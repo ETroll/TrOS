@@ -3,7 +3,7 @@
 BUILD = bin/
 TARGET = stage1.bin
 
-all: $(TARGET)
+all: $(BUILD) $(TARGET)
 
 $(TARGET):
 	nasm -f bin stage1.asm -o $(BUILD)$(TARGET)
