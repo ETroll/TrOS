@@ -97,7 +97,7 @@ func createImage(outPath string) bool {
 		os.Remove(path + ".dmg")
 	}
 
-	stdout, err := executeCommand("hdiutil create -megabytes 5 -fs MS-DOS -volname TEMP -o " + path)
+	stdout, err := executeCommand("hdiutil create -sectors 2880 -fs MS-DOS -volname TEMP -o " + path)
 
 	fmt.Println(stdout)
 
