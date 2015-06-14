@@ -32,7 +32,6 @@ bsSerialNumber:         dd 0xaac0ffee
 bsVolumeLabel:          db "TROS       "
 bsFileSystem:           db "FAT12   "
 
-msg	db "Welcome to My Operating System!", 0
 
 ;
 ; Generic print method
@@ -265,10 +264,4 @@ msgFailure      db 0x0D, 0x0A, "ERROR: Press Any Key to Reboot", 0x0D, 0x0A, 0x0
 msgCRLF         db 0x0D, 0x0A, 0x00
 
 times 510 - ($-$$) db 0
-; From Brokenthorn.com:
-;       "I wish this was more documented. In NASM, the dollar operator ($)
-;       represents the address of the current line. $$ represents the address
-;       of the first instruction (Should be 0x7C00). So, $-$$ returns the
-;       number of bytes from the current line to the start (In this case,
-;       the size of the program)"
 dw 0xAA55 ; Boot Signature
