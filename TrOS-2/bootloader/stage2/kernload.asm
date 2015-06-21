@@ -1,43 +1,93 @@
-org 0x0		; offset to 0, we will set segments later
+org 0x500		; Remember the memory map-- 0x500 through 0x7bff is unused above the BIOS data area.
+bits 16			; We are loaded at 0x500 (0x50:0)
 
-bits 16		; we are still in real mode
+jmp main
 
-; we are loaded at linear address 0x10000
+%include "stdio.asm"
+%include "gdt.asm"
 
-jmp main	; jump to main
+LoadingMsg 	db "Stage2: Preparing to load operating system.", 0x0D, 0x0A, 0x00
+A20Msg		db "Stage2: A20 enabled. Full 32 bit address bus is now available", 0x0D, 0x0A, 0x00
 
-;*************************************************;
-;	Prints a string
-;	DS=>SI: 0 terminated string
-;************************************************;
+;EnableA20 trough keyboard output port
+EnableA20:
+	cli
+	pusha
+	    call    wait_input
+	    mov     al,0xAD
+	    out     0x64,al			;Disable keyboard
+	    call    wait_input
 
-Print:
-			lodsb		; load next byte from string from SI to AL
-			or	al, al	; Does AL=0?
-			jz	PrintDone	; Yep, null terminator found-bail out
-			mov	ah,	0eh	; Nope-Print the character
-			int	10h
-			jmp	Print	; Repeat until null terminator found
-PrintDone:
-			ret		; we are done, so return
+	    mov     al,0xD0
+	    out     0x64,al			;Tell controller to read output port
+	    call    wait_output
 
-;*************************************************;
-;	Second Stage Loader Entry Point
-;************************************************;
+	    in      al,0x60
+	    push    eax				;Get output port data and store it
+	    call    wait_input
+
+	    mov     al,0xD1
+	    out     0x64,al			;Tell controller to write output port
+	    call    wait_input
+
+	    pop     eax
+	    or      al,2			;Set bit 1 (enable a20)
+	    out     0x60,al			;Write out data back to the output port
+
+	    call    wait_input
+	    mov     al,0xAE			;Enable keyboard
+	    out     0x64,al
+
+	    call    wait_input
+	popa
+    sti
+    ret
+
+wait_input:
+    in      al,0x64
+    test    al,2
+    jnz     wait_input
+    ret
+
+wait_output:
+    in      al,0x64
+    test    al,1
+    jz      wait_output
+    ret
 
 main:
-			cli		; clear interrupts
-			push	cs	; Insure DS=CS
-			pop	ds
+	cli
+	xor	ax, ax
+	mov	ds, ax
+	mov	es, ax
+	mov	ax, 0x9000		; stack begins at 0x9000-0xffff
+	mov	ss, ax
+	mov	sp, 0xFFFF
+	sti
 
-			mov	si, Msg
-			call	Print
+	mov	si, LoadingMsg
+	call	Puts16
+	call	InstallGDT
+	call 	EnableA20
+	mov si, A20Msg
+	call 	Puts16
 
-			cli		; clear interrupts to prevent triple faults
-			hlt		; hault the system
+	cli
+	mov	eax, cr0		; set bit 0 in cr0--enter pmode
+	or	eax, 1
+	mov	cr0, eax
 
-;*************************************************;
-;	Data Section
-;************************************************;
+	jmp	08h:stage3		; far jump to fix CS. Remember that the code selector is 0x8!
 
-Msg	db	"Preparing to load operating system...",13,10,0
+bits 32					; Woohoo! 32bit land! Finaly!
+
+stage3:
+	mov		ax, 0x10	; set data segments to data selector (0x10)
+	mov		ds, ax
+	mov		ss, ax
+	mov		es, ax
+	mov		esp, 0x90000; stack begins from 0x90000
+
+stop:
+	cli
+	hlt

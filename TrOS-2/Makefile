@@ -10,7 +10,9 @@ rebuild: clean all
 
 all: image
 
-qemu: rebuild
+qemu: rebuild run
+
+run:
 	qemu-system-i386 -fda build/TrOS.img
 
 $(MODULES):
@@ -25,7 +27,7 @@ $(SUBCLEAN): %.clean:
 
 image: $(FOLDERS) $(MODULES)
 	rm build/tmp/*.mbr
-	go run tools/diskimg.go -out=build/ -boot=bootloader/stage1/bin/floppy.mbr \
+	go run buildtools/diskimg.go -out=build/ -boot=bootloader/stage1/bin/floppy.mbr \
 	-content=build/tmp/
 
 $(FOLDERS):

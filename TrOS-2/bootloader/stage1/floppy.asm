@@ -142,7 +142,7 @@ ldrmain:
     sti
 
 loadRootDirectory:
-    mov si, msgWelcome
+    mov si, msgSearch
     call print
     xor cx, cx
     xor dx, dx
@@ -259,7 +259,7 @@ cluster         dw 0x0000
 ;Variables / Strings
 ImageName       db "KRNLDR  BIN"
 msgProgress     db ".", 0x00
-msgWelcome      db 0x0D, 0x0A, "Searching", 0x00
+msgSearch       db 0x0D, 0x0A, "Searching", 0x00
 msgFailure      db 0x0D, 0x0A, "ERROR: Press Any Key to Reboot", 0x0D, 0x0A, 0x00
 msgCRLF         db 0x0D, 0x0A, 0x00
 
