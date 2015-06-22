@@ -1,6 +1,6 @@
 #TrOS-2 Makefile
 
-MODULES := bootloader/stage1 bootloader/stage2
+MODULES := bootloader/stage1 bootloader/stage2 kernel
 FOLDERS := build build/tmp
 SUBCLEAN = $(addsuffix .clean,$(MODULES))
 

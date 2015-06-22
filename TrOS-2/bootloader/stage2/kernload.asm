@@ -92,8 +92,23 @@ stage3:
 	mov ebx, msg
 	call VGA_PUTS
 
+	.restart:
+		mov al, 0
+	.loop:
+		mov ebx, txt
+		mov cl, al
+		add cl, 0x30
+		mov [ebx], byte cl
+		call VGA_PUTS
+
+		add al, 1
+		cmp al, 10
+		je stop
+		jmp .loop
+
 stop:
 	cli
 	hlt
 
-	msg db "TrOS Bootloader stage2", 0x0A, 0
+	txt db "X ", 0x0A, 0
+	msg db "   TrOS Bootloader stage2", 0x0A, 0
