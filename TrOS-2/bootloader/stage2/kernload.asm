@@ -66,11 +66,11 @@ main:
 	sti
 
 	mov	si, LoadingMsg
-	call	Puts16
+	call	BIOS_PUTS
 	call	InstallGDT
 	call 	EnableA20
 	mov si, A20Msg
-	call 	Puts16
+	call 	BIOS_PUTS
 
 	cli
 	mov	eax, cr0		; set bit 0 in cr0--enter pmode
@@ -88,6 +88,12 @@ stage3:
 	mov		es, ax
 	mov		esp, 0x90000; stack begins from 0x90000
 
+	call VGA_CLEAR_SCREEN
+	mov ebx, msg
+	call VGA_PUTS
+
 stop:
 	cli
 	hlt
+
+	msg db "TrOS Bootloader stage2", 0x0A, 0

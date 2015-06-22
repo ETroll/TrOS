@@ -17,7 +17,7 @@ run:
 
 $(MODULES):
 	$(MAKE) -C $@
-	cp -r $@/bin/ build/tmp
+	cp -r $@/bin/*.* ./build/tmp
 
 clean: $(SUBCLEAN)
 	rm -rf build/
