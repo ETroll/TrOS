@@ -1,4 +1,5 @@
-
+; Simple VGA implementation for 16 and 32 bits
+;
 
 %ifndef __stdio_asm
 %define __stdio_asm
@@ -25,11 +26,11 @@ bits 32
 %define VIDMEM		0xB8000
 %define COLS		80
 %define LINES		25
-%define CHAR_ATTRIB 0x1F
 
 ;Current cursor X/Y pos
 _currentX db 0
 _currentY db 0
+_char_attrib db 0x1F;
 
 ; Moves the hardware cursor to position given in parameters:
 ; bh - Y pos
@@ -90,7 +91,7 @@ VGA_PUTCH:
 	je .newline
 
 	mov dl, bl
-	mov dh, CHAR_ATTRIB
+	mov dh, [_char_attrib]
 	mov word [edi], dx			; Move the data stored in dx to memory pointed
 	inc byte [_currentX]		; to by edi
 	jmp .done
@@ -133,13 +134,29 @@ VGA_CLEAR_SCREEN:
 	cld
 	mov edi, VIDMEM
 	mov cx, 2000
-	mov ah, CHAR_ATTRIB
+	mov ah, [_char_attrib]
 	mov al, ' '
 	rep stosw					; Loops over and increments EDI 2000 times
 								; and inserts value of ax
 	mov byte [_currentX], 0
 	mov byte [_currentY], 0
 	popa
+	ret
+
+; Set the VGA color via ATTRIB
+; bl - Font color
+; bh - Background color
+VGA_SET_COLOR:
+	pusha
+	shl bh, 4
+	and bl, 0x0F
+	or bl, bh
+	mov byte [_char_attrib], bl
+	popa
+	ret
+
+VGA_SET_COLOR_DEFAULT:
+	mov byte [_char_attrib], 0x1F
 	ret
 
 ; set the _current values to valus of al (X pos) ah (Y pos)

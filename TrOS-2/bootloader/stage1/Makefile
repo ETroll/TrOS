@@ -6,7 +6,7 @@ TARGET = floppy.mbr
 all: $(BUILD) $(TARGET)
 
 $(TARGET):
-	nasm -f bin floppy.asm -o $(BUILD)$(TARGET)
+	nasm -f bin boot_floppy.asm -o $(BUILD)$(TARGET)
 
 $(BUILD):
 	mkdir $@

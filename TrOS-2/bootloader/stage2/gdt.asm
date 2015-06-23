@@ -2,7 +2,7 @@
 %define __gdt_asm
 
 bits	16
-InstallGDT:
+BIOS_INSTALL_GDT:
 	cli
 	pusha
 	lgdt [toc]			; load GDT into GDTR
@@ -32,5 +32,8 @@ toc:
 	dw end_of_gdt - gdt_data - 1
 	dd gdt_data
 
+%define GDT_NULL_DESC 0
+%define GDT_CODE_DESC 0x8
+%define GDT_DATA_DESC 0x10
 
 %endif
