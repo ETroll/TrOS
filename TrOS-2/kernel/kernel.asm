@@ -1,15 +1,16 @@
-org	0x100000                    ; Kernel starts at 1 MB
+;org	0x100000                    ; Kernel starts at 1 MB
 
-bits 32
+;bits 32
 
 jmp	kernel_main
 
 %include "../bootloader/stage2/stdio.asm"
 
-msg db "   TrOS dummy kernel", 0x0A, 0x0A
-    db "   Weee!", 0x0A, 0
+msg db "   TrOS dummy kernel - Now loaded from ELF!", 0x0A, 0x0A
+    db "   Weee! ELF Rocks!!!", 0x0A, 0
 txt db "X ", 0x0A, 0
 
+global kernel_main
 kernel_main:
 	mov	ax, 0x10
 	mov	ds, ax

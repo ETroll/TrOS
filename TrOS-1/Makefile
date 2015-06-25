@@ -20,7 +20,7 @@ BUILD = Bin/
 INCLUDES  = Src/Include/
 LINKER = Linker/kernel-$(ARCH).ld
 MODULES := . Kernel Kernel/* Kernel/Arch/* Kernel/Drivers/* Applications Applications/*
-	
+
 
 ### Output:
 
