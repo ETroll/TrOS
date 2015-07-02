@@ -13,7 +13,10 @@ all: image
 qemu: rebuild run
 
 run:
-	qemu-system-i386 -fda build/TrOS.img
+	qemu-system-i386 -fda build/TrOS.img -monitor stdio
+
+debug:
+	qemu-system-i386 -s -S -fda build/TrOS.img
 
 $(MODULES):
 	$(MAKE) -C $@
@@ -26,6 +29,7 @@ $(SUBCLEAN): %.clean:
 	$(MAKE) -C $* clean
 
 image: $(FOLDERS) $(MODULES)
+	gcc buildtools/elfinfo.c -o build/elfinfo -std=c99
 	rm build/tmp/*.mbr
 	go run buildtools/diskimg.go -out=build/ -boot=bootloader/stage1/bin/floppy.mbr \
 	-content=build/tmp/

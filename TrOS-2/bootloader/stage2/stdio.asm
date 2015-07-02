@@ -104,6 +104,47 @@ VGA_PUTCH:
 		popa
 		ret
 
+; Prints a 32bit word to VGA memory
+; Takes 1 argument on the stack
+VGA_PUT_HEX:
+	push ebp
+    mov ebp,esp
+    ;sub esp, 4 ; local variable of 4 bytes (accessable from [ebp-4])
+	pusha
+	mov bl, 0x30		; '0'
+	call VGA_PUTCH
+	mov bl, 0x78		; 'x'
+	call VGA_PUTCH
+
+    ;mov eax,[ebp+8] ; our parameter
+	mov cl, 28
+	.loop:
+		cmp cl, 0
+		jl .done
+
+		mov ebx, [ebp+8]
+		shr ebx, cl			; value in ecx used for shift op
+		and ebx, 0xF		; bl now contains our letter
+		cmp bl, 9
+		jg .letter
+		add bl, 0x30
+		jmp .print
+
+	.letter:
+		add bl, 0x37
+
+	.print:
+		call VGA_PUTCH
+		sub cl, 4			; go downwards 4 bits (nibble) at a time
+		jmp .loop
+
+	.done:
+		popa
+	    mov esp, ebp
+	    pop ebp
+	    ret 4 ; pop the parameter from the stack
+
+
 ;Prints a nullterminated string to VGA
 ; EBX => Start address of the string to print
 VGA_PUTS:
@@ -166,5 +207,43 @@ VGA_GOTO_XY:
 	mov [_currentY], ah
 	popa
 	ret
+
+; Move data from one address to another
+;					+8			+12			+16
+; MEM_MOVE_BYTE(void* from, void* to, int numBytes)
+MEM_MOVE_BYTES:
+	push ebp
+	mov ebp,esp
+	pusha
+
+	cld
+	mov esi, [ebp+8]
+	mov	edi, [ebp+12]
+	mov ecx, [ebp+16]
+	rep	movsb
+
+	popa
+	mov esp, ebp
+	pop ebp
+	ret 12
+
+; Move data from one address to another
+;					+8			+12			+16
+; MEM_MOVE_WORDS(void* from, void* to, int numWords)
+MEM_MOVE_WORDS:
+	push ebp
+	mov ebp,esp
+	pusha
+
+	cld
+	mov esi, [ebp+8]
+	mov	edi, [ebp+12]
+	mov ecx, [ebp+16]
+	rep	movsd
+
+	popa
+	mov esp, ebp
+	pop ebp
+	ret 12
 
 %endif

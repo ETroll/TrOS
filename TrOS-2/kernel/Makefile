@@ -13,6 +13,8 @@ COMPILER_ASM = nasm
 DIR_BUILD = bin/
 DIR_OBJECT = obj/
 TARGET = kernel.elf
+LIST = kernel.list
+
 
 # CONFIGURATION
 FLAGS = -Wall
@@ -33,7 +35,10 @@ OBJECTS_GCC := $(patsubst $(SOURCE)%.c, $(DIR_OBJECT)%.o, $(SRC_GCC))
 OBJECTS_ALL += $(OBJECTS_AS)
 OBJECTS_ALL += $(OBJECTS_GCC)
 
-all: $(TARGET)
+all: $(LIST)
+
+$(LIST) : $(TARGET)
+	$(TOOLCHAIN)i386-elf-objdump -D $(DIR_BUILD)$(TARGET) > $(DIR_OBJECT)/$(LIST)
 
 $(TARGET): $(DIR_BUILD) $(OBJECTS_AS) $(OBJECTS_GCC)
 	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(addprefix $(DIR_OBJECT), $(notdir $(OBJECTS_ALL))) -o $(DIR_BUILD)$(TARGET)

@@ -6,19 +6,19 @@ jmp KRNLOAD_MAIN
 %include "stdio.asm"
 %include "gdt.asm"
 %include "fat12.asm"
+%include "elf32.asm"
 
-; where the kernel is to be loaded to in protected mode
-%define IMAGE_PMODE_BASE 0x100000
+bits 16
 
 ; where the kernel is to be loaded to in real mode
 %define IMAGE_RMODE_BASE 0x3000
 
 
-ImageName   db "KERNEL  BIN"
+ImageName   db "KERNEL  ELF"
 ImageSize   db 0
 LoadingMsg 	db "Stage2: Preparing to load kernel.", 0x0D, 0x0A, 0x00
-FailureMsg db 0x0D, 0x0A, "*** FATAL: MISSING OR CURRUPT KERNEL.BIN. Press Any Key to Reboot", 0x0D, 0x0A, 0x0A, 0x00
-
+FailureMsg 	db 0x0D, 0x0A, "*** FATAL: MISSING OR CURRUPT KERNEL. Press Any Key to Reboot", 0x0D, 0x0A, 0x0A, 0x00
+BadHeader 	db "*** FATAL: KERNEL.ELF is not a valid ELF32 file", 0x0A, 0x00
 
 ;EnableA20 trough keyboard output port
 BIOS_ENABLE_A20:
@@ -57,15 +57,15 @@ BIOS_ENABLE_A20:
     ret
 
 wait_input:
-    in      al,0x64
-    test    al,2
-    jnz     wait_input
+    in al,0x64
+    test al,2
+    jnz wait_input
     ret
 
 wait_output:
-    in      al,0x64
-    test    al,1
-    jz      wait_output
+    in al,0x64
+    test al,1
+    jz wait_output
     ret
 
 KRNLOAD_MAIN:
@@ -114,6 +114,18 @@ JUMP_TO_PROTECTED_MODE:
 
 
 bits 32						; Woohoo! 32bit land! Finaly!
+
+ElfTempAddr	dd 0
+
+Elf_SectionHeaderAddr	dd	0
+Elf_NumSectionHeaders	db	0
+Elf_SectionHeaderSize	db	0
+; NOTE to self:
+;	word -> 2 bytes
+;	dword -> 4 bytes
+; ---- ---- ---- ----
+;	QEMU: info registers
+;	QEMU: xp /16xw 0x100000 (prints 16 words staring at 0x100000)
 PROTECTED_MODE:
 	mov	ax, GDT_DATA_DESC	; set data segments to data selector (0x10)
 	mov	ds, ax
@@ -121,21 +133,95 @@ PROTECTED_MODE:
 	mov	es, ax
 	mov	esp, 0x90000		; stack begins from 0x90000
 
-	; Copy the image to protected mode address
-	mov	eax, dword [ImageSize]
-	movzx ebx, word [bpbBytesPerSector]
-	mul	ebx
-	mov	ebx, 4
-	div	ebx
-	cld
-	mov esi, IMAGE_RMODE_BASE
-	mov	edi, IMAGE_PMODE_BASE
-	mov	ecx, eax
-	rep	movsd
+	; Lets clear the screen
+	mov bl, 15
+	mov bh, 0
+	call VGA_SET_COLOR
+	call VGA_CLEAR_SCREEN
 
-	; Jump to the kernel. - This assumes Kernel's entry point is at 1 MB
-	jmp	GDT_CODE_DESC:IMAGE_PMODE_BASE
+	; Create space for som local variables
+	;mov ebp, esp
+	;sub esp, 8
+	;mov [ebp-4], dword [IMAGE_RMODE_BASE + Elf32_Ehdr.e_shoff]
 
+	mov ebx, dword [IMAGE_RMODE_BASE]
+	cmp ebx, 0x464C457F;
+	jne near BAD_KERNEL
 
+	mov eax, dword [IMAGE_RMODE_BASE + Elf32_Ehdr.e_shoff]
+	add eax, IMAGE_RMODE_BASE
+	mov dword [Elf_SectionHeaderAddr], eax
+
+	mov al, byte [IMAGE_RMODE_BASE + Elf32_Ehdr.e_shnum]
+	mov byte [Elf_NumSectionHeaders], al
+
+	mov al, byte [IMAGE_RMODE_BASE + Elf32_Ehdr.e_shentsize]
+	mov byte [Elf_SectionHeaderSize], al
+
+	; Loop trough all section headers and copy the data
+	mov cl, 0
+	.sectionloop:
+		cmp cl, byte [Elf_NumSectionHeaders]
+		je EXECUTE_KERNEL
+
+		push dword [Elf_SectionHeaderAddr]
+		call VGA_PUT_HEX
+
+		; Get VMem address. (Actually physical in this case)
+		mov edx, dword [Elf_SectionHeaderAddr];
+		cmp dword [edx + Elf32_Shdr.sh_addr], 0
+		je .next
+
+		mov bl, 0x2D
+		call VGA_PUTCH
+
+		push dword [edx + Elf32_Shdr.sh_addr]
+		call VGA_PUT_HEX
+
+		mov bl, 0x2D
+		call VGA_PUTCH
+
+		; Get current offset from start of ELF
+		push dword [edx + Elf32_Shdr.sh_offset]
+		call VGA_PUT_HEX
+
+		mov bl, 0x2D
+		call VGA_PUTCH
+
+		; Get the size in bytes
+		push dword [edx + Elf32_Shdr.sh_size]
+		call VGA_PUT_HEX
+
+		push dword [edx + Elf32_Shdr.sh_size]		; size
+		push dword [edx + Elf32_Shdr.sh_addr]		; to
+
+		mov ebx, dword [edx + Elf32_Shdr.sh_offset]
+		add ebx, IMAGE_RMODE_BASE
+		push ebx 									; from
+		call MEM_MOVE_BYTES
+
+	.next
+		inc cl
+		xor eax, eax
+		mov al, byte [Elf_SectionHeaderSize]
+		add dword [Elf_SectionHeaderAddr], eax
+
+		mov bl, 0x0A
+		call VGA_PUTCH
+		jmp .sectionloop
+
+EXECUTE_KERNEL:
+	mov eax, dword [IMAGE_RMODE_BASE + Elf32_Ehdr.e_entry]
+	mov ebp, eax
+	cli
+
+	; Execute Kernel
+	call ebp
+	cli
+	hlt
+
+BAD_KERNEL:
+	mov	ebx, BadHeader
+	call VGA_PUTS
 	cli
 	hlt

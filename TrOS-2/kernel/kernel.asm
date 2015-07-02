@@ -2,7 +2,7 @@
 
 ;bits 32
 
-jmp	kernel_main
+;jmp	kernel_main
 
 %include "../bootloader/stage2/stdio.asm"
 
@@ -18,6 +18,11 @@ kernel_main:
 	mov	es, ax
 	mov	esp, 0x90000
 
+    ;xor ecx, ecx
+    ;xor eax, eax
+    ;mov ecx, 0xC0FFEE
+    ;jmp STOP;
+    call VGA_SET_COLOR_DEFAULT
     call VGA_CLEAR_SCREEN
 	mov ebx, msg
 	call VGA_PUTS

@@ -4,7 +4,6 @@ SECTIONS
     . = 1M;
     .text BLOCK(4K) : ALIGN(4K)
     {
-        *(.multiboot)
         *(.text)
     }
 
@@ -25,6 +24,5 @@ SECTIONS
     {
         *(COMMON)
         *(.bss)
-        *(.bootstrap_stack)
     }
 }

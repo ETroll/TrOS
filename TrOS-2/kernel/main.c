@@ -20,9 +20,9 @@ void kernel_early()
     // asm("push ebp");
 }
 
-int main()
-{
-    kernel_main();
-    kernel_early();
-    return 1;
-}
+// int main()
+// {
+//     kernel_main();
+//     kernel_early();
+//     return 1;
+// }

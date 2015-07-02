@@ -77,7 +77,7 @@ int fprintf(file_t* file, char* str, ...)
 
 					fputc('0', file);
 					fputc('x', file);
-					for(int i = 32; i >= 0; i-=4)
+					for(int i = 28; i >= 0; i-=4)
 					{
 						nibble = (arg >> i) & 0xF;
 						if(nibble > 9)
