@@ -50,7 +50,7 @@ void vga_putch(char c)
 void vga_puts(char* str)
 {
     while (*str)
-	{
+    {
         vga_putch(*str);
     }
 }
@@ -61,13 +61,13 @@ void vga_clear_screen(vga_char_attrib_t* c)
     unsigned char attrib = _vga_calculate_color(c);
     unsigned int size = (VGA_COLS*2)*VGA_LINES;
 
-	for (int i=0; i<size; i+=2)
+    for (int i=0; i<size; i+=2)
     {
-		vgamem[i] = ' ';
-		vgamem[i+1] = attrib;
-	}
+        vgamem[i] = ' ';
+        vgamem[i+1] = attrib;
+    }
 
-	_xPos = 0;
+    _xPos = 0;
     _yPos = 0;
 }
 
