@@ -17,11 +17,11 @@ LIST = kernel.list
 
 
 # CONFIGURATION
-FLAGS = -Wall
+FLAGS = -Wall -std=c99
 LINKER_FLAGS = -ffreestanding -nostdlib
 INCLUDES = ../include/
 LINKER_MAP = kernel.ld
-FOLDERS = .
+FOLDERS = . init hal
 SOURCE =
 
 # SOURCE FILES
