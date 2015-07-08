@@ -8,13 +8,6 @@
 
 #define MAX_INTERRUPTS 256
 
-//#define IDT_DESC_BIT16 0x06
-#define IDT_DESC_BIT32 0x0E
-#define IDT_DESC_RING1 0x40
-#define IDT_DESC_RING2 0x20
-#define IDT_DESC_RING3 0x60
-#define IDT_DESC_PRESENT 0x80
-
 typedef void (*IRQ_HANDLER_FUNC)(void);
 
 typedef struct {
@@ -31,9 +24,11 @@ typedef struct {
 } __attribute__((packed)) idtr;
 
 
+extern void idt_load(uint32_t addr);
+
 // Installs interrupt handler. When INT is fired, it will call this callback
 // irq_handler_register in TrOS-1 - to be renamed
-int idt_install_ir(uint32_t irq, uint16_t flags, uint16_t sel, IRQ_HANDLER_FUNC ir);
-int idt_initialize(uint16_t codeSel, IRQ_HANDLER_FUNC default_handler);
+void idt_install_ir(uint8_t irq, uint32_t base, uint16_t sel, uint8_t flags);
+void idt_initialize();
 
 #endif

@@ -17,11 +17,11 @@ LIST = kernel.list
 
 
 # CONFIGURATION
-FLAGS = -Wall -std=c99 -fno-builtin
+FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
 INCLUDES = ../include/
 LINKER_MAP = kernel.ld
-FOLDERS = . init hal ../clib
+FOLDERS = . init hal irq ../clib
 SOURCE =
 
 # SOURCE FILES

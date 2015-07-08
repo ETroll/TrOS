@@ -8,6 +8,7 @@ kernel_init:
 	mov	es, ax
 	mov	esp, 0xFFFFF ;1M - 1 byte
 
+	; Set up the itsy bisty tinyest stackframe before calling kernel
 	mov ebp,esp
     push ebp
 

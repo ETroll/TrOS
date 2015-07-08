@@ -8,12 +8,6 @@
 extern void fun_stuff(void);
 #define GenerateInterrupt(arg) __asm__("int %0\n" : : "N"((arg)) : "cc", "memory")
 
-// Debug function for now..
-void geninterrupt()
-{
-    __asm("int $15;");
-}
-
 // Just a dummy "UI" for experimenting
 void draw_ui()
 {
@@ -87,19 +81,6 @@ void draw_ui()
     }
 }
 
-void default_irq_handler()
-{
-    vga_char_attrib_t color = {
-    	.bg = VGA_YELLOW,
-        .font = VGA_BLACK
-    };
-
-    vga_set_color(&color);
-    vga_set_position(0,1);
-    printk("Unhandled Exception...! This is BAD!");
-    for(;;);
-}
-
 void kernel_early()
 {
     vga_char_attrib_t console_color = {
@@ -107,30 +88,26 @@ void kernel_early()
         .font = VGA_WHITE
     };
 
-    vga_clear_screen(&console_color);
-    vga_set_position(0,0);
+    vga_set_color(&console_color);
+    vga_set_position(0,1);
 
     gdt_initialize();
-    idt_initialize(0x08, (IRQ_HANDLER_FUNC)default_irq_handler);
+    idt_initialize();
 }
 
 void kernel_main()
 {
+    draw_ui();
     kernel_early();
-    //draw_ui();
 
-    // vga_char_attrib_t console_color = {
-    // 	.bg = VGA_BLUE,
-    //     .font = VGA_WHITE
-    // };
-    //vga_set_color(&console_color);
-    //vga_set_position(0,VGA_LINES-1);
-    //printk("> Hello kernel world! %x\0", 0xC0FFEE);
-    vga_move_cursor(32,VGA_LINES-1);
+    GenerateInterrupt(0x15);
+    GenerateInterrupt(0x26);
 
-    //GenerateInterrupt(0x15);
-    //geninterrupt();
-
+    //dummy end stuff
+    vga_set_position(0,VGA_LINES-1);
+    printk("> ");
+    vga_move_cursor(2,VGA_LINES-1);
+    //__asm("sti");
     __asm("hlt");
     while(1)
     {
