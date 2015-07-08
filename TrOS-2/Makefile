@@ -13,7 +13,7 @@ all: image
 qemu: rebuild run
 
 run:
-	qemu-system-i386 -fda build/TrOS.img -monitor stdio
+	qemu-system-i386 -fda build/TrOS.img -monitor stdio #-d cpu_reset
 
 debug:
 	qemu-system-i386 -s -S -fda build/TrOS.img
