@@ -1,28 +1,27 @@
 ENTRY(kernel_main)
 SECTIONS
 {
-    . = 1M;
-    .text BLOCK(4K) : ALIGN(4K)
+    .text 0x100000 : /* 1M */
     {
+        code = .; _code = .; __code = .;
         *(.text)
+        . = ALIGN(4096);
     }
 
-    /* Read-only data. */
-    .rodata BLOCK(4K) : ALIGN(4K)
+    .data :
     {
-        *(.rodata)
-    }
-
-    /* Read-write data (initialized) */
-    .data BLOCK(4K) : ALIGN(4K)
-    {
+        data = .; _data = .; __data = .;
         *(.data)
+        *(.rodata)
+        . = ALIGN(4096);
     }
 
-    /* Read-write data (uninitialized) and stack */
-    .bss BLOCK(4K) : ALIGN(4K)
+    .bss :
     {
-        *(COMMON)
+        bss = .; _bss = .; __bss = .;
         *(.bss)
+        . = ALIGN(4096);
     }
+
+    end = .; _end = .; __end = .;
 }

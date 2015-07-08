@@ -2,8 +2,11 @@
 // TrOS kernel - Main entry
 #include <TrOS/TrOS.h>
 #include <TrOS/hal/VGA.h>
+#include <TrOS/hal/idt.h>
+#include <TrOS/hal/gdt.h>
 
 extern void fun_stuff(void);
+#define GenerateInterrupt(arg) __asm__("int %0\n" : : "N"((arg)) : "cc", "memory")
 
 // Just a dummy "UI" for experimenting
 void draw_ui()
@@ -80,23 +83,32 @@ void draw_ui()
 
 void kernel_early()
 {
-
-}
-
-void kernel_main()
-{
-    kernel_early();
-    draw_ui();
-
     vga_char_attrib_t console_color = {
     	.bg = VGA_BLUE,
         .font = VGA_WHITE
     };
-    vga_set_color(&console_color);
-    vga_set_position(0,VGA_LINES-1);
-    printk("> Hello kernel world! %x\0", 0xC0FFEE);
-    vga_move_cursor(32,VGA_LINES-1);
 
+    vga_set_color(&console_color);
+    vga_set_position(0,1);
+
+    gdt_initialize();
+    idt_initialize();
+}
+
+void kernel_main()
+{
+    draw_ui();
+    kernel_early();
+
+    GenerateInterrupt(0x15);
+    GenerateInterrupt(0x26);
+
+    //dummy end stuff
+    vga_set_position(0,VGA_LINES-1);
+    printk("> ");
+    vga_move_cursor(2,VGA_LINES-1);
+    //__asm("sti");
+    __asm("hlt");
     while(1)
     {
         __asm("nop;");

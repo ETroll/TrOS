@@ -6,14 +6,14 @@ SUBCLEAN = $(addsuffix .clean,$(MODULES))
 
 .PHONY: $(MODULES)
 
-rebuild: clean all
+all: $(FOLDERS) $(MODULES)
 
-all: image
+rebuild: clean all image
 
 qemu: rebuild run
 
 run:
-	qemu-system-i386 -fda build/TrOS.img -monitor stdio
+	qemu-system-i386 -fda build/TrOS.img -monitor stdio #-d cpu_reset
 
 debug:
 	qemu-system-i386 -s -S -fda build/TrOS.img
@@ -28,7 +28,7 @@ clean: $(SUBCLEAN)
 $(SUBCLEAN): %.clean:
 	$(MAKE) -C $* clean
 
-image: $(FOLDERS) $(MODULES)
+image:
 	gcc buildtools/elfinfo.c -o build/elfinfo -std=c99
 	rm build/tmp/*.mbr
 	go run buildtools/diskimg.go -out=build/ -boot=bootloader/stage1/bin/floppy.mbr \
