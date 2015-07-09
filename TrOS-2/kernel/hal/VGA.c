@@ -1,11 +1,15 @@
 #include <TrOS/hal/VGA.h>
 #include <TrOS/hal/io.h>
 
+#define VGA_MEMORY 0xB8000
+#define VGA_CURSOR_IREG 0x3D4
+#define VGA_CURSOR_DREG 0x3D5
+
 static unsigned int _xPos = 0;
 static unsigned int _yPos = 0;
 static unsigned char _char_attrib = 0x1F;
 
-unsigned char _vga_calculate_color(vga_char_attrib_t* c);
+static unsigned char _vga_calculate_color(vga_char_attrib_t* c);
 
 void vga_move_cursor(unsigned int x, unsigned int y)
 {
@@ -24,26 +28,42 @@ void vga_putch(char c)
 {
     if(c != 0)
     {
-        if (c == '\n'|| c == '\r')
+        unsigned char* vgamem = (unsigned char*)VGA_MEMORY;
+
+        if (c == '\n'|| c == '\r' || _xPos > 79)
         {
             _yPos++;
             _xPos = 0;
+
+            //"scroll" if needed
+            if(_yPos >= VGA_LINES)
+            {
+                for (int i = 0; i < (VGA_LINES-1)*(VGA_COLS*2); i+=2)
+                {
+                    vgamem[i] = vgamem[i+(VGA_COLS*2)];
+                    vgamem[i+1] = vgamem[i+(VGA_COLS*2)+1];
+                }
+
+                for (int i = (VGA_LINES-1)*(VGA_COLS*2);
+                    i < (VGA_COLS*2)*VGA_LINES;
+                    i+=2)
+                {
+                    vgamem[i] = ' ';
+                    vgamem[i+1] = _char_attrib;
+                }
+
+                _yPos = (VGA_LINES-1);
+            }
         }
         else
         {
-            if (_xPos > 79)
-            {
-               _yPos++;
-               _xPos = 0;
-            }
-
-            unsigned char* vgamem = (unsigned char*)VGA_MEMORY;
             unsigned int memloc = (_xPos * 2)+(_yPos * VGA_COLS *2);
 
             vgamem[memloc] = c;
             vgamem[memloc+1] = _char_attrib;
             _xPos++;
         }
+        vga_move_cursor(_xPos, _yPos);
     }
 }
 

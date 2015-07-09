@@ -1,5 +1,6 @@
 #include <TrOS/hal/VGA.h>
 
+
 void printk(char* str, ...)
 {
 	register int* arguments = (int *)(&str);

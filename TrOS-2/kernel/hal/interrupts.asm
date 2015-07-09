@@ -42,6 +42,7 @@ idt_load:
         jmp irq_common
 %endmacro
 
+;rename: isr_fallback
 global irq_fallback
 irq_fallback:
     cli

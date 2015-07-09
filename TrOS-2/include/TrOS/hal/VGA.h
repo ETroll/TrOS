@@ -4,11 +4,8 @@
 #ifndef INCLUDE_VGA_H
 #define INCLUDE_VGA_H
 
-#define VGA_MEMORY 0xB8000
 #define VGA_COLS 80
 #define VGA_LINES 25
-#define VGA_CURSOR_IREG 0x3D4
-#define VGA_CURSOR_DREG 0x3D5
 
 typedef enum vga_color
 {
@@ -42,6 +39,5 @@ void vga_puts(char* str);
 void vga_clear_screen(vga_char_attrib_t* c);
 void vga_set_position(unsigned int x, unsigned int y);
 void vga_set_color(vga_char_attrib_t* c);
-//void vga_puthex(unsigned int data);
 
 #endif
