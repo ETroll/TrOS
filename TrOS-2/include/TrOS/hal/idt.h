@@ -8,8 +8,6 @@
 
 #define MAX_INTERRUPTS 256
 
-typedef void (*IRQ_HANDLER_FUNC)(void);
-
 typedef struct {
     uint16_t baseLo;
     uint16_t sel;

@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 
+#define MAX_IRQ 256
+
 typedef struct registers
 {
     uint32_t ds; // Data segment selector
@@ -14,11 +16,10 @@ typedef struct registers
     uint32_t eip, cs, eflags, useresp, ss; // Pushed by the processor automatically.
 } irq_registers_t;
 
-//TODO:
-//irq_handler_register(uint8_t irq, int (*handler) (irq_registers_t reg))
-//irq_initialize()
+typedef void (*irq_handler)(irq_registers_t);
 
+void irq_initialize(void);
 void irq_default_handler();
-
+int irq_handler_register(unsigned int irq, irq_handler handler);
 
 #endif

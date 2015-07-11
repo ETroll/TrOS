@@ -1,4 +1,5 @@
 #include <TrOS/hal/idt.h>
+#include <TrOS/hal/io.h>
 #include <string.h>
 
 #include <TrOS/TrOS.h>
@@ -13,7 +14,7 @@ static idt_descriptor __idt_descriptors[MAX_INTERRUPTS];
 #define IDT_DESC_RING3 0x60
 #define IDT_DESC_PRESENT 0x80
 
-extern void irq_fallback();
+extern void isr_fallback();
 
 extern void isr0 ();
 extern void isr1 ();
@@ -47,6 +48,22 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void irq0 ();
+extern void irq1 ();
+extern void irq2 ();
+extern void irq3 ();
+extern void irq4 ();
+extern void irq5 ();
+extern void irq6 ();
+extern void irq7 ();
+extern void irq8 ();
+extern void irq9 ();
+extern void irq10();
+extern void irq11();
+extern void irq12();
+extern void irq13();
+extern void irq14();
+extern void irq15();
 
 void idt_install_ir(uint8_t irq, uint32_t base, uint16_t sel, uint8_t flags)
 {
@@ -104,9 +121,26 @@ void idt_initialize()
     idt_install_ir(30, (uint32_t)isr30, 0x08, 0x8E);
     idt_install_ir(31, (uint32_t)isr31, 0x08, 0x8E);
 
-    for (int i = 32; i < MAX_INTERRUPTS; i++)
+    idt_install_ir(32, (uint32_t)irq0, 0x08, 0x8E);
+    idt_install_ir(33, (uint32_t)irq1, 0x08, 0x8E);
+    idt_install_ir(34, (uint32_t)irq2, 0x08, 0x8E);
+    idt_install_ir(35, (uint32_t)irq3, 0x08, 0x8E);
+    idt_install_ir(36, (uint32_t)irq4, 0x08, 0x8E);
+    idt_install_ir(37, (uint32_t)irq5, 0x08, 0x8E);
+    idt_install_ir(38, (uint32_t)irq6, 0x08, 0x8E);
+    idt_install_ir(39, (uint32_t)irq7, 0x08, 0x8E);
+    idt_install_ir(40, (uint32_t)irq8, 0x08, 0x8E);
+    idt_install_ir(41, (uint32_t)irq9, 0x08, 0x8E);
+    idt_install_ir(42, (uint32_t)irq10, 0x08, 0x8E);
+    idt_install_ir(43, (uint32_t)irq11, 0x08, 0x8E);
+    idt_install_ir(44, (uint32_t)irq12, 0x08, 0x8E);
+    idt_install_ir(45, (uint32_t)irq13, 0x08, 0x8E);
+    idt_install_ir(46, (uint32_t)irq14, 0x08, 0x8E);
+    idt_install_ir(47, (uint32_t)irq15, 0x08, 0x8E);
+
+    for (int i = 48; i < MAX_INTERRUPTS; i++)
     {
-        idt_install_ir(i, (uint32_t)irq_fallback, 0x08, 0x8E);
+        idt_install_ir(i, (uint32_t)isr_fallback, 0x08, 0x8E);
     }
 
     idt_load((uint32_t)&__idtr);
