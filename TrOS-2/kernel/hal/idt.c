@@ -14,7 +14,7 @@ static idt_descriptor __idt_descriptors[MAX_INTERRUPTS];
 #define IDT_DESC_RING3 0x60
 #define IDT_DESC_PRESENT 0x80
 
-extern void isr_fallback();
+extern void irq_fallback();
 
 extern void isr0 ();
 extern void isr1 ();
@@ -140,7 +140,7 @@ void idt_initialize()
 
     for (int i = 48; i < MAX_INTERRUPTS; i++)
     {
-        idt_install_ir(i, (uint32_t)isr_fallback, 0x08, 0x8E);
+        idt_install_ir(i, (uint32_t)irq_fallback, 0x08, 0x8E);
     }
 
     idt_load((uint32_t)&__idtr);

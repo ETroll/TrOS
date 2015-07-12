@@ -1,7 +1,6 @@
 ;
 ; Helper methods for IRQ handling
 
-extern isr_default_handler
 extern irq_default_handler
 
 global gdt_load
@@ -32,7 +31,7 @@ idt_load:
         cli
         push byte 0
         push byte %1
-        jmp isr_common
+        jmp irq_common
 %endmacro
 
 %macro IRQ_ERRCODE 1
@@ -40,7 +39,7 @@ idt_load:
     isr%1:
         cli
         push byte %1
-        jmp isr_common
+        jmp irq_common
 %endmacro
 
 %macro IRQ 2
@@ -53,14 +52,14 @@ idt_load:
 %endmacro
 
 ;rename: isr_fallback
-global isr_fallback
-isr_fallback:
+global irq_fallback
+irq_fallback:
     cli
     push byte 0
     push byte 0x0F
-    jmp isr_common
+    jmp irq_common
 
-isr_common:
+irq_common:
     pusha
     mov ax, ds              ; Lower 16-bits of eax = ds.
     push eax                ; Save the data segment descriptor
@@ -71,7 +70,7 @@ isr_common:
     mov fs, ax
     mov gs, ax
 
-    call isr_default_handler
+    call irq_default_handler
 
     pop ebx                 ; Reload the original data segment descriptor
     mov ds, bx
@@ -84,29 +83,6 @@ isr_common:
     sti
     iret                    ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 
-irq_common:
-    pusha
-    mov ax, ds
-    push eax
-
-    mov ax, 0x10
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    call irq_default_handler
-
-    pop ebx
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
-    mov gs, bx
-
-    popa
-    add esp, 8
-    sti
-    iret
 
 IRQ_NOERRCODE 0
 IRQ_NOERRCODE 1

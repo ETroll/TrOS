@@ -18,63 +18,71 @@ void printk(char* str, ...)
 
 			switch(*str)
 			{
-			case 'i':
-			case 'd':
-			{
-				//MINI itoa (Maybe break it out?)
-				int arg = *arguments;
-				char buffer[10];
-				int digit = 0;
-
-				if(arg < 0)
+				case 's':
 				{
-					vga_putch('-');
-					arg *= -1;
+					const char* str = (const char*)*arguments;
+					vga_puts(str);
 				}
+				break;
 
-				if(arg == 0)
+				case 'i':
+				case 'd':
 				{
-					vga_putch('0');
-				}
-				else
-				{
-					while (arg > 0 && digit <= 9)
+					//MINI itoa (Maybe break it out?)
+					int arg = *arguments;
+					char buffer[10];
+					int digit = 0;
+
+					if(arg < 0)
 					{
-						buffer[digit++] =  0x30 + (arg % 10);
-						arg = arg / 10;
+						vga_putch('-');
+						arg *= -1;
 					}
-					for(int i = digit-1; i>=0; i--)
-					{
-						vga_putch(buffer[i]);
-					}
-				}
-			}
-			break;
-			case 'x':
-			case 'X':
-			{
-				int arg = *arguments;
-				unsigned int nibble;
 
-				vga_putch('0');
-				vga_putch('x');
-				for(int i = 28; i >= 0; i-=4)
-				{
-					nibble = (arg >> i) & 0xF;
-					if(nibble > 9)
+					if(arg == 0)
 					{
-						nibble += 0x37;
+						vga_putch('0');
 					}
 					else
 					{
-						nibble += 0x30;
+						while (arg > 0 && digit <= 9)
+						{
+							buffer[digit++] =  0x30 + (arg % 10);
+							arg = arg / 10;
+						}
+						for(int i = digit-1; i>=0; i--)
+						{
+							vga_putch(buffer[i]);
+						}
 					}
-					vga_putch(nibble);
 				}
-			}
-			/* no break */
-			default:
-			break;
+				break;
+
+				case 'x':
+				case 'X':
+				{
+					int arg = *arguments;
+					unsigned int nibble;
+
+					vga_putch('0');
+					vga_putch('x');
+					for(int i = 28; i >= 0; i-=4)
+					{
+						nibble = (arg >> i) & 0xF;
+						if(nibble > 9)
+						{
+							nibble += 0x37;
+						}
+						else
+						{
+							nibble += 0x30;
+						}
+						vga_putch(nibble);
+					}
+				}
+				/* no break */
+				default:
+				break;
 			}
 		}
 		str++;

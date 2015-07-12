@@ -67,11 +67,12 @@ void vga_putch(char c)
     }
 }
 
-void vga_puts(char* str)
+void vga_puts(const char* str)
 {
     while (*str)
     {
         vga_putch(*str);
+        str++;
     }
 }
 
