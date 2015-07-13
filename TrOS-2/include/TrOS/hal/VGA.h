@@ -33,11 +33,19 @@ typedef struct
     vga_color_t font;
 } vga_char_attrib_t;
 
+typedef struct
+{
+    unsigned int x;
+    unsigned int y;
+} vga_position_t;
+
 void vga_move_cursor(unsigned int x, unsigned int y);
 void vga_putch(char c);
 void vga_puts(const char* str);
 void vga_clear_screen(vga_char_attrib_t* c);
 void vga_set_position(unsigned int x, unsigned int y);
 void vga_set_color(vga_char_attrib_t* c);
+vga_position_t vga_get_position();
+
 
 #endif

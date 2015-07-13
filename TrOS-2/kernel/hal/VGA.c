@@ -108,3 +108,12 @@ void vga_set_position(unsigned int x, unsigned int y)
     _xPos = x;
     _yPos = y;
 }
+
+vga_position_t vga_get_position()
+{
+    vga_position_t pos = {
+        .x = _xPos,
+        .y = _yPos
+    };
+    return pos;
+}

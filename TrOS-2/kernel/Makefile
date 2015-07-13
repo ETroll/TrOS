@@ -21,7 +21,7 @@ FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
 INCLUDES = ../include/
 LINKER_MAP = kernel.ld
-FOLDERS = . init hal irq ../clib
+FOLDERS = . init hal irq sys ../clib
 SOURCE =
 
 # SOURCE FILES

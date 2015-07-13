@@ -16,7 +16,7 @@ typedef struct registers
     uint32_t eip, cs, eflags, useresp, ss; // Pushed by the processor automatically.
 } cpu_registers_t;
 
-typedef void (*irq_handler)(cpu_registers_t);
+typedef void (*irq_handler)(cpu_registers_t*);
 
 void irq_initialize(void);
 void irq_default_handler();

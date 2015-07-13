@@ -55,8 +55,7 @@ void irq_initialize(void)
 
 void irq_default_handler(cpu_registers_t regs)
 {
-    printk("Recieved IRQ: %d \n", regs.irq_no);
-    if(regs.irq_no > 31)
+    if(regs.irq_no > 31 && regs.irq_no < 48)
     {
         pic_eoi(regs.irq_no);
     }
@@ -64,7 +63,7 @@ void irq_default_handler(cpu_registers_t regs)
     if (__irq_handlers[regs.irq_no] != 0)
     {
         irq_handler handler = __irq_handlers[regs.irq_no];
-        handler(regs);
+        handler(&regs);
     }
     else if(regs.irq_no < 32)
     {
@@ -72,6 +71,10 @@ void irq_default_handler(cpu_registers_t regs)
 		// we are in touble.. Lets panic. (We did not bring a towel..)
 		kernel_panic(irq_names[regs.irq_no], &regs);
     }
+	else
+	{
+		printk("Unhandled IRQ: %d\n", regs.irq_no);
+	}
 }
 
 int irq_handler_register(unsigned int irq, irq_handler handler)
