@@ -141,6 +141,8 @@ ldrmain:
     mov sp, 0xFFFF      ; stack grows to big.. IVT: (Phys:) 0x0000 -> 0x0400
     sti
 
+    mov [bootdevice], dl
+
 loadRootDirectory:
     mov si, msgSearch
     call print
@@ -236,6 +238,7 @@ loadImage:
 DONE:
     mov si, msgCRLF
     call print
+    mov dl, [bootdevice]
     push WORD 0x0050
     push WORD 0x0000
     retf
@@ -253,6 +256,7 @@ absoluteSector  db 0x00
 absoluteHead    db 0x00
 absoluteTrack   db 0x00
 
+bootdevice      db 0
 datasector      dw 0x0000
 cluster         dw 0x0000
 

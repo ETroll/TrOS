@@ -5,6 +5,7 @@
 #include <TrOS/hal/VGA.h>
 #include <TrOS/scheduler.h>
 #include <TrOS/irq.h>
+#include <multiboot.h>
 
 void kernel_early()
 {
@@ -23,11 +24,15 @@ void kernel_early()
 
 }
 
-void kernel_main()
+void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t magic)
 {
     kernel_early();
 
+    uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
 
+    printk("Got multiboot at: %x\n", multiboot);
+    printk("Kernel size: %d KB\n", (kernel_size*512)/1024); //it is in sectors
+    printk("Memory size %d MB\n", memSize/1024);
 
     //GenerateInterrupt(0x15);
     //GenerateInterrupt(0x26);
