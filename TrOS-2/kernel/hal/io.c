@@ -1,4 +1,4 @@
-#include <TrOS/hal/io.h>
+#include <tros/hal/io.h>
 
 
 unsigned char inb(unsigned short int port)

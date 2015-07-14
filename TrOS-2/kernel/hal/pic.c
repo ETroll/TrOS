@@ -1,5 +1,5 @@
-#include <TrOS/hal/pic.h>
-#include <TrOS/hal/io.h>
+#include <tros/hal/pic.h>
+#include <tros/hal/io.h>
 
 #define PIC1_CREG 0x20
 #define PIC2_CREG 0xA0

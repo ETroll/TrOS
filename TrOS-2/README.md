@@ -12,7 +12,17 @@ Some build tools have been created using go-lang. These tools create a floppy di
 
 ### Kernel
 
-The TrOS-2 kernel. :: TODO
+The TrOS-2 kernel is a hybrid 32bit kernel. It has the following features atm:
+
+ - Multiboot support
+ - :: TODO! Moar features!
+
+Planned features:
+
+ - Preemptive scheduling (simple scheuler)
+ - Memory management and protection
+ - Userland
+ - Integrated Lua support (Integrated in to shell)
 
 ### Userland
 

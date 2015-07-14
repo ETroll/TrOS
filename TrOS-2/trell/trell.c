@@ -1,7 +1,7 @@
 // Trell - TrOS default shell
 
 #include <trell/trell.h>
-#include <TrOS/hal/VGA.h>
+#include <tros/hal/VGA.h>
 
 #define TRELL_RCOLUMN_SIZE 11
 #define TRELL_CONSOLE_SIZE 69

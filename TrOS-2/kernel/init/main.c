@@ -1,10 +1,10 @@
 // Kernel.c
 // TrOS kernel - Main entry
 
-#include <TrOS/TrOS.h>
-#include <TrOS/hal/VGA.h>
-#include <TrOS/scheduler.h>
-#include <TrOS/irq.h>
+#include <tros/TrOS.h>
+#include <tros/hal/VGA.h>
+#include <tros/scheduler.h>
+#include <tros/irq.h>
 #include <multiboot.h>
 
 void kernel_early()

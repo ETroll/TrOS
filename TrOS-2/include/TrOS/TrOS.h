@@ -1,7 +1,7 @@
 #ifndef INCLUDE_KERNEL_H
 #define INCLUDE_KERNEL_H
 
-#include <TrOS/irq.h>
+#include <tros/irq.h>
 #define GenerateInterrupt(arg) __asm__("int %0\n" : : "N"((arg)) : "cc", "memory")
 
 //void printk_initialize(void (*putch)(char));

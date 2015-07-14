@@ -1,4 +1,4 @@
-#include <TrOS/TrOS.h>
+#include <tros/TrOS.h>
 
 void kernel_panic(const char* message, cpu_registers_t* regs)
 {
