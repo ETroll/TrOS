@@ -1,7 +1,7 @@
 #include <tros/hal/idt.h>
 #include <tros/hal/gdt.h>
 #include <tros/hal/pic.h>
-#include <tros/TrOS.h>
+#include <tros/tros.h>
 #include <tros/irq.h>
 
 static irq_handler __irq_handlers[MAX_IRQ];

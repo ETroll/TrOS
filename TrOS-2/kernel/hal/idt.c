@@ -2,7 +2,7 @@
 #include <tros/hal/io.h>
 #include <string.h>
 
-#include <tros/TrOS.h>
+#include <tros/tros.h>
 
 static idtr __idtr;
 static idt_descriptor __idt_descriptors[MAX_INTERRUPTS];

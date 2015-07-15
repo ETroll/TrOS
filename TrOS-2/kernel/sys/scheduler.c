@@ -2,7 +2,7 @@
 #include <tros/irq.h>
 #include <tros/hal/pit.h>
 #include <tros/hal/VGA.h>   //debug purposes for now
-#include <tros/TrOS.h>      //debug purposes for now
+#include <tros/tros.h>      //debug purposes for now
 
 unsigned int ticks;
 

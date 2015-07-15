@@ -1,26 +1,92 @@
 #include <tros/mmap.h>
+#include <string.h>
 
-void mmap_set(int bit)
+static unsigned int* __mmap_memory_map = 0;
+static unsigned int __mmap_max_blocks = 0;
+
+void mmap_initialize(unsigned int phys_loc, unsigned int max_blocks, unsigned int bpb)
 {
+    __mmap_memory_map = (unsigned int*)phys_loc;
+    __mmap_max_blocks = max_blocks;
 
+    memset (__mmap_memory_map, 0xf, (__mmap_max_blocks / bpb));
 }
 
-void mmap_unset(int bit)
+void mmap_set_used(int block)
 {
-
+    __mmap_memory_map[block / 32] |= (1 << (block % 32));
 }
 
-int mmap_test(int bit)
+void mmap_set_notused(int block)
 {
-    return 0;
+    __mmap_memory_map[block / 32] &= ~ (1 << (block % 32));
 }
 
-int mmap_first_free_frame()
+int mmap_test_block(int block)
 {
-    return 0;
+    return __mmap_memory_map[block / 32] &  (1 << (block % 32));
 }
 
-int mmap_first_free_size(unsigned int size)
+int mmap_get_first_free_block()
 {
-    return 0;
+    for(unsigned int i=0; i < (__mmap_max_blocks / 32); i++)
+    {
+        if(__mmap_memory_map[i] != 0xffffffff)
+        {
+            //We have at least one free frame, lets test the bits and find which one.
+            for(int j=0; j<32; j++)
+            {
+                int bit = 1 << j;
+                if(!(__mmap_memory_map[i] & bit))
+                {
+                    return i*4*8+j;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+int mmap_get_first_free_size(unsigned int size)
+{
+    if(size > 0)
+    {
+        if(size==1)
+        {
+            return mmap_get_first_free_block();
+        }
+        else
+        {
+            for(unsigned int i=0; i < (__mmap_max_blocks / 32); i++)
+            {
+                if(__mmap_memory_map[i] != 0xffffffff)
+                {
+                    for(int j=0; j<32; j++)
+                    {
+                        int bit = 1 << j;
+                        if(!(__mmap_memory_map[i] & bit))
+                        {
+                            int start_bit = (i*32) + bit;
+
+                            unsigned int free_bits = 0;
+                            for(unsigned int count=0; count<=size; count++)
+                            {
+                                if(!mmap_test_block(start_bit+count))
+                                {
+                                    free_bits++;
+                                }
+                                if(free_bits == size)
+                                {
+                                    return i*4*8+j;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return -1;
+
 }
