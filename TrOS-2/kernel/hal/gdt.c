@@ -1,5 +1,5 @@
-#include <TrOS/hal/gdt.h>
-#include <TrOS/TrOS.h>
+#include <tros/hal/gdt.h>
+#include <tros/tros.h>
 #include <string.h>
 
 static gdtr __gdtr;

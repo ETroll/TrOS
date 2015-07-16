@@ -1,3 +1,6 @@
+%ifndef __elf32_asm
+%define __elf32_asm
+
 bits 32
 
 %define EHDR_SIZE 52
@@ -42,3 +45,5 @@ struc Elf32_Shdr
     .sh_addralign   resd    1
     .sh_entsize     resd    1
 endstruc
+
+%endif

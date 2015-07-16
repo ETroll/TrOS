@@ -1,4 +1,4 @@
-ENTRY(kernel_main)
+ENTRY(kernel_init)
 SECTIONS
 {
     .text 0x100000 : /* 1M */

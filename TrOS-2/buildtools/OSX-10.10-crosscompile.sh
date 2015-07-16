@@ -1,6 +1,6 @@
 #! /bin/sh
 
-export PROJECT_HOME=~/Projects/Private/TrOS/
+export PROJECT_HOME=~/Projects/Private/tros/
 
 ###
 brew install gcc

@@ -1,8 +1,8 @@
-#include <TrOS/hal/idt.h>
-#include <TrOS/hal/io.h>
+#include <tros/hal/idt.h>
+#include <tros/hal/io.h>
 #include <string.h>
 
-#include <TrOS/TrOS.h>
+#include <tros/tros.h>
 
 static idtr __idtr;
 static idt_descriptor __idt_descriptors[MAX_INTERRUPTS];

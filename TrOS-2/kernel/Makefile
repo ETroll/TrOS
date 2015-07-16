@@ -5,7 +5,7 @@
 # # # # #
 
 # COMPILATION
-TOOLCHAIN = ~/Projects/Private/TrOS/Toolchains/gcc-i386-none-elf/bin/
+TOOLCHAIN = ~/Projects/Private/tros/Toolchains/gcc-i386-none-elf/bin/
 GCC = $(TOOLCHAIN)i386-elf-gcc
 COMPILER_ASM = nasm
 
@@ -21,7 +21,7 @@ FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
 INCLUDES = ../include/
 LINKER_MAP = kernel.ld
-FOLDERS = . init hal irq sys ../clib
+FOLDERS = . init hal irq sys mem ../clib
 SOURCE =
 
 # SOURCE FILES

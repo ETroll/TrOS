@@ -1,5 +1,5 @@
-#include <TrOS/hal/pit.h>
-#include <TrOS/hal/io.h>
+#include <tros/hal/pit.h>
+#include <tros/hal/io.h>
 
 #define PIT_8253_CLK 1193180
 

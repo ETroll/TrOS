@@ -1,5 +1,5 @@
-#include <TrOS/hal/VGA.h>
-#include <TrOS/hal/io.h>
+#include <tros/hal/VGA.h>
+#include <tros/hal/io.h>
 
 #define VGA_MEMORY 0xB8000
 #define VGA_CURSOR_IREG 0x3D4
