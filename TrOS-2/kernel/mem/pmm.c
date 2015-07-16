@@ -32,7 +32,8 @@ void pmm_init_region(unsigned int addr, unsigned int size)
         mmap_set_notused(i);
         __pmm_used_blocks--;
     }
-    //first block is always set. This insures allocs cant be 0
+    //First block is always set.
+    //This insures allocs cant be 0, since 0 is used for OOM
     mmap_set_used(0);
 }
 
@@ -51,7 +52,7 @@ void pmm_deinit_region(unsigned int addr, unsigned int size)
 
 void* pmm_alloc_block()
 {
-    if(pmm_get_free_block_count() > 0)
+    if(pmm_get_free_block_count() <= 0)
     {
         return 0;	//out of memory
     }
@@ -80,7 +81,7 @@ void pmm_free_block(void* blockptr)
 
 void* pmm_alloc_blocks(unsigned int size)
 {
-    if(pmm_get_free_block_count() > 0)
+    if(pmm_get_free_block_count() <= 0)
     {
         return 0;	//out of memory
     }

@@ -74,19 +74,6 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
         pmm_get_free_block_count());
 
 
-    uint32_t* p = (uint32_t*)pmm_alloc_block();
-    printk("\np allocated at 0x%x\n", (unsigned int)p);
-
-    uint32_t* p2 = (uint32_t*)pmm_alloc_blocks(2);
-    printk("allocated 2 blocks for p2 at 0x%x\n", (unsigned int)p2);
-
-    pmm_free_block(p);
-    p = (uint32_t*)pmm_alloc_blocks(4);
-    printk("Unallocated p to free block 1. p is reallocated to 0x%x\n", (unsigned int)p);
-
-    pmm_free_blocks(p,4);
-    pmm_free_blocks(p2, 2);
-
     //GenerateInterrupt(0x15);
     //GenerateInterrupt(0x26);
     //printk("Lets enable IRQ\n");
