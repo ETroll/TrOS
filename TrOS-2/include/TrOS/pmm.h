@@ -29,9 +29,10 @@ unsigned int pmm_get_use_block_count();
 unsigned int pmm_get_free_block_count();
 unsigned int pmm_get_block_count();
 unsigned int pmm_get_block_size();
-void pmm_paging_enable(int enable);
-int pmm_is_paging_enabled();
-void pmm_load_PDBR(unsigned int physical_addr);
-unsigned int pmmngr_get_PDBR();
+
+extern void pmm_paging_enable(int enable);
+extern int pmm_paging_is_enabled();
+extern void pmm_load_PDBR(unsigned int physical_addr);
+extern unsigned int pmmngr_get_PDBR();
 
 #endif
