@@ -7,7 +7,7 @@ pmm_paging_enable:
 	mov ebp,esp
 
     mov	eax, cr0
-	cmp [ebp+8], 1
+	cmp dword [ebp+8], 1
 	je	.enable
 	jmp .disable
 
