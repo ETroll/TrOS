@@ -6,6 +6,7 @@
 #include <tros/scheduler.h>
 #include <tros/irq.h>
 #include <tros/pmm.h>
+#include <tros/vmm.h>
 #include <multiboot.h>
 
 char* pmm_memory_types[] = {
@@ -27,7 +28,7 @@ void kernel_early()
 
     irq_initialize();
     scheduler_initialize(50);
-
+	__asm("sti");
 }
 
 void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t magic)
@@ -78,7 +79,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
     //GenerateInterrupt(0x26);
     //printk("Lets enable IRQ\n");
 
-    __asm("sti");   //Bad!
+	vmm_initialize();
+
 
     //dummy end stuff
     // vga_set_position(0,VGA_LINES-1);

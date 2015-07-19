@@ -9,6 +9,7 @@ jmp KRNLOAD_MAIN
 %include "elf32.asm"
 %include "multiboot.asm"
 %include "memory.asm"
+%include "paging.asm"
 
 bits 16
 
@@ -183,6 +184,8 @@ PROTECTED_MODE:
 	mov bh, 0
 	call VGA_SET_COLOR
 	call VGA_CLEAR_SCREEN
+
+	call PAGING_MINIMAL_ENABLE
 
 	; Create space for som local variables
 	;mov ebp, esp

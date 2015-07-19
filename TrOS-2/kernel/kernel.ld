@@ -1,7 +1,7 @@
 ENTRY(kernel_init)
 SECTIONS
 {
-    .text 0x100000 : /* 1M */
+    .text 0xC0000000 /*0x100000*/ : /* 1M */
     {
         code = .; _code = .; __code = .;
         *(.text)
