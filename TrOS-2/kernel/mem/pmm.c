@@ -138,29 +138,3 @@ unsigned int pmm_get_block_size()
 {
     return PMM_BLOCK_SIZE;
 }
-
-//TODO: Move these inline tasks in to the HAL instead
-void pmm_paging_enable(int enable)
-{
-
-
-}
-
-int pmm_is_paging_enabled()
-{
-    unsigned int result = 0;
-    __asm("mov %0, %%cr0" : "=r" (result));
-    return (result & 0x80000000) ? 0 : 1;
-}
-
-void pmm_load_PDBR(unsigned int physical_addr)
-{
-    __asm("mov %%cr3, %0" : : "r" (physical_addr));
-}
-
-unsigned int pmmngr_get_PDBR()
-{
-    unsigned int result = 0;
-    __asm("mov %0, %%cr3" : "=r" (result));
-    return result;
-}

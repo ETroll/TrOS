@@ -6,6 +6,7 @@
 #include <tros/scheduler.h>
 #include <tros/irq.h>
 #include <tros/pmm.h>
+#include <tros/vmm.h>
 #include <multiboot.h>
 
 char* pmm_memory_types[] = {
@@ -20,14 +21,14 @@ void kernel_early()
     //"init" VGA
     vga_char_attrib_t clr = {
     	.bg = VGA_BLACK,
-        .font = VGA_WHITE
+    	.font = VGA_WHITE
     };
     vga_clear_screen(&clr);
     vga_set_color(&clr);
 
     irq_initialize();
     scheduler_initialize(50);
-
+	__asm("sti");
 }
 
 void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t magic)
@@ -66,19 +67,20 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
             pmm_init_region(regions[i].startLo, regions[i].sizeLo);
         }
 	}
-    pmm_deinit_region(0x100000, kernel_size*512);
+	pmm_deinit_region(0x100000, kernel_size*512);
 
-    printk("\nBlocks initialized: %i\nUsed or reserved blocks: %i\nFree blocks: %i\n",
+	printk("\nBlocks initialized: %i\nUsed or reserved blocks: %i\nFree blocks: %i\n",
 		pmm_get_block_count(),
-        pmm_get_use_block_count(),
-        pmm_get_free_block_count());
+		pmm_get_use_block_count(),
+		pmm_get_free_block_count());
 
 
     //GenerateInterrupt(0x15);
     //GenerateInterrupt(0x26);
     //printk("Lets enable IRQ\n");
 
-    __asm("sti");   //Bad!
+	vmm_initialize();
+
 
     //dummy end stuff
     // vga_set_position(0,VGA_LINES-1);
