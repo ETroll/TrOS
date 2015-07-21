@@ -8,6 +8,7 @@
 #include <tros/pmm.h>
 #include <tros/vmm.h>
 #include <multiboot.h>
+#include <trell/trell.h>
 
 char* pmm_memory_types[] = {
 	"Available",
@@ -25,6 +26,7 @@ void kernel_early()
     };
     vga_clear_screen(&clr);
     vga_set_color(&clr);
+
 
     irq_initialize();
     scheduler_initialize(50);
@@ -80,7 +82,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
     //printk("Lets enable IRQ\n");
 
 	vmm_initialize();
-
+	trell_initialize();
 
     //dummy end stuff
     // vga_set_position(0,VGA_LINES-1);
