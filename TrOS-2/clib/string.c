@@ -12,6 +12,16 @@ char* strcpy(char* dest, const char* src)
     return dest;
 }
 
+int strcmp(const char* a, const char* b)
+{
+    int r = 0;
+    while(!r && *a && *b)
+    {
+        r = (*a++) - (*b++);
+    }
+    return (*a) - (*b);
+}
+
 unsigned int strlen (const char* str)
 {
     unsigned int len=0;

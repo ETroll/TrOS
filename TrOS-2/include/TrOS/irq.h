@@ -18,8 +18,10 @@ typedef struct registers
 
 typedef void (*irq_handler)(cpu_registers_t*);
 
-void irq_initialize(void);
+void irq_initialize();
+void irq_eoi(unsigned int irq);
 void irq_default_handler();
-int irq_handler_register(unsigned int irq, irq_handler handler);
+int irq_register_handler(unsigned int irq, irq_handler handler);
+//int irq_remove_handler(unsigned int irq, irq_handler handler);
 
 #endif

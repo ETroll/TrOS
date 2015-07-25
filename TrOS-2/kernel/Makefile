@@ -21,17 +21,15 @@ FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
 INCLUDES = ../include/
 LINKER_MAP = kernel.ld
-FOLDERS = . init hal irq sys mem ../clib
-SOURCE =
+FOLDERS = . init hal irq sys mem drivers ../clib
 
 # SOURCE FILES
-SRC_DIR := $(addprefix $(SOURCE), $(FOLDERS))
-SRC_GCC := $(foreach sdir, $(SRC_DIR), $(wildcard $(sdir)/*.c))
-SRC_AS := $(foreach sdir, $(SRC_DIR), $(wildcard $(sdir)/*.asm))
+SRC_GCC := $(foreach sdir, $(FOLDERS), $(wildcard $(sdir)/*.c))
+SRC_AS := $(foreach sdir, $(FOLDERS), $(wildcard $(sdir)/*.asm))
 
 # OBJECT FILES
-OBJECTS_AS := $(patsubst $(SOURCE)%.asm, $(DIR_OBJECT)%.o, $(SRC_AS))
-OBJECTS_GCC := $(patsubst $(SOURCE)%.c, $(DIR_OBJECT)%.o, $(SRC_GCC))
+OBJECTS_AS := $(patsubst %.asm, $(DIR_OBJECT)%.o, $(SRC_AS))
+OBJECTS_GCC := $(patsubst %.c, $(DIR_OBJECT)%.o, $(SRC_GCC))
 OBJECTS_ALL += $(OBJECTS_AS)
 OBJECTS_ALL += $(OBJECTS_GCC)
 
@@ -44,10 +42,10 @@ $(TARGET): $(DIR_BUILD) $(OBJECTS_AS) $(OBJECTS_GCC)
 	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(addprefix $(DIR_OBJECT), $(notdir $(OBJECTS_ALL))) -o $(DIR_BUILD)$(TARGET)
 
 $(OBJECTS_AS): $(DIR_OBJECT)
-	$(COMPILER_ASM) -f elf $(patsubst $(DIR_OBJECT)%.o, $(SOURCE)%.asm, $@) -o $(patsubst $(@D)%.o, $(DIR_OBJECT)%.o, $@)
+	$(COMPILER_ASM) -f elf $(patsubst $(DIR_OBJECT)%.o, %.asm, $@) -o $(patsubst $(@D)%.o, $(DIR_OBJECT)%.o, $@)
 
 $(OBJECTS_GCC): $(DIR_OBJECT)
-	$(GCC) $(FLAGS) -I$(INCLUDES) -c $(patsubst $(DIR_OBJECT)%.o, $(SOURCE)%.c, $@) -o $(patsubst $(@D)%.o, $(DIR_OBJECT)%.o, $@)
+	$(GCC) $(FLAGS) -I$(INCLUDES) -c $(patsubst $(DIR_OBJECT)%.o, %.c, $@) -o $(patsubst $(@D)%.o, $(DIR_OBJECT)%.o, $@)
 
 $(DIR_BUILD):
 	mkdir $@

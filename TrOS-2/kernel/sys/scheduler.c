@@ -13,13 +13,13 @@ static void scheduler_irq_callback(cpu_registers_t* regs)
     vga_set_position(67,0);
     printk("Ticks: %d\n", ticks);
     vga_set_position(pos.x, pos.y);
-
+    irq_eoi(0);
 }
 
 void scheduler_initialize(unsigned int frequency)
 {
     ticks = 0;
-    irq_handler_register(32, &scheduler_irq_callback);
+    irq_register_handler(32, &scheduler_irq_callback);
 
     pit_initialize(frequency);
 }
