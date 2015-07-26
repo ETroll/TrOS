@@ -5,7 +5,7 @@
 # # # # #
 
 # COMPILATION
-TOOLCHAIN = ~/Projects/Private/tros/Toolchains/gcc-i386-none-elf/bin/
+TOOLCHAIN = ../../Toolchains/gcc-i386-none-elf/bin/
 GCC = $(TOOLCHAIN)i386-elf-gcc
 COMPILER_ASM = nasm
 

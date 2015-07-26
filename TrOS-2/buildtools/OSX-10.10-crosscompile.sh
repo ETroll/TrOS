@@ -1,9 +1,11 @@
 #! /bin/sh
 
-export PROJECT_HOME=~/Projects/Private/tros/
+export PROJECT_HOME=~/Projects/tros/
 
 ###
-brew install gcc
+brew tap homebrew/versions
+brew install gcc49
+#brew install gcc
 
 cd $PROJECT_HOME
 mkdir Toolchains
@@ -17,9 +19,13 @@ export LD=/usr/local/bin/gcc-4.9
 export CFLAGS=-Wno-error
 
 cd tmp
-curl -O http://ftp.gnu.org/gnu/binutils/binutils-2.24.tar.gz
-curl -O http://ftp.gnu.org/gnu/gcc/gcc-4.9.0/gcc-4.9.0.tar.gz
+if ! [ -f binutils-2.24.tar.gz ]; then
+    curl -O http://ftp.gnu.org/gnu/binutils/binutils-2.24.tar.gz
+fi
 
+if ! [ -f gcc-4.9.0.tar.gz ]; then
+    curl -O http://ftp.gnu.org/gnu/gcc/gcc-4.9.0/gcc-4.9.0.tar.gz
+fi
 
 #binutils
 tar xvzf binutils-2.24.tar.gz
@@ -39,4 +45,4 @@ make all-gcc
 make install-gcc
 
 cd $PROJECT_HOME/Toolchains
-rm -rf tmp/
+#rm -rf tmp/
