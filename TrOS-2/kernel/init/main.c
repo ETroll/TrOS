@@ -83,7 +83,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
 	// ----------
 	pmm_deinit_region(0x100000, kernel_size*512);
 
-	printk("\nBlocks initialized: %i\nUsed or reserved blocks: %i\nFree blocks: %i\n",
+	printk("\nBlocks initialized: %i\nUsed or reserved blocks: %i\nFree blocks: %i\n\n",
 		pmm_get_block_count(),
 		pmm_get_use_block_count(),
 		pmm_get_free_block_count());

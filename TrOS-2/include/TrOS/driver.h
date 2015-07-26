@@ -8,8 +8,8 @@ typedef enum
 {
     DRV_NONE,
 	DRV_SERIAL,
-    DRV_HID,
-	DRV_FRAMEBUFFER
+    DRV_BLOCK,
+    DRV_HID
 } driver_t;
 
 typedef struct

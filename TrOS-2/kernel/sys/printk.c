@@ -25,6 +25,13 @@ void printk(char* str, ...)
 				}
 				break;
 
+				case 'c':
+				{
+					char arg = *arguments;
+					vga_putch(arg);
+				}
+				break;
+
 				case 'i':
 				case 'd':
 				{

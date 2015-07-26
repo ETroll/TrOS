@@ -91,3 +91,8 @@ int irq_register_handler(unsigned int irq, irq_handler handler)
         return irq;
     }
 }
+
+void irq_remove_handler(unsigned int irq)
+{
+	__irq_handlers[irq] = 0;
+}

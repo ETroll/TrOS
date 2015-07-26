@@ -107,6 +107,7 @@ void vga_set_position(unsigned int x, unsigned int y)
 {
     _xPos = x;
     _yPos = y;
+    vga_move_cursor(_xPos, _yPos);
 }
 
 vga_position_t vga_get_position()
