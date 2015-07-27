@@ -15,7 +15,7 @@ typedef struct {
 
 typedef unsigned int phy_address;
 
-void pmm_initialize(phy_address addr, unsigned int size);
+void pmm_initialize(unsigned int addr, unsigned int size, pmm_region_t* regions);
 
 //Enable a physical region for use with the PMM
 void pmm_init_region(phy_address addr, unsigned int size);

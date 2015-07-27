@@ -1,5 +1,6 @@
 #include <tros/mmap.h>
 #include <tros/pmm.h>
+#include <tros/tros.h>
 
 #define PMM_BLOCKS_PER_BYTE 8
 #define PMM_BLOCK_SIZE      4096
@@ -9,14 +10,48 @@ static unsigned int __pmm_memory_size = 0;
 static unsigned int __pmm_used_blocks = 0;
 static unsigned int __pmm_max_blocks = 0;
 
+char* pmm_memory_types[] = {
+	"Available",
+	"Reserved",
+	"ACPI Reclaim",
+	"ACPI NVS Memory"
+};
 
-void pmm_initialize(unsigned int addr, unsigned int size)
+void pmm_initialize(unsigned int addr, unsigned int size, pmm_region_t* regions)
 {
     __pmm_memory_size = size;
     __pmm_max_blocks =	((__pmm_memory_size*1024) / PMM_BLOCK_SIZE);
     __pmm_used_blocks = __pmm_max_blocks;
 
     mmap_initialize(addr, __pmm_max_blocks, PMM_BLOCKS_PER_BYTE);
+
+    printk("PMM initialized with %d KB physical memory\n", size);
+    printk("Physical Memory Map:\n");
+
+    for(int i=0; i<15; ++i)
+    {
+        if (regions[i].type > 4)
+        {
+            regions[i].type = 1;
+        }
+        if(i > 0 && regions[i].startLo == 0)
+        {
+            break;
+        }
+        printk("Region %d: Start %x Length %d KB Type: %d (%s)\n",
+            i,
+            regions[i].startLo,
+            regions[i].sizeLo / 1014,
+            regions[i].type,
+            pmm_memory_types[regions[i].type-1]);
+
+        if (regions[i].type == 1)
+        {
+            pmm_init_region(regions[i].startLo, regions[i].sizeLo);
+        }
+    }
+
+
 }
 
 void pmm_init_region(unsigned int addr, unsigned int size)

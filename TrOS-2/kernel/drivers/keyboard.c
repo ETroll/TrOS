@@ -145,7 +145,7 @@ void kbd_driver_remove()
 
 int kbd_read(char* buffer, unsigned int count)
 {
-    //TODO: Blocking IO call
+    //TODO: Make this a *blocking* IO call
     unsigned int read = 0;
 	while(read < count)
 	{
@@ -230,7 +230,7 @@ void kbd_irq_handler(cpu_registers_t* regs)
             key = kbd_ascii_keycode(key);
 
             rb_push(&_kb_data, key);
-            printk("%c", key);
+            //printk("%c", key);
         }
     }
     irq_eoi(1);
