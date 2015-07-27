@@ -149,5 +149,3 @@ int uart_close ()
 	uart_is_opened = 0;
 	return 1;
 }
-
-

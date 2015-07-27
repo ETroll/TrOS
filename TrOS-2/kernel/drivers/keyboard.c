@@ -2,143 +2,12 @@
 #include <tros/hal/io.h>
 #include <tros/irq.h>
 #include <tros/tros.h>
+#include <ds/ringbuffer.h>
 #include <string.h>
+#include <keyboard.h>
 
 #define KEY_DEVICE  0x60
 #define KEY_PENDING 0x64
-
-enum KEYCODE {
-    KEY_SPACE           = ' ',
-    KEY_0               = '0',
-    KEY_1               = '1',
-    KEY_2               = '2',
-    KEY_3               = '3',
-    KEY_4               = '4',
-    KEY_5               = '5',
-    KEY_6               = '6',
-    KEY_7               = '7',
-    KEY_8               = '8',
-    KEY_9               = '9',
-    KEY_A               = 'a',
-    KEY_B               = 'b',
-    KEY_C               = 'c',
-    KEY_D               = 'd',
-    KEY_E               = 'e',
-    KEY_F               = 'f',
-    KEY_G               = 'g',
-    KEY_H               = 'h',
-    KEY_I               = 'i',
-    KEY_J               = 'j',
-    KEY_K               = 'k',
-    KEY_L               = 'l',
-    KEY_M               = 'm',
-    KEY_N               = 'n',
-    KEY_O               = 'o',
-    KEY_P               = 'p',
-    KEY_Q               = 'q',
-    KEY_R               = 'r',
-    KEY_S               = 's',
-    KEY_T               = 't',
-    KEY_U               = 'u',
-    KEY_V               = 'v',
-    KEY_W               = 'w',
-    KEY_X               = 'x',
-    KEY_Y               = 'y',
-    KEY_Z               = 'z',
-    KEY_RETURN          = '\r',
-    KEY_ESCAPE          = 0x1001,
-    KEY_BACKSPACE       = '\b',
-    KEY_UP              = 0x1100,
-    KEY_DOWN            = 0x1101,
-    KEY_LEFT            = 0x1102,
-    KEY_RIGHT           = 0x1103,
-    KEY_F1              = 0x1201,
-    KEY_F2              = 0x1202,
-    KEY_F3              = 0x1203,
-    KEY_F4              = 0x1204,
-    KEY_F5              = 0x1205,
-    KEY_F6              = 0x1206,
-    KEY_F7              = 0x1207,
-    KEY_F8              = 0x1208,
-    KEY_F9              = 0x1209,
-    KEY_F10             = 0x120a,
-    KEY_F11             = 0x120b,
-    KEY_F12             = 0x120b,
-    KEY_F13             = 0x120c,
-    KEY_F14             = 0x120d,
-    KEY_F15             = 0x120e,
-    KEY_DOT             = '.',
-    KEY_COMMA           = ',',
-    KEY_COLON           = ':',
-    KEY_SEMICOLON       = ';',
-    KEY_SLASH           = '/',
-    KEY_BACKSLASH       = '\\',
-    KEY_PLUS            = '+',
-    KEY_MINUS           = '-',
-    KEY_ASTERISK        = '*',
-    KEY_EXCLAMATION     = '!',
-    KEY_QUESTION        = '?',
-    KEY_QUOTEDOUBLE     = '\"',
-    KEY_QUOTE           = '\'',
-    KEY_EQUAL           = '=',
-    KEY_HASH            = '#',
-    KEY_PERCENT         = '%',
-    KEY_AMPERSAND       = '&',
-    KEY_UNDERSCORE      = '_',
-    KEY_LEFTPARENTHESIS = '(',
-    KEY_RIGHTPARENTHESIS= ')',
-    KEY_LEFTBRACKET     = '[',
-    KEY_RIGHTBRACKET    = ']',
-    KEY_LEFTCURL        = '{',
-    KEY_RIGHTCURL       = '}',
-    KEY_DOLLAR          = '$',
-    KEY_POUND           = '#',
-    KEY_EURO            = '$',
-    KEY_LESS            = '<',
-    KEY_GREATER         = '>',
-    KEY_BAR             = '|',
-    KEY_GRAVE           = '`',
-    KEY_TILDE           = '~',
-    KEY_AT              = '@',
-    KEY_CARRET          = '^',
-    KEY_KP_0            = '0',
-    KEY_KP_1            = '1',
-    KEY_KP_2            = '2',
-    KEY_KP_3            = '3',
-    KEY_KP_4            = '4',
-    KEY_KP_5            = '5',
-    KEY_KP_6            = '6',
-    KEY_KP_7            = '7',
-    KEY_KP_8            = '8',
-    KEY_KP_9            = '9',
-    KEY_KP_PLUS         = '+',
-    KEY_KP_MINUS        = '-',
-    KEY_KP_DECIMAL      = '.',
-    KEY_KP_DIVIDE       = '/',
-    KEY_KP_ASTERISK     = '*',
-    KEY_KP_NUMLOCK      = 0x300f,
-    KEY_KP_ENTER        = 0x3010,
-    KEY_TAB             = 0x4000,
-    KEY_CAPSLOCK        = 0x4001,
-    KEY_LSHIFT          = 0x4002,
-    KEY_LCTRL           = 0x4003,
-    KEY_LALT            = 0x4004,
-    KEY_LWIN            = 0x4005,
-    KEY_RSHIFT          = 0x4006,
-    KEY_RCTRL           = 0x4007,
-    KEY_RALT            = 0x4008,
-    KEY_RWIN            = 0x4009,
-    KEY_INSERT          = 0x400a,
-    KEY_DELETE          = 0x400b,
-    KEY_HOME            = 0x400c,
-    KEY_END             = 0x400d,
-    KEY_PAGEUP          = 0x400e,
-    KEY_PAGEDOWN        = 0x400f,
-    KEY_SCROLLLOCK      = 0x4010,
-    KEY_PAUSE           = 0x4011,
-    KEY_UNKNOWN,
-    KEY_NUMKEYCODES
-};
 
 
 static int _kbd_scancode_map[] = {
@@ -232,7 +101,10 @@ static int _kbd_scancode_map[] = {
 static int _shift;
 static int _alt;
 static int _ctrl;
+static int _capslock;
 static char _scancode;
+
+static ringbuffer_t _kb_data;
 
 int kbd_read(char* buffer, unsigned int count);
 int kbd_ioctl(unsigned int num, unsigned long param);
@@ -240,7 +112,7 @@ int kbd_open();
 int kbd_close();
 void kbd_irq_handler(cpu_registers_t* regs);
 
-char kkybrd_key_to_ascii (enum KEYCODE code);
+char kbd_ascii_keycode(enum KEYCODE code);
 
 static driver_hid_t __kbdriver = {
     .read = kbd_read,
@@ -255,7 +127,13 @@ int kbd_driver_initialize()
         .driver = &__kbdriver
     };
 
+    _shift = 0;
+    _alt = 0;
+    _ctrl = 0;
+    _capslock = 0;
+
     printk("** Initalizing generic keyboard driver\n");
+    rb_init(&_kb_data);
     irq_register_handler(33, &kbd_irq_handler);
 	return driver_register(&drv);
 }
@@ -267,7 +145,16 @@ void kbd_driver_remove()
 
 int kbd_read(char* buffer, unsigned int count)
 {
-    return 0;
+    //TODO: Blocking IO call
+    unsigned int read = 0;
+	while(read < count)
+	{
+		if(rb_len(&_kb_data) > 0)
+		{
+			rb_pop(&_kb_data, &buffer[read++]);
+		}
+	}
+	return read;
 }
 
 int kbd_ioctl(unsigned int num, unsigned long param)
@@ -285,7 +172,7 @@ void kbd_irq_handler(cpu_registers_t* regs)
     if (scancode == 0xE0 || scancode == 0xE1)
     {
         _extended = 1;
-        printk("extended\n");
+        //printk("extended\n");
     }
     else
     {
@@ -319,8 +206,6 @@ void kbd_irq_handler(cpu_registers_t* regs)
             _scancode = scancode;
             int key = _kbd_scancode_map[scancode];
 
-            printk("%c", key);
-
             switch (key)
             {
                 case KEY_LCTRL:
@@ -337,10 +222,104 @@ void kbd_irq_handler(cpu_registers_t* regs)
                 case KEY_RALT:
                     _alt = 1;
                     break;
+                case KEY_CAPSLOCK:
+                    _capslock = (_capslock) ? 0 : 1;
+                    break;
             }
+
+            key = kbd_ascii_keycode(key);
+
+            rb_push(&_kb_data, key);
+            printk("%c", key);
         }
     }
-
-
     irq_eoi(1);
+}
+
+char kbd_ascii_keycode(enum KEYCODE code)
+{
+    unsigned char key = code;
+
+    if (key <= 0x7F)
+    {
+        if ((_shift || _capslock) && key >= 'a' && key <= 'z')
+        {
+            key -= 32;
+        }
+        else
+        {
+            if(_shift)
+            {
+                switch (key)
+                {
+                    case '0':
+                        key = KEY_RIGHTPARENTHESIS;
+                        break;
+                    case '1':
+                        key = KEY_EXCLAMATION;
+                        break;
+                    case '2':
+                        key = KEY_AT;
+                        break;
+                    case '3':
+                        key = KEY_EXCLAMATION;
+                        break;
+                    case '4':
+                        key = KEY_HASH;
+                        break;
+                    case '5':
+                        key = KEY_PERCENT;
+                        break;
+                    case '6':
+                        key = KEY_CARRET;
+                        break;
+                    case '7':
+                        key = KEY_AMPERSAND;
+                        break;
+                    case '8':
+                        key = KEY_ASTERISK;
+                        break;
+                    case '9':
+                        key = KEY_LEFTPARENTHESIS;
+                        break;
+                    case KEY_COMMA:
+                        key = KEY_LESS;
+                        break;
+                    case KEY_DOT:
+                        key = KEY_GREATER;
+                        break;
+                    case KEY_SLASH:
+                        key = KEY_QUESTION;
+                        break;
+                    case KEY_SEMICOLON:
+                        key = KEY_COLON;
+                        break;
+                    case KEY_QUOTE:
+                        key = KEY_QUOTEDOUBLE;
+                        break;
+                    case KEY_LEFTBRACKET :
+                        key = KEY_LEFTCURL;
+                        break;
+                    case KEY_RIGHTBRACKET :
+                        key = KEY_RIGHTCURL;
+                        break;
+                    case KEY_GRAVE:
+                        key = KEY_TILDE;
+                        break;
+                    case KEY_MINUS:
+                        key = KEY_UNDERSCORE;
+                        break;
+                    case KEY_PLUS:
+                        key = KEY_EQUAL;
+                        break;
+                    case KEY_BACKSLASH:
+                        key = KEY_BAR;
+                        break;
+                }
+            }
+        }
+
+        return key;
+    }
+    return 0;
 }
