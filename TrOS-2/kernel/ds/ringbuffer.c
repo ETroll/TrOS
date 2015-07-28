@@ -5,7 +5,7 @@ void rb_init(ringbuffer_t* rb)
     rb->start = rb->end = 0;
 }
 
-void rb_push(ringbuffer_t* rb, char data)
+void rb_push(ringbuffer_t* rb, int data)
 {
     rb->data[rb->end++] = data;
     if(rb->end > RB_BUF_SIZE)
@@ -14,7 +14,7 @@ void rb_push(ringbuffer_t* rb, char data)
     }
 }
 
-void rb_pop(ringbuffer_t* rb, char* data)
+void rb_pop(ringbuffer_t* rb, int* data)
 {
     (*data) = rb->data[rb->start++];
     if(rb->start > RB_BUF_SIZE)

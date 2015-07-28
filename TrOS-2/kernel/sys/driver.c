@@ -32,3 +32,22 @@ int driver_register(device_driver_t* driver)
 
     return next_driver_id++;
 }
+
+device_driver_t* driver_find_device(char* name)
+{
+    device_driver_t* driver = 0;
+    for (int i = 0; i < MAX_DRIVERS; i++)
+    {
+        if(strcmp(drivers[i].name, name) == 0)
+        {
+            driver = &drivers[i];
+            break;
+        }
+    }
+    return driver;
+}
+
+device_driver_t* driver_find_device_id(int id)
+{
+	return &drivers[id];
+}

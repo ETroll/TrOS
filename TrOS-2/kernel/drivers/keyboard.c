@@ -106,13 +106,13 @@ static char _scancode;
 
 static ringbuffer_t _kb_data;
 
-int kbd_read(char* buffer, unsigned int count);
+int kbd_read(int* buffer, unsigned int count);
 int kbd_ioctl(unsigned int num, unsigned long param);
 int kbd_open();
 int kbd_close();
 void kbd_irq_handler(cpu_registers_t* regs);
 
-char kbd_ascii_keycode(enum KEYCODE code);
+unsigned int kbd_translate_keycode(enum KEYCODE code);
 
 static driver_hid_t __kbdriver = {
     .read = kbd_read,
@@ -143,7 +143,7 @@ void kbd_driver_remove()
     irq_remove_handler(33);
 }
 
-int kbd_read(char* buffer, unsigned int count)
+int kbd_read(int* buffer, unsigned int count)
 {
     //TODO: Make this a *blocking* IO call
     unsigned int read = 0;
@@ -204,7 +204,7 @@ void kbd_irq_handler(cpu_registers_t* regs)
         else
         {
             _scancode = scancode;
-            int key = _kbd_scancode_map[scancode];
+            unsigned int key = _kbd_scancode_map[scancode];
 
             switch (key)
             {
@@ -226,100 +226,94 @@ void kbd_irq_handler(cpu_registers_t* regs)
                     _capslock = (_capslock) ? 0 : 1;
                     break;
             }
-
-            key = kbd_ascii_keycode(key);
+            key = kbd_translate_keycode(key);
 
             rb_push(&_kb_data, key);
-            //printk("%c", key);
         }
     }
     irq_eoi(1);
 }
 
-char kbd_ascii_keycode(enum KEYCODE code)
+unsigned int kbd_translate_keycode(enum KEYCODE code)
 {
-    unsigned char key = code;
+    unsigned int key = code;
 
-    if (key <= 0x7F)
+    if ((_shift || _capslock) && key >= 'a' && key <= 'z')
     {
-        if ((_shift || _capslock) && key >= 'a' && key <= 'z')
+        key -= 32;
+    }
+    else
+    {
+        if(_shift)
         {
-            key -= 32;
-        }
-        else
-        {
-            if(_shift)
+            switch (key)
             {
-                switch (key)
-                {
-                    case '0':
-                        key = KEY_RIGHTPARENTHESIS;
-                        break;
-                    case '1':
-                        key = KEY_EXCLAMATION;
-                        break;
-                    case '2':
-                        key = KEY_AT;
-                        break;
-                    case '3':
-                        key = KEY_EXCLAMATION;
-                        break;
-                    case '4':
-                        key = KEY_HASH;
-                        break;
-                    case '5':
-                        key = KEY_PERCENT;
-                        break;
-                    case '6':
-                        key = KEY_CARRET;
-                        break;
-                    case '7':
-                        key = KEY_AMPERSAND;
-                        break;
-                    case '8':
-                        key = KEY_ASTERISK;
-                        break;
-                    case '9':
-                        key = KEY_LEFTPARENTHESIS;
-                        break;
-                    case KEY_COMMA:
-                        key = KEY_LESS;
-                        break;
-                    case KEY_DOT:
-                        key = KEY_GREATER;
-                        break;
-                    case KEY_SLASH:
-                        key = KEY_QUESTION;
-                        break;
-                    case KEY_SEMICOLON:
-                        key = KEY_COLON;
-                        break;
-                    case KEY_QUOTE:
-                        key = KEY_QUOTEDOUBLE;
-                        break;
-                    case KEY_LEFTBRACKET :
-                        key = KEY_LEFTCURL;
-                        break;
-                    case KEY_RIGHTBRACKET :
-                        key = KEY_RIGHTCURL;
-                        break;
-                    case KEY_GRAVE:
-                        key = KEY_TILDE;
-                        break;
-                    case KEY_MINUS:
-                        key = KEY_UNDERSCORE;
-                        break;
-                    case KEY_PLUS:
-                        key = KEY_EQUAL;
-                        break;
-                    case KEY_BACKSLASH:
-                        key = KEY_BAR;
-                        break;
-                }
+                case '0':
+                    key = KEY_RIGHTPARENTHESIS;
+                    break;
+                case '1':
+                    key = KEY_EXCLAMATION;
+                    break;
+                case '2':
+                    key = KEY_AT;
+                    break;
+                case '3':
+                    key = KEY_EXCLAMATION;
+                    break;
+                case '4':
+                    key = KEY_HASH;
+                    break;
+                case '5':
+                    key = KEY_PERCENT;
+                    break;
+                case '6':
+                    key = KEY_CARRET;
+                    break;
+                case '7':
+                    key = KEY_AMPERSAND;
+                    break;
+                case '8':
+                    key = KEY_ASTERISK;
+                    break;
+                case '9':
+                    key = KEY_LEFTPARENTHESIS;
+                    break;
+                case KEY_COMMA:
+                    key = KEY_LESS;
+                    break;
+                case KEY_DOT:
+                    key = KEY_GREATER;
+                    break;
+                case KEY_SLASH:
+                    key = KEY_QUESTION;
+                    break;
+                case KEY_SEMICOLON:
+                    key = KEY_COLON;
+                    break;
+                case KEY_QUOTE:
+                    key = KEY_QUOTEDOUBLE;
+                    break;
+                case KEY_LEFTBRACKET :
+                    key = KEY_LEFTCURL;
+                    break;
+                case KEY_RIGHTBRACKET :
+                    key = KEY_RIGHTCURL;
+                    break;
+                case KEY_GRAVE:
+                    key = KEY_TILDE;
+                    break;
+                case KEY_MINUS:
+                    key = KEY_UNDERSCORE;
+                    break;
+                case KEY_PLUS:
+                    key = KEY_EQUAL;
+                    break;
+                case KEY_BACKSLASH:
+                    key = KEY_BAR;
+                    break;
             }
         }
-
-        return key;
     }
-    return 0;
+
+    return key;
 }

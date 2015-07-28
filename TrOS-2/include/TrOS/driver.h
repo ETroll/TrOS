@@ -21,7 +21,7 @@ typedef struct
 
 typedef struct
 {
-	int (*read) (char *buffer, unsigned int count);
+	int (*read) (int *buffer, unsigned int count);
 	int (*ioctl) (unsigned int num, unsigned long param);
     //int (*open) (void);
 	//int (*close) (void);
@@ -30,6 +30,7 @@ typedef struct
 //Set up the driver system
 void driver_initialize();
 int driver_register(device_driver_t* driver);
-
+device_driver_t* driver_find_device(char* name);
+device_driver_t* driver_find_device_id(int id);
 
 #endif
