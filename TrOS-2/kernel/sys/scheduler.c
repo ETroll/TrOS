@@ -4,9 +4,9 @@
 #include <tros/hal/VGA.h>   //debug purposes for now
 #include <tros/tros.h>      //debug purposes for now
 
-unsigned int ticks;
+static unsigned int ticks;
 
-static void scheduler_irq_callback(cpu_registers_t* regs)
+void scheduler_irq_callback(cpu_registers_t* regs)
 {
     ticks++;
     vga_position_t pos = vga_get_position();
@@ -22,4 +22,13 @@ void scheduler_initialize(unsigned int frequency)
     irq_register_handler(32, &scheduler_irq_callback);
 
     pit_initialize(frequency);
+}
+
+void scheduler_sleep(unsigned int wait)
+{
+    wait = wait + ticks;
+    while(wait > ticks)
+    {
+        __asm("nop;");
+    }
 }

@@ -17,16 +17,15 @@ char* pmm_memory_types[] = {
 	"ACPI NVS Memory"
 };
 
-void pmm_initialize(unsigned int addr, unsigned int size, pmm_region_t* regions)
+void pmm_initialize(phy_address bitmap, unsigned int size, pmm_region_t* regions)
 {
     __pmm_memory_size = size;
     __pmm_max_blocks =	((__pmm_memory_size*1024) / PMM_BLOCK_SIZE);
     __pmm_used_blocks = __pmm_max_blocks;
 
-    mmap_initialize(addr, __pmm_max_blocks, PMM_BLOCKS_PER_BYTE);
+    mmap_initialize(bitmap, __pmm_max_blocks, PMM_BLOCKS_PER_BYTE);
 
-    printk("PMM initialized with %d KB physical memory\n", size);
-    printk("Physical Memory Map:\n");
+    printk("\nPMM initialized with %d KB physical memory\n", size);
 
     for(int i=0; i<15; ++i)
     {

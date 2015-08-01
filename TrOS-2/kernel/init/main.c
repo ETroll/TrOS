@@ -8,11 +8,15 @@
 #include <tros/driver.h>
 #include <tros/pmm.h>
 #include <tros/vmm.h>
+#include <tros/hwdetect.h>
 #include <multiboot.h>
 #include <string.h>
 #include <keyboard.h>
 
 extern int kbd_driver_initialize();
+extern int floppy_driver_initialize(unsigned char device);
+
+
 void kernel_tmp_cmd();
 
 void kernel_early()
@@ -35,7 +39,24 @@ void kernel_early()
 void kernel_drivers()
 {
 	driver_initialize();
+
+	hwd_floppy_t fd = hwdetect_floppy_disks();
+	printk("FDC Primary is:   %s\n", fd.master_desc);
+	printk("FDC Secondary is: %s\n\n", fd.slave_desc);
+
 	kbd_driver_initialize();
+	if(fd.master > 0)
+	{
+		floppy_driver_initialize(0);
+	}
+	if(fd.slave > 0)
+	{
+		floppy_driver_initialize(1);
+	}
+
+	//TODO: RAMDISK DRIVER
+	//TODO: VFS DRIVER
+	//TODO: FAT DRIVER?
 }
 
 void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t magic)
@@ -45,7 +66,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
     uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
     pmm_region_t* regions = (pmm_region_t*)0x1000;
 
-    pmm_initialize(0x100000 + (kernel_size*512), memSize, regions);
+    pmm_initialize(0xC0000000 + (kernel_size*512), memSize, regions);
+
 	pmm_deinit_region(0x0, 0x100000); //Dont want to use first mb
 	pmm_deinit_region(0x100000, kernel_size*512);
 
@@ -68,6 +90,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
 
 void kernel_run_command(char* cmd)
 {
+	printk("Command: %s\n", cmd);
 	if(strcmp(cmd, "cls") == 0)
 	{
 		vga_char_attrib_t clr = {
@@ -83,6 +106,18 @@ void kernel_run_command(char* cmd)
 		printk(" - help: Displays this help message\n");
 		printk(" - cls:  Clears the display\n");
 	}
+	// else if(strcmp(cmd, "readsect") == 0)
+	// {
+	// 	driver_hid_t* fdd = (driver_hid_t*)driver_find_device("fdd")->driver;
+	// 	if(fdd != 0)
+	// 	{
+	//
+	// 	}
+	// 	else
+	// 	{
+	// 		printk("ERROR: Could not find a floppy disk drive\n");
+	// 	}
+	// }
 	else
 	{
 		printk("Unknown command\n");
@@ -96,7 +131,7 @@ void kernel_tmp_cmd()
 	int next_command = 0;
 	int key;
 	driver_hid_t* kbd = (driver_hid_t*)driver_find_device("kbd")->driver;
-
+	kbd->open();
 	while(1)
 	{
 		buffer_loc = 0;
@@ -150,4 +185,5 @@ void kernel_tmp_cmd()
 			}
 		}
 	}
+	kbd->close();
 }

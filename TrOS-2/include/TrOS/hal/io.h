@@ -7,7 +7,10 @@
 #ifndef INCLUDE_TROS_IO_H
 #define INCLUDE_TROS_IO_H
 
-unsigned char inb(unsigned short int port);
-void outb(unsigned char value, unsigned short int port);
+unsigned char pio_inb(unsigned short int port);
+void pio_outb(unsigned char value, unsigned short int port);
+
+unsigned char mmio_inb(unsigned short int port);
+void mmio_outb(unsigned char value, unsigned short int port);
 
 #endif

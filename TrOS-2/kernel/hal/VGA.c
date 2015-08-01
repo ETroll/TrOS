@@ -17,11 +17,11 @@ void vga_move_cursor(unsigned int x, unsigned int y)
     unsigned char mempos_low = mempos & 0xFF;
     unsigned char mempos_high = (mempos >> 8) & 0xFF;
 
-    outb(0x0F, VGA_CURSOR_IREG);
-    outb(mempos_low, VGA_CURSOR_DREG);
+    pio_outb(0x0F, VGA_CURSOR_IREG);
+    pio_outb(mempos_low, VGA_CURSOR_DREG);
 
-    outb(0x0E, VGA_CURSOR_IREG);
-    outb(mempos_high, VGA_CURSOR_DREG);
+    pio_outb(0x0E, VGA_CURSOR_IREG);
+    pio_outb(mempos_high, VGA_CURSOR_DREG);
 }
 
 void vga_putch(char c)

@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #define MAX_IRQ 256
+#define IRQ_BASE 32
 
 typedef struct registers
 {

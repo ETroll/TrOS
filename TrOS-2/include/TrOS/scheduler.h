@@ -5,5 +5,6 @@
 #define INCLUDE_TROS_SCHEDULER_H
 
 void scheduler_initialize(unsigned int frequency);
+void scheduler_sleep(unsigned int wait);
 
 #endif

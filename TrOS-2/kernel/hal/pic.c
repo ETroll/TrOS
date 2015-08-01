@@ -9,30 +9,30 @@
 void pic_initialize()
 {
 
-    outb(0x11, PIC1_CREG);
-    outb(0x11, PIC2_CREG);
+    pio_outb(0x11, PIC1_CREG);
+    pio_outb(0x11, PIC2_CREG);
 
     //Mapping IRQ0 -> IRQ32 und so weiter
-    outb(0x20, PIC1_DREG);
-    outb(0x28, PIC2_DREG);
+    pio_outb(0x20, PIC1_DREG);
+    pio_outb(0x28, PIC2_DREG);
 
     //Connect the PICs
-    outb(0x04, PIC1_DREG);
-    outb(0x02, PIC2_DREG);
+    pio_outb(0x04, PIC1_DREG);
+    pio_outb(0x02, PIC2_DREG);
 
     //Set X86 mode
-    outb(0x01, PIC1_DREG);
-    outb(0x01, PIC2_DREG);
+    pio_outb(0x01, PIC1_DREG);
+    pio_outb(0x01, PIC2_DREG);
 
-    outb(0x00, PIC1_DREG);
-    outb(0x00, PIC2_DREG);
+    pio_outb(0x00, PIC1_DREG);
+    pio_outb(0x00, PIC2_DREG);
 }
 
 void pic_eoi(unsigned int irq)
 {
     if (irq >= 40)
     {
-        outb(0x20, PIC2_CREG);
+        pio_outb(0x20, PIC2_CREG);
     }
-    outb(0x20, PIC1_CREG);
+    pio_outb(0x20, PIC1_CREG);
 }

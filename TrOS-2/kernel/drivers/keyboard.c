@@ -103,20 +103,23 @@ static int _alt;
 static int _ctrl;
 static int _capslock;
 static char _scancode;
+static char _is_open;
 
 static ringbuffer_t _kb_data;
 
 int kbd_read(int* buffer, unsigned int count);
 int kbd_ioctl(unsigned int num, unsigned long param);
 int kbd_open();
-int kbd_close();
+void kbd_close();
 void kbd_irq_handler(cpu_registers_t* regs);
 
 unsigned int kbd_translate_keycode(enum KEYCODE code);
 
 static driver_hid_t __kbdriver = {
     .read = kbd_read,
-    .ioctl = kbd_ioctl
+    .ioctl = kbd_ioctl,
+    .open = kbd_open,
+    .close = kbd_close
 };
 
 int kbd_driver_initialize()
@@ -126,20 +129,35 @@ int kbd_driver_initialize()
         .type = DRV_HID,
         .driver = &__kbdriver
     };
+    _is_open = 0;
 
+    printk("** Initalizing generic keyboard driver\n");
+	return driver_register(&drv);
+}
+
+
+int kbd_open()
+{
     _shift = 0;
     _alt = 0;
     _ctrl = 0;
     _capslock = 0;
+    _is_open = 1;
 
-    printk("** Initalizing generic keyboard driver\n");
     rb_init(&_kb_data);
-    irq_register_handler(33, &kbd_irq_handler);
-	return driver_register(&drv);
+    if(irq_register_handler(33, &kbd_irq_handler))
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
-void kbd_driver_remove()
+void kbd_close()
 {
+    _is_open = 0;
     irq_remove_handler(33);
 }
 
@@ -166,8 +184,8 @@ void kbd_irq_handler(cpu_registers_t* regs)
 {
     static int _extended = 0;
 
-    while(inb(KEY_PENDING) & 2);
-    int scancode = inb(KEY_DEVICE);
+    while(pio_inb(KEY_PENDING) & 2);
+    int scancode = pio_inb(KEY_DEVICE);
 
     if (scancode == 0xE0 || scancode == 0xE1)
     {
