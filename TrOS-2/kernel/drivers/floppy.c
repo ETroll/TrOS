@@ -9,6 +9,7 @@
 #include <tros/scheduler.h> //temp sleep location
 
 #define FLOPPY_IRQ 6
+#define FDD_SECTORS_PER_TRACK 18
 
 //FDD Controller IO ports
 enum FDD_OI_PORT
@@ -110,6 +111,13 @@ enum FDD_SECTOR_DTL
     FDD_SECTOR_DTL_1024 = 4
 };
 
+typedef struct
+{
+    int head;
+    int track;
+    int sector;
+} chs_t;
+
 void fdd_irq_handler(cpu_registers_t* regs);
 
 // Temp DMA functions before a generic DMA driver have been created
@@ -137,6 +145,7 @@ static void fdd_reset();
 static int fdd_calibrate();
 static void fdd_send_drivedata(unsigned int steprate, unsigned int load_time,
     unsigned int  unload_time, unsigned char dma);
+static chs_t fdd_lba_to_chs(int lba);
 
 static volatile unsigned char __fdd_irq_fired = 0;
 static unsigned char __fdd_current_drive = 0;
@@ -180,7 +189,7 @@ int floppy_open()
         fdd_reset();
 
         //steprate=13ms, load_time=1ms unload_time=15ms, DMA=ON
-        fdd_send_drivedata(13, 1, 15, 1);   //NOTE: Is this needed?
+        //fdd_send_drivedata(13, 1, 15, 1);   //NOTE: Is this needed?
 
         return 1;
     }
@@ -197,16 +206,69 @@ void floppy_close()
 
 void fdd_irq_handler(cpu_registers_t* regs)
 {
-    printk("Floppy IRQ!\n");
     __fdd_irq_fired = 1;
 
     irq_eoi(FLOPPY_IRQ);
 }
 
-
+//Sector comes as a Logical Block Address
 int floppy_read(unsigned char *buffer, unsigned int sector)
 {
-    return 0;
+    //TODO: Sett DMA to point to buffer addr
+
+    chs_t chs = fdd_lba_to_chs(sector);
+    fdd_motor_on();
+    printk("CHS: %d / %d / %d\n", chs.track, chs.head, chs.sector);
+
+    if(floppy_seek(chs.track, chs.head))
+    {
+        //read a block
+        unsigned int status = 0;
+        unsigned int cylinder = 0;
+        unsigned char result[7];
+
+        fdd_dma_read();
+
+        fdd_send_command(FDD_CMD_READ_SECT
+            | FDD_CMD_EXT_MULTITRACK
+            | FDD_CMD_EXT_SKIP
+            | FDD_CMD_EXT_DENSITY);
+
+        fdd_send_command(chs.head << 2 | __fdd_current_drive );
+        fdd_send_command(chs.track);
+        fdd_send_command(chs.head);
+        fdd_send_command(chs.sector);
+        fdd_send_command(FDD_SECTOR_DTL_512);
+        fdd_send_command(((sector + 1) >= FDD_SECTORS_PER_TRACK) ?
+            FDD_SECTORS_PER_TRACK :
+            sector + 1);
+        fdd_send_command(FDD_GAP3_LENGTH_3_5); //NOTE: Can change! Depends on device
+        fdd_send_command(0xFF);
+
+        fdd_wait_irq();
+
+        for(int i=0; i<7; i++)
+        {
+            result[i] = fdd_read_data();
+        }
+
+        fdd_check_interrupt_status(&status, &cylinder);
+
+        fdd_motor_off();
+
+        // unsigned char* tmp = (unsigned char*)DMA_BUFFER;
+        // for(int i = 0; i<512; i++)
+        // {
+        //     buffer[i] = tmp[i];
+        // }
+
+        //printk("%d - %d\n", chs.sector, result[5]);
+        return (int)(chs.sector- result[5]); //number of sectors read
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 int floppy_write(unsigned char *data, unsigned int sector)
@@ -241,7 +303,6 @@ int floppy_seek(unsigned int track, unsigned int head)
 
     return 0;
 }
-
 void fdd_dma_init()
 {
     pio_outb(0x06, 0x0a);
@@ -269,11 +330,23 @@ void fdd_dma_write()
     pio_outb(0x02, 0x0a);
 }
 
+static chs_t fdd_lba_to_chs(int lba)
+{
+    chs_t chs = {
+        .head = (lba % (FDD_SECTORS_PER_TRACK * 2)) / (FDD_SECTORS_PER_TRACK),
+        .track = lba / (FDD_SECTORS_PER_TRACK * 2),
+        .sector = lba % FDD_SECTORS_PER_TRACK + 1
+    };
+    return chs;
+}
+
 static void fdd_wait_irq()
 {
     //TODO: Maybe implement SIGNALS to replace this shit?
-    while(!__fdd_irq_fired);
-
+    while(__fdd_irq_fired == 0)
+    {
+        //printk(".");
+    }
     __fdd_irq_fired = 0;
 }
 
@@ -300,6 +373,7 @@ static void fdd_send_command(unsigned char cmd)
         if(pio_inb(FDD_IO_MSR) & FDD_MSR_MASK_DATAREG)
         {
             pio_outb(cmd, FDD_IO_FIFO);
+            break;
         }
     }
 }
@@ -312,6 +386,7 @@ static unsigned char fdd_read_data()
         if(pio_inb(FDD_IO_MSR) & FDD_MSR_MASK_DATAREG)
         {
             data = pio_inb(FDD_IO_FIFO);
+            break;
         }
     }
     return data;
@@ -341,13 +416,13 @@ static void fdd_motor_on()
         | motor
         | FDD_DOR_MASK_RESET
         | FDD_DOR_MASK_DMA, FDD_IO_DOR);
-	scheduler_sleep(20);
+	scheduler_sleep(5);
 }
 
 static void fdd_motor_off()
 {
     pio_outb(FDD_DOR_MASK_RESET, FDD_IO_DOR);
-	scheduler_sleep(20);
+	scheduler_sleep(5);
 }
 
 static void fdd_check_interrupt_status(unsigned int* status_reg0, unsigned int* cur_cylinder)
@@ -378,7 +453,6 @@ static int fdd_calibrate()
             return 1;
         }
     }
-
     //It failed! Oh noes!
     fdd_motor_off();
     return 0;
@@ -388,16 +462,15 @@ static void fdd_reset()
 {
     unsigned int status = 0;
     unsigned int cylinder = 0;
-
     pio_outb(0, FDD_IO_DOR);
     pio_outb(FDD_DOR_MASK_RESET | FDD_DOR_MASK_DMA, FDD_IO_DOR);
     fdd_wait_irq();
+
 
     for(int i=0; i<4; i++)
     {
         fdd_check_interrupt_status(&status, &cylinder);
     }
-
     pio_outb(0, FDD_IO_CTRL); //Sets transfer speed to 500Kb/s
 
     //steprate=3ms, load_time=16ms unload_time=240ms, DMA=ON

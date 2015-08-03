@@ -12,14 +12,18 @@ char* strcpy(char* dest, const char* src)
     return dest;
 }
 
-int strcmp(const char* a, const char* b)
+int strcmp(const char* str1, const char* str2)
 {
-    int r = 0;
-    while(!r && *a && *b)
+    while(*str1 == *str2)
     {
-        r = (*a++) - (*b++);
+        if(*str1 == '\0')
+        {
+            return 0;
+        }
+        str1++;
+        str2++;
     }
-    return (*a) - (*b);
+    return (*str1 - *str2);
 }
 
 unsigned int strlen (const char* str)

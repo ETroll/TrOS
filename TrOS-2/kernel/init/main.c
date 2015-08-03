@@ -11,6 +11,7 @@
 #include <tros/hwdetect.h>
 #include <multiboot.h>
 #include <string.h>
+#include <stdio.h>
 #include <keyboard.h>
 
 extern int kbd_driver_initialize();
@@ -90,8 +91,25 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
 
 void kernel_run_command(char* cmd)
 {
-	printk("Command: %s\n", cmd);
-	if(strcmp(cmd, "cls") == 0)
+	char* argv[5];	//NOTE: Hardcoded a maximum of 5 params for now
+	unsigned int argc = 1;
+
+	argv[0] = cmd;
+	while(*cmd++ != '\0' && argc < 5)
+	{
+		if(*cmd == ' ')
+		{
+			*cmd = '\0';
+			argv[argc++] = ++cmd;
+		}
+	}
+	// printk("Got command %s with %d parameters\n", argv[0], argc-1);
+	// for(int i=1; i<argc; i++)
+	// {
+	// 	printk("parameter %d: %s\n", i, argv[i]);
+	// }
+
+	if(strcmp(argv[0], "cls") == 0)
 	{
 		vga_char_attrib_t clr = {
 			.bg = VGA_BLACK,
@@ -99,25 +117,48 @@ void kernel_run_command(char* cmd)
 		};
 		vga_clear_screen(&clr);
 	}
-	else if(strcmp(cmd, "help") == 0)
+	else if(strcmp(argv[0], "help") == 0)
 	{
 		printk("TrOS-2 Help:\n");
 		printk("Commands:\n");
 		printk(" - help: Displays this help message\n");
 		printk(" - cls:  Clears the display\n");
 	}
-	// else if(strcmp(cmd, "readsect") == 0)
-	// {
-	// 	driver_hid_t* fdd = (driver_hid_t*)driver_find_device("fdd")->driver;
-	// 	if(fdd != 0)
-	// 	{
-	//
-	// 	}
-	// 	else
-	// 	{
-	// 		printk("ERROR: Could not find a floppy disk drive\n");
-	// 	}
-	// }
+	else if(strcmp(argv[0], "rs") == 0)
+	{
+		if(argc > 1)
+		{
+			driver_block_t* fdd = (driver_block_t*)driver_find_device("fdd")->driver;
+			if(fdd != 0)
+			{
+				fdd->open();
+
+				//Bit of a hack for now, since I hardcoded DMA to 0x1000
+				unsigned char* buffer = (unsigned char*)0x1000;
+
+				int sect = atoi(argv[1]);
+				//printk("Reading sector: %d\n", sect);
+				int num = fdd->read(buffer, sect);
+
+				for(int i = 0; i<10; i++)
+				{
+					printk("%x: %x\n", &buffer[i], buffer[i]);
+				}
+				printk("\n");
+				//printk("\n\n %d sectors read\n", num);
+
+				fdd->close();
+			}
+			else
+			{
+				printk("ERROR: Could not find a floppy disk drive\n");
+			}
+		}
+		else
+		{
+			printk("Usage: rs <sect>, where <sect> is a integer\n");
+		}
+	}
 	else
 	{
 		printk("Unknown command\n");
