@@ -6,13 +6,19 @@
 
 static unsigned int ticks;
 
-void scheduler_irq_callback(cpu_registers_t* regs)
+static vga_char_attrib_t menu_color = {
+    .bg = VGA_WHITE,
+    .font = VGA_BLACK
+};
+
+static void scheduler_irq_callback(cpu_registers_t* regs)
 {
     ticks++;
-    vga_position_t pos = vga_get_position();
-    vga_set_position(67,0);
-    printk("Ticks: %d\n", ticks);
-    vga_set_position(pos.x, pos.y);
+    //vga_position_t pos = vga_get_position();
+    //vga_set_position(69,23);
+    //vga_set_color(&menu_color);
+    //printk("Ticks: %d\n", ticks);
+    //vga_set_position(pos.x, pos.y);
     irq_eoi(0);
 }
 

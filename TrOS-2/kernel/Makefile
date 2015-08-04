@@ -21,7 +21,7 @@ FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
 INCLUDES = ../include/
 LINKER_MAP = kernel.ld
-FOLDERS = . ds init hal irq sys mem drivers ../clib
+FOLDERS = . ds init hal irq sys mem drivers ../clib ../trell
 
 # SOURCE FILES
 SRC_GCC := $(foreach sdir, $(FOLDERS), $(wildcard $(sdir)/*.c))
