@@ -4,10 +4,14 @@
 #ifndef INCLUDE_TROS_DRIVER_H
 #define INCLUDE_TROS_DRIVER_H
 
+#define TROS_DRIVER_OK          1
+#define TROS_DRIVER_WASOPEN     0
+#define TROS_DRIVER_ERROR       -1
+
 typedef enum
 {
     DRV_NONE,
-	DRV_SERIAL,
+    DRV_CHAR,
     DRV_BLOCK,
     DRV_HID
 } driver_t;
@@ -28,6 +32,16 @@ typedef struct
     int (*open) (void);
 	void (*close) (void);
 } driver_hid_t;
+
+typedef struct
+{
+	int (*read) (char *buffer, unsigned int count);
+    int (*write) (char *buffer, unsigned int count);
+    int (*seek) (unsigned int pos);
+	int (*ioctl) (unsigned int num, unsigned int param);
+    int (*open) (void);
+	void (*close) (void);
+} driver_char_t;
 
 typedef struct
 {

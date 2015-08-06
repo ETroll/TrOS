@@ -15,6 +15,7 @@
 
 extern int kbd_driver_initialize();
 extern int floppy_driver_initialize(unsigned char device);
+extern int vga_driver_initialize();
 
 void (*__putch)(char c);
 void (*__puts)(const char* str);
@@ -59,6 +60,8 @@ void kernel_drivers()
 		floppy_driver_initialize(1);
 	}
 
+	vga_driver_initialize();
+
 	//TODO: RAMDISK DRIVER
 	//TODO: VFS DRIVER
 	//TODO: FAT DRIVER?
@@ -73,7 +76,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
 
     pmm_initialize(0xC0000000 + (kernel_size*512), memSize, regions);
 
-	pmm_deinit_region(0x0, 0x100000); //Dont want to use first mb
+	//pmm_deinit_region(0x0, 0x100000); //Dont want to use first mb
 	pmm_deinit_region(0x100000, kernel_size*512);
 
 	printk("\nBlocks initialized: %i\nUsed or reserved blocks: %i\nFree blocks: %i\n\n",
@@ -84,9 +87,10 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
 	vmm_initialize();
 
 	kernel_drivers();
-	trell_initialize();
 
-	//kernel_tmp_cmd();
+
+	//Lets set up basic console
+	trell_initialize();
 
     while(1)
     {

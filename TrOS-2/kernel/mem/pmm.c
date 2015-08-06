@@ -44,7 +44,7 @@ void pmm_initialize(phy_address bitmap, unsigned int size, pmm_region_t* regions
             regions[i].type,
             pmm_memory_types[regions[i].type-1]);
 
-        if (regions[i].type == 1)
+        if (regions[i].type == 1 && regions[i].startLo != 0)
         {
             pmm_init_region(regions[i].startLo, regions[i].sizeLo);
         }
@@ -68,7 +68,7 @@ void pmm_init_region(unsigned int addr, unsigned int size)
     }
     //First block is always set.
     //This insures allocs cant be 0, since 0 is used for OOM
-    mmap_set_used(0);
+    //mmap_set_used(0);
 }
 
 void pmm_deinit_region(unsigned int addr, unsigned int size)

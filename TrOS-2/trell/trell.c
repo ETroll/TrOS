@@ -22,7 +22,6 @@ static char __trell_history[TRELL_MAX_HISTORY][TRELL_CONSOLE_SIZE];
 static unsigned int __trell_next_inputpos;
 static unsigned int __trell_current_viewpos;
 
-static void trell_draw_ui();
 static void trell_cmd();
 void trell_clear();
 
@@ -98,7 +97,7 @@ void kernel_run_command(char* cmd)
 
 				int sect = atoi(argv[1]);
 				//printk("Reading sector: %d\n", sect);
-				int num = fdd->read(buffer, sect);
+				fdd->read(buffer, sect);
 
 				for(int i = 0; i<10; i++)
 				{

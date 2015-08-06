@@ -36,24 +36,24 @@ void vga_putch(char c)
             _xPos = 0;
 
             //"scroll" if needed
-            // if(_yPos >= VGA_LINES)
-            // {
-            //     for (int i = 0; i < (VGA_LINES-1)*(VGA_COLS*2); i+=2)
-            //     {
-            //         vgamem[i] = vgamem[i+(VGA_COLS*2)];
-            //         vgamem[i+1] = vgamem[i+(VGA_COLS*2)+1];
-            //     }
-            //
-            //     for (int i = (VGA_LINES-1)*(VGA_COLS*2);
-            //         i < (VGA_COLS*2)*VGA_LINES;
-            //         i+=2)
-            //     {
-            //         vgamem[i] = ' ';
-            //         vgamem[i+1] = _char_attrib;
-            //     }
-            //
-            //     _yPos = (VGA_LINES-1);
-            // }
+            if(_yPos >= VGA_LINES)
+            {
+                for (int i = 0; i < (VGA_LINES-1)*(VGA_COLS*2); i+=2)
+                {
+                    vgamem[i] = vgamem[i+(VGA_COLS*2)];
+                    vgamem[i+1] = vgamem[i+(VGA_COLS*2)+1];
+                }
+
+                for (int i = (VGA_LINES-1)*(VGA_COLS*2);
+                    i < (VGA_COLS*2)*VGA_LINES;
+                    i+=2)
+                {
+                    vgamem[i] = ' ';
+                    vgamem[i+1] = _char_attrib;
+                }
+
+                _yPos = (VGA_LINES-1);
+            }
         }
         else
         {

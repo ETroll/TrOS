@@ -6,10 +6,10 @@
 
 static unsigned int ticks;
 
-static vga_char_attrib_t menu_color = {
-    .bg = VGA_WHITE,
-    .font = VGA_BLACK
-};
+// static vga_char_attrib_t menu_color = {
+//     .bg = VGA_WHITE,
+//     .font = VGA_BLACK
+// };
 
 static void scheduler_irq_callback(cpu_registers_t* regs)
 {
