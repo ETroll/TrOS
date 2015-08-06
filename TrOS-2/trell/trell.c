@@ -3,24 +3,25 @@
 #include <trell/trell.h>
 #include <tros/tros.h>
 #include <tros/driver.h>
-#include <tros/hal/VGA.h>
 #include <string.h>
 #include <stdio.h>
 #include <keyboard.h>
 
-
+#define VGA_COLS 80
 #define TRELL_RCOLUMN_SIZE 11
-#define TRELL_CONSOLE_SIZE VGA_COLS - TRELL_RCOLUMN_SIZE
-#define TRELL_CONSOLE_LINES 23
+#define TRELL_CONSOLE_COLS VGA_COLS // - TRELL_RCOLUMN_SIZE
+#define TRELL_CONSOLE_ROWS 25
 
 #define TRELL_MAX_HISTORY 400
 
 extern void (*__putch)(char c);
 extern void (*__puts)(const char* str);
 
-static char __trell_history[TRELL_MAX_HISTORY][TRELL_CONSOLE_SIZE];
-static unsigned int __trell_next_inputpos;
-static unsigned int __trell_current_viewpos;
+static char __trell_history[TRELL_MAX_HISTORY][TRELL_CONSOLE_COLS];
+static unsigned int __trell_line_top;
+static unsigned int __trell_line_bottom;
+static driver_char_t* __trell_vga_driver;
+
 
 static void trell_cmd();
 void trell_clear();
@@ -29,27 +30,76 @@ void trell_initialize()
 {
     __putch = trell_putch;
     __puts = trell_puts;
-    trell_clear();
 
-    printk("trell_history at %x\n", &__trell_history);
+    __trell_line_top = 0;
+    __trell_line_bottom = 0;
 
+    __trell_vga_driver = driver_find_device("vga")->driver;
+    __trell_vga_driver->open();
+
+    //Lets get information allready on screen and save it
+    __trell_vga_driver->ioctl(IOCTL_VGA_TOGGLE_CURSOR, 0);
+    __trell_vga_driver->ioctl(IOCTL_VGA_SHOULD_SCROLL, 1);
+
+
+    char rowbuf[TRELL_CONSOLE_COLS];
+    for(int pos = 0; pos < VGA_COLS*(TRELL_CONSOLE_ROWS-1);
+        pos+=VGA_COLS)
+    {
+        __trell_vga_driver->seek(pos);
+        __trell_vga_driver->read(rowbuf, TRELL_CONSOLE_COLS);
+
+        memcpy(rowbuf, __trell_history[__trell_line_bottom++],
+            TRELL_CONSOLE_COLS);
+    }
+
+    //Lets find our first free line from bottom-up
+    int last_sum = 0;
+    for(; __trell_line_bottom > __trell_line_top; __trell_line_bottom--)
+    {
+        int sum = 0;
+        for(int pos = 0; pos<TRELL_CONSOLE_COLS; pos++)
+        {
+            sum += (__trell_history[__trell_line_bottom][pos] - 0x20);
+        }
+
+        if(sum != 0 && last_sum == 0)
+        {
+            break;
+        }
+        else
+        {
+            last_sum = sum;
+        }
+    }
+
+    __trell_vga_driver->ioctl(IOCTL_VGA_TOGGLE_CURSOR, 1);
+    __trell_vga_driver->seek(__trell_line_bottom*VGA_COLS);
+
+    //printk("trell_history at %x\n", &__trell_history);
     trell_cmd();
+
+    __trell_vga_driver->close();
 }
 
 void trell_clear()
 {
-    __trell_next_inputpos = 0;
-    __trell_current_viewpos = 0;
+    __trell_line_top = 0;
+    __trell_line_bottom = 0;
     //redraw
 }
 
 void trell_putch(char c)
 {
-    vga_putch(c);
+    __trell_vga_driver->write(&c, 1);
 }
 void trell_puts(const char* str)
 {
-    vga_puts(str);
+    while (*str)
+    {
+        trell_putch(*str);
+        str++;
+    }
 }
 
 void kernel_run_command(char* cmd)
@@ -81,7 +131,8 @@ void kernel_run_command(char* cmd)
 		printk("TrOS-2 Help:\n");
 		printk("Commands:\n");
 		printk(" - help: Displays this help message\n");
-		printk(" - cls:  Clears the display\n");
+		printk(" - clr:  Clears the display\n");
+        printk(" - rs <sect>:  Reads the sector data from floppy\n");
 	}
 	else if(strcmp(argv[0], "rs") == 0)
 	{
@@ -182,11 +233,11 @@ static void trell_cmd()
 							cmd_buffer[buffer_loc-1] = ' ';
 							buffer_loc--;
 
-							vga_position_t pos = vga_get_position();
-							pos.x--;
-							vga_set_position(pos.x, pos.y);
-							vga_putch(' ');
-							vga_set_position(pos.x, pos.y);
+							// vga_position_t pos = vga_get_position();
+							// pos.x--;
+							// vga_set_position(pos.x, pos.y);
+							// vga_putch(' ');
+							// vga_set_position(pos.x, pos.y);
 						}
 					}
 					else
@@ -194,7 +245,7 @@ static void trell_cmd()
 						if(buffer_loc < 100)
 						{
 							cmd_buffer[buffer_loc++] = key;
-							vga_putch((char)key);
+							trell_putch((char)key);
 						}
 					}
 				}
