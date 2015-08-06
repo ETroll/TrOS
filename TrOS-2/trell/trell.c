@@ -20,6 +20,8 @@ extern void (*__puts)(const char* str);
 static char __trell_history[TRELL_MAX_HISTORY][TRELL_CONSOLE_COLS];
 static unsigned int __trell_line_top;
 static unsigned int __trell_line_bottom;
+static unsigned int __trell_line_pos;
+
 static driver_char_t* __trell_vga_driver;
 
 
@@ -33,13 +35,14 @@ void trell_initialize()
 
     __trell_line_top = 0;
     __trell_line_bottom = 0;
+    __trell_line_pos = 0;
 
     __trell_vga_driver = driver_find_device("vga")->driver;
     __trell_vga_driver->open();
 
     //Lets get information allready on screen and save it
     __trell_vga_driver->ioctl(IOCTL_VGA_TOGGLE_CURSOR, 0);
-    __trell_vga_driver->ioctl(IOCTL_VGA_SHOULD_SCROLL, 1);
+    __trell_vga_driver->ioctl(IOCTL_VGA_SHOULD_SCROLL, 0);
 
 
     char rowbuf[TRELL_CONSOLE_COLS];
@@ -86,12 +89,48 @@ void trell_clear()
 {
     __trell_line_top = 0;
     __trell_line_bottom = 0;
-    //redraw
+    __trell_line_pos = 0;
+    __trell_vga_driver->ioctl(IOCTL_VGA_CLEAR_MEM, 0);
+}
+
+void trell_newline()
+{
+    __trell_line_bottom++;
+    __trell_line_pos = 0;
+
+    if(__trell_line_bottom - __trell_line_top >= TRELL_CONSOLE_ROWS-1)
+    {
+        if(__trell_line_bottom >= TRELL_MAX_HISTORY)
+        {
+            //Remove 20 from history
+            //copy data to new location
+            //set history pointers
+        }
+
+        __trell_line_top++;
+        __trell_vga_driver->ioctl(IOCTL_VGA_SCROLL_UP, 1);
+        __trell_vga_driver->seek(VGA_COLS*(TRELL_CONSOLE_ROWS-1));
+    }
+    else
+    {
+        __trell_vga_driver->seek(VGA_COLS*(__trell_line_bottom-__trell_line_top));
+    }
+
 }
 
 void trell_putch(char c)
 {
-    __trell_vga_driver->write(&c, 1);
+    //NOTE: If we are not displaying the last entries, then scroll our collective
+    //      arses down to the last entries.
+    if (c == '\n'|| c == '\r' || __trell_line_pos > (TRELL_CONSOLE_COLS-1))
+    {
+        trell_newline();
+    }
+    else
+    {
+        __trell_history[__trell_line_bottom][__trell_line_pos++] = c;
+        __trell_vga_driver->write(&c, 1);
+    }
 }
 void trell_puts(const char* str)
 {

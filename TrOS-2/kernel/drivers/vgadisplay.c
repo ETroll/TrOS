@@ -93,6 +93,7 @@ int vga_drv_write(char* buffer, unsigned int count)
         {
             __vga_ypos++;
             __vga_xpos = 0;
+            vga_drv_write("X",1);
 
             if(__vga_should_autoscroll && __vga_ypos >= VGA_ROWS)
             {
@@ -184,10 +185,12 @@ int vga_drv_open()
 
 int vga_drv_seek(unsigned int pos)
 {
+    //printk("seek: %d (x: %d, y: %d)\n", pos, pos % VGA_COLS, pos / VGA_COLS);
     if(pos < (VGA_COLS * VGA_ROWS))
     {
         __vga_ypos = pos / VGA_COLS;
         __vga_xpos = pos % VGA_COLS;
+
         vga_drv_update_cursor();
         return TROS_DRIVER_OK;
     }
