@@ -1,4 +1,7 @@
-// Trell - TrOS default shell
+// Trell
+// A _highly_ inefficient half arsed excuse for a shell
+// Disclaimwer: Mostly written while drunk one friday night...
+// NOTE TO SOBER SELF: Rewrite stuff..!
 
 #include <trell/trell.h>
 #include <tros/tros.h>
@@ -18,8 +21,11 @@ extern void (*__putch)(char c);
 extern void (*__puts)(const char* str);
 
 static char __trell_history[TRELL_MAX_HISTORY][TRELL_CONSOLE_COLS];
-static unsigned int __trell_line_top;
-static unsigned int __trell_line_bottom;
+static unsigned int _wierd_alignment_bug;   //TODO! Big TODO! Figure out
+
+static unsigned int __trell_history_current;
+static unsigned int __trell_history_top;
+static unsigned int __trell_history_bottom;
 static unsigned int __trell_line_pos;
 
 static driver_char_t* __trell_vga_driver;
@@ -33,9 +39,16 @@ void trell_initialize()
     __putch = trell_putch;
     __puts = trell_puts;
 
-    __trell_line_top = 0;
-    __trell_line_bottom = 0;
+    _wierd_alignment_bug = 0;
+    __trell_history_current = 0;
+    __trell_history_top = 0;
+    __trell_history_bottom = 0;
     __trell_line_pos = 0;
+
+    for(int i = 0; i<TRELL_MAX_HISTORY; i++)
+    {
+        memset(__trell_history[i], 0x20, TRELL_CONSOLE_COLS);
+    }
 
     __trell_vga_driver = driver_find_device("vga")->driver;
     __trell_vga_driver->open();
@@ -45,25 +58,22 @@ void trell_initialize()
     __trell_vga_driver->ioctl(IOCTL_VGA_SHOULD_SCROLL, 0);
 
 
-    char rowbuf[TRELL_CONSOLE_COLS];
     for(int pos = 0; pos < VGA_COLS*(TRELL_CONSOLE_ROWS-1);
         pos+=VGA_COLS)
     {
         __trell_vga_driver->seek(pos);
-        __trell_vga_driver->read(rowbuf, TRELL_CONSOLE_COLS);
+        __trell_vga_driver->read(__trell_history[__trell_history_bottom++], TRELL_CONSOLE_COLS);
 
-        memcpy(rowbuf, __trell_history[__trell_line_bottom++],
-            TRELL_CONSOLE_COLS);
     }
 
     //Lets find our first free line from bottom-up
     int last_sum = 0;
-    for(; __trell_line_bottom > __trell_line_top; __trell_line_bottom--)
+    for(; __trell_history_bottom > __trell_history_top; __trell_history_bottom--)
     {
         int sum = 0;
         for(int pos = 0; pos<TRELL_CONSOLE_COLS; pos++)
         {
-            sum += (__trell_history[__trell_line_bottom][pos] - 0x20);
+            sum += (__trell_history[__trell_history_bottom][pos] - 0x20);
         }
 
         if(sum != 0 && last_sum == 0)
@@ -76,10 +86,14 @@ void trell_initialize()
         }
     }
 
-    __trell_vga_driver->ioctl(IOCTL_VGA_TOGGLE_CURSOR, 1);
-    __trell_vga_driver->seek(__trell_line_bottom*VGA_COLS);
+    __trell_history_bottom++;
 
-    //printk("trell_history at %x\n", &__trell_history);
+    __trell_vga_driver->ioctl(IOCTL_VGA_TOGGLE_CURSOR, 1);
+    __trell_vga_driver->seek(__trell_history_bottom*VGA_COLS);
+
+    __trell_history_current = __trell_history_bottom;
+
+    //printk("trell_history at %x", &__trell_history);
     trell_cmd();
 
     __trell_vga_driver->close();
@@ -87,33 +101,56 @@ void trell_initialize()
 
 void trell_clear()
 {
-    __trell_line_top = 0;
-    __trell_line_bottom = 0;
+    __trell_history_top = 0;
+    __trell_history_bottom = 0;
+    __trell_history_current = 0;
     __trell_line_pos = 0;
     __trell_vga_driver->ioctl(IOCTL_VGA_CLEAR_MEM, 0);
 }
 
+void trell_refresh()
+{
+    int seekpos = 0;
+    for(int i = __trell_history_top; i<__trell_history_bottom+1; i++)
+    {
+        __trell_vga_driver->seek(seekpos);
+        __trell_vga_driver->write(__trell_history[i], TRELL_CONSOLE_COLS);
+        seekpos+=VGA_COLS;
+    }
+
+    if(__trell_history_current - __trell_history_top >= TRELL_CONSOLE_ROWS-1)
+    {
+        __trell_vga_driver->seek(VGA_COLS*(TRELL_CONSOLE_ROWS-1)+__trell_line_pos);
+    }
+    else
+    {
+        __trell_vga_driver->seek(VGA_COLS*(__trell_history_bottom-__trell_history_top+__trell_line_pos));
+    }
+    __trell_vga_driver->ioctl(IOCTL_VGA_TOGGLE_CURSOR, 1);
+}
+
 void trell_newline()
 {
-    __trell_line_bottom++;
+    __trell_history_current++;
     __trell_line_pos = 0;
 
-    if(__trell_line_bottom - __trell_line_top >= TRELL_CONSOLE_ROWS-1)
+    if(__trell_history_current - __trell_history_top >= TRELL_CONSOLE_ROWS)
     {
-        if(__trell_line_bottom >= TRELL_MAX_HISTORY)
+        if(__trell_history_current >= TRELL_MAX_HISTORY)
         {
-            //Remove 20 from history
+            //Remove 100 from history
             //copy data to new location
             //set history pointers
         }
 
-        __trell_line_top++;
+        __trell_history_top++;
+        __trell_history_bottom++;
         __trell_vga_driver->ioctl(IOCTL_VGA_SCROLL_UP, 1);
         __trell_vga_driver->seek(VGA_COLS*(TRELL_CONSOLE_ROWS-1));
     }
     else
     {
-        __trell_vga_driver->seek(VGA_COLS*(__trell_line_bottom-__trell_line_top));
+        __trell_vga_driver->seek(VGA_COLS*(__trell_history_bottom-__trell_history_top));
     }
 
 }
@@ -122,13 +159,30 @@ void trell_putch(char c)
 {
     //NOTE: If we are not displaying the last entries, then scroll our collective
     //      arses down to the last entries.
+    //      - Seek to correct location for next char
+    //      - Move history back to reality
+
+    if(__trell_history_bottom != __trell_history_current)
+    {
+        __trell_history_bottom = __trell_history_current;
+        if(__trell_history_bottom-TRELL_CONSOLE_ROWS > 0)
+        {
+            __trell_history_top = __trell_history_bottom - (TRELL_CONSOLE_ROWS-1);
+        }
+        else
+        {
+            __trell_history_top = 0;
+        }
+        trell_refresh();
+    }
+
     if (c == '\n'|| c == '\r' || __trell_line_pos > (TRELL_CONSOLE_COLS-1))
     {
         trell_newline();
     }
     else
     {
-        __trell_history[__trell_line_bottom][__trell_line_pos++] = c;
+        __trell_history[__trell_history_current][__trell_line_pos++] = c;
         __trell_vga_driver->write(&c, 1);
     }
 }
@@ -251,7 +305,16 @@ static void trell_cmd()
 					}
                     else if(key == KEY_PAGEUP)
 					{
-                        printk("PGUP\n");
+                        if(__trell_history_top != 0)
+                        {
+                            __trell_history_top--;
+                            __trell_history_bottom--;
+
+                            __trell_vga_driver->ioctl(IOCTL_VGA_TOGGLE_CURSOR, 0);
+                            __trell_vga_driver->ioctl(IOCTL_VGA_SCROLL_DOWN, 1);
+                            __trell_vga_driver->seek(0);
+                            __trell_vga_driver->write(__trell_history[__trell_history_top], TRELL_CONSOLE_COLS);
+                        }
                     }
                     else if(key == KEY_PAGEDOWN)
 					{

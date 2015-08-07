@@ -64,15 +64,14 @@ int vga_drv_read(char* buffer, unsigned int count)
     //NOTE: Something "Special" about this read is that it does not move
     //      any pointers at all like a normal read would
     int bytes_read = 0;
-    unsigned char vga_xpos = __vga_xpos;
-    unsigned char vga_ypos = __vga_ypos;
+    unsigned int memloc = (__vga_xpos * 2)+(__vga_ypos * VGA_COLS *2);
 
     for(; bytes_read<count; bytes_read++)
     {
-        unsigned int memloc = (vga_xpos * 2)+(vga_ypos * VGA_COLS *2);
         if(memloc < VGA_MEM_SIZE)
         {
             buffer[bytes_read] = __vga_mem[memloc];
+            memloc+=2;
         }
         else
         {
@@ -93,7 +92,6 @@ int vga_drv_write(char* buffer, unsigned int count)
         {
             __vga_ypos++;
             __vga_xpos = 0;
-            vga_drv_write("X",1);
 
             if(__vga_should_autoscroll && __vga_ypos >= VGA_ROWS)
             {
@@ -185,7 +183,6 @@ int vga_drv_open()
 
 int vga_drv_seek(unsigned int pos)
 {
-    //printk("seek: %d (x: %d, y: %d)\n", pos, pos % VGA_COLS, pos / VGA_COLS);
     if(pos < (VGA_COLS * VGA_ROWS))
     {
         __vga_ypos = pos / VGA_COLS;
