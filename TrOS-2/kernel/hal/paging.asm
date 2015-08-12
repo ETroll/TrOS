@@ -63,6 +63,17 @@ paging_get_PDBR:
 	pop ebp
 	ret; 4
 
+global paging_error_addr
+paging_error_addr:
+	push ebp
+	mov ebp,esp
+
+    mov eax, cr2
+
+	mov esp, ebp
+	pop ebp
+	ret; 4
+
 global paging_flush_tlb_entry
 paging_flush_tlb_entry:
 	push ebp

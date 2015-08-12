@@ -10,6 +10,11 @@
 #include <stdio.h>
 #include <keyboard.h>
 
+//Temp
+
+#include <tros/pmm.h>
+#include <tros/mmap.h>
+
 #define VGA_COLS 80
 #define TRELL_RCOLUMN_SIZE 11
 #define TRELL_CONSOLE_COLS VGA_COLS // - TRELL_RCOLUMN_SIZE
@@ -226,6 +231,30 @@ void kernel_run_command(char* cmd)
 		printk(" - help: Displays this help message\n");
 		printk(" - clr:  Clears the display\n");
         printk(" - rs <sect>:  Reads the sector data from floppy\n");
+	}
+    else if(strcmp(argv[0], "mmap") == 0)
+	{
+        if(argc > 1)
+        {
+            unsigned int num_blocks = 32;
+            unsigned int start_block = atoi(argv[1]);
+            if(argc == 3)
+            {
+                num_blocks = atoi(argv[2]);
+            }
+
+            for(int block = start_block; block<(num_blocks+start_block); block++)
+            {
+                int taken = mmap_test_block(block);
+                unsigned int addr = block * 4096;
+                printk("Block: %x is %s\n", addr, taken == 0 ? "FREE" :"TAKEN");
+            }
+
+        }
+        else
+        {
+            printk("Usage: \n");
+        }
 	}
 	else if(strcmp(argv[0], "rs") == 0)
 	{

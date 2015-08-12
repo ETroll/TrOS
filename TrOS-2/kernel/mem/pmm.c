@@ -23,7 +23,7 @@ void pmm_initialize(phy_address bitmap, unsigned int size, pmm_region_t* regions
     __pmm_max_blocks =	((__pmm_memory_size*1024) / PMM_BLOCK_SIZE);
     __pmm_used_blocks = __pmm_max_blocks;
 
-    mmap_initialize(bitmap, __pmm_max_blocks, PMM_BLOCKS_PER_BYTE);
+    mmap_initialize(bitmap, __pmm_max_blocks);
 
     printk("\nPMM initialized with %d KB physical memory\n", size);
 
@@ -44,12 +44,15 @@ void pmm_initialize(phy_address bitmap, unsigned int size, pmm_region_t* regions
             regions[i].type,
             pmm_memory_types[regions[i].type-1]);
 
-        if (regions[i].type == 1 && regions[i].startLo != 0)
+        if (regions[i].type == 1) // && regions[i].startLo != 0)
         {
             pmm_init_region(regions[i].startLo, regions[i].sizeLo);
         }
     }
+	mmap_set_used(0); //0x00000000 used for "out of mem"
+	mmap_set_used(1);
 
+	printk("Memory map at: %x\n", bitmap);
 
 }
 
@@ -61,14 +64,12 @@ void pmm_init_region(unsigned int addr, unsigned int size)
     unsigned int num_blocks = size / PMM_BLOCK_SIZE;
     unsigned int end_block = start_block + num_blocks;
 
+	//printk("Init region for use. Start %d, stop %d\n", start_block, end_block);
     for (int i = start_block; i<=end_block; i++)
     {
         mmap_set_notused(i);
         __pmm_used_blocks--;
     }
-    //First block is always set.
-    //This insures allocs cant be 0, since 0 is used for OOM
-    //mmap_set_used(0);
 }
 
 void pmm_deinit_region(unsigned int addr, unsigned int size)
@@ -101,6 +102,8 @@ void* pmm_alloc_block()
     unsigned int addr = block * PMM_BLOCK_SIZE;
     __pmm_used_blocks++;
 
+	//printk("Allocating block %d (%x)\n", block, addr);
+
     return (void*)addr;
 }
 
@@ -132,6 +135,8 @@ void* pmm_alloc_blocks(unsigned int size)
     }
     unsigned int block_addr = start_block * PMM_BLOCK_SIZE;
     __pmm_used_blocks+=size;
+
+	//printk("Allocating %d blocks %d (%x)\n", size, start_block, block_addr);
 
     return (void*)block_addr;
 }

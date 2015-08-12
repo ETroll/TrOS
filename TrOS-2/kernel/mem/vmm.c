@@ -1,5 +1,7 @@
 #include <tros/vmm.h>
 #include <tros/pmm.h>
+#include <tros/irq.h>
+#include <tros/tros.h>
 #include <string.h>
 
 #define PAGE_DIRECTORY_INDEX(x) (((x) >> 22) & 0x3ff)
@@ -17,33 +19,40 @@ extern void paging_flush_tlb_entry(vrt_address addr);
 extern void paging_enable(int enable);
 extern void paging_load_PDBR(phy_address addr);
 extern unsigned int paging_get_PDBR();
+extern unsigned int paging_error_addr();
 
-void vmm_initialize()
+void vmm_pagefault_handler(cpu_registers_t* regs);
+
+int vmm_initialize()
 {
     ptable_t* table_default = (ptable_t*)pmm_alloc_block();
     if(!table_default)
     {
-        return;
+        return VMM_ERROR_NOMEM;
     }
 
     ptable_t* table_3_gb = (ptable_t*)pmm_alloc_block();
     if(!table_3_gb)
     {
-        return;
+        return VMM_ERROR_NOMEM;
     }
 
     vmm_ptable_clear(table_default);
     vmm_ptable_clear(table_3_gb);
 
     //Identity mapping
-    for(int i=0, block=0x0, virt=0x00000000; i<1024; i++, block+=4096, virt+=4096)
+    printk("VMM Identitymapped from %x ", 0);
+    unsigned int last_addr = 0;
+    for(int i=0, block=0x0, virt=0x00000000; i<256; i++, block+=4096, virt+=4096)
     {
        pte_t page = 0;
        pte_add_attribute(&page, PTE_PRESENT);
        pte_set_block(&page, block);
 
        table_default->entries[PAGE_TABLE_INDEX(virt)] = page;
+       last_addr = virt;
     }
+    printk("to %x \n", last_addr+4096);
 
     for (int i=0, block=0x100000, virt=0xc0000000; i<1024; i++, block+=4096, virt+=4096)
     {
@@ -54,10 +63,11 @@ void vmm_initialize()
        table_3_gb->entries[PAGE_TABLE_INDEX(virt)] = page;
     }
 
-    pdirectory_t* dir = (pdirectory_t*)pmm_alloc_blocks(3);
+    pdirectory_t* dir = (pdirectory_t*)pmm_alloc_block();
+    //printk("Dir: %x %x", dir, *dir);
     if (!dir)
     {
-        return;
+        return VMM_ERROR_NOMEM;
     }
 
     vmm_pdirectory_clear(dir);
@@ -76,8 +86,11 @@ void vmm_initialize()
 
     //TODO: Make the updating of pdbr variable happen in vmm_switch_pdirectory
     vmm_switch_pdirectory(dir);
+
+    irq_register_handler(14, vmm_pagefault_handler);
     paging_enable(1);
 
+    return VMM_OK;
 }
 
 void vmm_map_page(void* phys, void* virt)
@@ -202,4 +215,39 @@ pde_t* vmm_pdirectory_lookup_entry(pdirectory_t* dir, vrt_address addr)
     {
         return 0;
     }
+}
+
+void vmm_pagefault_handler(cpu_registers_t* regs)
+{
+    unsigned int faulting_address = paging_error_addr();
+
+
+    int not_present = !(regs->err_code & 0x1);
+    int write_operation = regs->err_code & 0x2;
+    int user_mode = regs->err_code & 0x4;
+    int cpu_reserved = regs->err_code & 0x8;
+    int id = regs->err_code & 0x10;
+
+
+    printk("Page fault! ( ");
+    if(not_present)
+    {
+        printk("not-present ");
+    }
+    if(write_operation)
+    {
+        printk("read-only ");
+    }
+    if(user_mode)
+    {
+        printk("user-mode ");
+    }
+    if(cpu_reserved)
+    {
+        printk("reserved ");
+    }
+    printk(") at %x\n", faulting_address);
+
+    kernel_panic("Page fault", regs);
+
 }

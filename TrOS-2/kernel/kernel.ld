@@ -1,26 +1,23 @@
 ENTRY(kernel_init)
 SECTIONS
 {
-    .text 0xC0000000 /*0x100000*/ : /* 1M */
+    . = 0xC0000000;
+    .text BLOCK(4K) : ALIGN(4K)
     {
-        code = .; _code = .; __code = .;
         *(.text)
-        . = ALIGN(4096);
     }
 
-    .data :
+    .data BLOCK(4K): ALIGN(4K)
     {
-        data = .; _data = .; __data = .;
         *(.data)
         *(.rodata)
-        . = ALIGN(4096);
     }
 
-    .bss :
+    .bss BLOCK(4K) : ALIGN(4K)
     {
-        bss = .; _bss = .; __bss = .;
+        *(COMMON)
         *(.bss)
-        . = ALIGN(4096);
+        *(.kernel_stack)
     }
 
     end = .; _end = .; __end = .;

@@ -6,8 +6,9 @@
 #include <tros/scheduler.h>
 #include <tros/irq.h>
 #include <tros/driver.h>
-#include <tros/pmm.h>
-#include <tros/vmm.h>
+#include <tros/pmm.h>	// REMOVE
+#include <tros/vmm.h> 	// REMOVE
+#include <tros/kheap.h>
 #include <tros/hwdetect.h>
 #include <multiboot.h>
 
@@ -85,6 +86,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
 		pmm_get_free_block_count());
 
 	vmm_initialize();
+	kheap_initialize();
 
 	kernel_drivers();
 
