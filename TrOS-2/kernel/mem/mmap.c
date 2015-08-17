@@ -14,8 +14,6 @@ void mmap_initialize(unsigned int phys_loc, unsigned int max_blocks)
     {
         __mmap_memory_map[i] = 0xFFFFFFFF;
     }
-
-    //memset (__mmap_memory_map, 0xf, (__mmap_max_blocks / bpb));
 }
 
 void mmap_set_used(int block)

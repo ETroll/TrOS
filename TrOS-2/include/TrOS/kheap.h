@@ -7,5 +7,6 @@
 void kheap_initialize();
 
 void* kmalloc(unsigned int size);
+void kfree(void* ptr);
 
 #endif

@@ -68,17 +68,17 @@ void kernel_drivers()
 	//TODO: FAT DRIVER?
 }
 
-void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t magic)
+void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
 {
     kernel_early();
 
     uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
     pmm_region_t* regions = (pmm_region_t*)0x1000;
 
-    pmm_initialize(0xC0000000 + (kernel_size*512), memSize, regions);
+    int mmap_size = pmm_initialize(stack_top, memSize, regions);
 
-	//pmm_deinit_region(0x0, 0x100000); //Dont want to use first mb
-	pmm_deinit_region(0x100000, kernel_size*512);
+	unsigned int kernel_region_size = (stack_top-0xC0000000) + mmap_size;
+	pmm_deinit_region(0x100000, kernel_region_size);
 
 	printk("\nBlocks initialized: %i\nUsed or reserved blocks: %i\nFree blocks: %i\n\n",
 		pmm_get_block_count(),
@@ -89,7 +89,6 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t kernel_size, uint32_t mag
 	kheap_initialize();
 
 	kernel_drivers();
-
 
 	//Lets set up basic console
 	trell_initialize();

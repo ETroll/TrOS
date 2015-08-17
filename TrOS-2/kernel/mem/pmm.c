@@ -17,7 +17,7 @@ char* pmm_memory_types[] = {
 	"ACPI NVS Memory"
 };
 
-void pmm_initialize(phy_address bitmap, unsigned int size, pmm_region_t* regions)
+int pmm_initialize(phy_address bitmap, unsigned int size, pmm_region_t* regions)
 {
     __pmm_memory_size = size;
     __pmm_max_blocks =	((__pmm_memory_size*1024) / PMM_BLOCK_SIZE);
@@ -52,8 +52,8 @@ void pmm_initialize(phy_address bitmap, unsigned int size, pmm_region_t* regions
 	mmap_set_used(0); //0x00000000 used for "out of mem"
 	mmap_set_used(1);
 
-	printk("Memory map at: %x\n", bitmap);
-
+	//printk("Memory map at: %x\n", bitmap);
+	return sizeof(unsigned int) * (__pmm_max_blocks / 32);
 }
 
 void pmm_init_region(unsigned int addr, unsigned int size)

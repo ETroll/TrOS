@@ -125,6 +125,7 @@ void vmm_map_page(void* phys, void* virt)
     ptable_t* table = (ptable_t*)PAGE_GET_PHYSICAL_ADDRESS(dir);
     pte_t* page = &table->entries[PAGE_TABLE_INDEX((vrt_address)virt)];
 
+    //printk("Page at %x, set phys addr: %x\n", page, phys);
     pte_set_block(page, (unsigned int)phys);
     pte_add_attribute(page, PTE_PRESENT);
 }
@@ -226,7 +227,6 @@ void vmm_pagefault_handler(cpu_registers_t* regs)
     int write_operation = regs->err_code & 0x2;
     int user_mode = regs->err_code & 0x4;
     int cpu_reserved = regs->err_code & 0x8;
-    int id = regs->err_code & 0x10;
 
 
     printk("Page fault! ( ");

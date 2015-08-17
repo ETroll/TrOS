@@ -6,6 +6,7 @@
 #include <trell/trell.h>
 #include <tros/tros.h>
 #include <tros/driver.h>
+#include <tros/kheap.h>
 #include <string.h>
 #include <stdio.h>
 #include <keyboard.h>
@@ -226,11 +227,24 @@ void kernel_run_command(char* cmd)
 	}
 	else if(strcmp(argv[0], "help") == 0)
 	{
-		printk("TrOS-2 Help:\n");
-		printk("Commands:\n");
-		printk(" - help: Displays this help message\n");
-		printk(" - clr:  Clears the display\n");
+        printk("TrOS-2 Help:\n");
+        printk("Commands:\n");
+        printk(" - help: Displays this help message\n");
+        printk(" - clr:  Clears the display\n");
         printk(" - rs <sect>:  Reads the sector data from floppy\n");
+	}
+    else if(strcmp(argv[0], "test") == 0)
+	{
+        void* data = 0;
+        if(argc > 1)
+        {
+            data = kmalloc(atoi(argv[1]));
+        }
+        else
+        {
+            data = kmalloc(5000);
+        }
+        printk("Got data allocated at %x\n", data);
 	}
     else if(strcmp(argv[0], "mmap") == 0)
 	{
@@ -249,11 +263,10 @@ void kernel_run_command(char* cmd)
                 unsigned int addr = block * 4096;
                 printk("Block: %x is %s\n", addr, taken == 0 ? "FREE" :"TAKEN");
             }
-
         }
         else
         {
-            printk("Usage: \n");
+            printk("Usage: mmap <startblock> (<numblocks>)\n");
         }
 	}
 	else if(strcmp(argv[0], "rs") == 0)

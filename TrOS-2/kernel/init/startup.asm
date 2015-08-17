@@ -25,8 +25,8 @@ kernel_init:
 	mov ebp,esp
     push ebp
 
+	push stack_top+8
 	push eax		; multiboot "magic"
-	push ecx		; kernel size
 	push ebx		; multiboot struct pointer
 
 	call kernel_main
