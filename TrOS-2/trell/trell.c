@@ -235,16 +235,35 @@ void kernel_run_command(char* cmd)
 	}
     else if(strcmp(argv[0], "test") == 0)
 	{
-        void* data = 0;
         if(argc > 1)
         {
-            data = kmalloc(atoi(argv[1]));
+            void* data = kmalloc(atoi(argv[1]));
+            printk("Got data allocated at %x\n", data);
         }
         else
         {
-            data = kmalloc(5000);
+            printk("--- alloc 5000:\n");
+            void* data = kmalloc(5000);
+            printk("--- alloc 100:\n");
+            void* stuff = kmalloc(100);
+            printk("--- alloc 400:\n");
+            void* morestuff = kmalloc(400);
+
+            printk("--- free 100:\n");
+            kfree(stuff);
+            printk("--- free 400:\n");
+            kfree(morestuff);
+            printk("--- free 5000:\n");
+            kfree(data);
+
+            printk("--- alloc 100:\n");
+            data = kmalloc(100);
+            printk("--- alloc 300:\n");
+            stuff = kmalloc(300);
+            printk("Got data allocated at %x and stuff at %x\n", data, stuff);
+
         }
-        printk("Got data allocated at %x\n", data);
+
 	}
     else if(strcmp(argv[0], "mmap") == 0)
 	{

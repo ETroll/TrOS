@@ -9,6 +9,7 @@
 
 #define KERNEL_HEAP_START   0xD0000000
 #define KERNEL_HEAP_END     0xDFFFFFFF
+#define CHUNK_ID            0xCAFEB00D
 #define BLOCK_SIZE          4096
 #define BLOCK_ALIGN         BLOCK_SIZE
 
@@ -17,7 +18,7 @@ struct heap_chunk_t
     struct heap_chunk_t* next;
     struct heap_chunk_t* prev;
     unsigned int size;
-    unsigned int inuse;
+    unsigned int chend;
 };
 
 static struct heap_chunk_t* _kheap_start = 0;
@@ -28,7 +29,8 @@ static struct heap_chunk_t* kheap_first_free(unsigned int amount);
 static void kheap_add_chunk_heap(struct heap_chunk_t* chunk);
 static void kheap_add_chunk_free(struct heap_chunk_t* chunk);
 static void kheap_add_overflow_to_free(struct heap_chunk_t* chunk, unsigned int size);
-static void kheap_add_ordered_chunk(struct heap_chunk_t** start, struct heap_chunk_t* chunk);
+static void kheap_merge_freelist_bottom(struct heap_chunk_t* chunk);
+static void kheap_merge_freelist_top(struct heap_chunk_t* chunk);
 
 void kheap_initialize()
 {
@@ -78,7 +80,17 @@ void* kmalloc(unsigned int size)
 
 void kfree(void* ptr)
 {
+    struct heap_chunk_t* chunk = (struct heap_chunk_t*) (ptr-sizeof(struct heap_chunk_t));
 
+    if(chunk->chend == CHUNK_ID)
+    {
+        kheap_add_chunk_free(chunk);
+    }
+    else
+    {
+        //PANIC!
+        printk("ERROR! - Trying to free unallocated memory at %x\n", ptr);
+    }
 }
 
 static struct heap_chunk_t* kheap_extend(unsigned int size)
@@ -101,6 +113,7 @@ static struct heap_chunk_t* kheap_extend(unsigned int size)
 
     struct heap_chunk_t* newchunk = (struct heap_chunk_t*) chunk_start_addr;
     newchunk->size = (amount*BLOCK_SIZE) - 16;
+    newchunk->chend = CHUNK_ID;
 
     return newchunk;
 }
@@ -134,15 +147,23 @@ static void kheap_add_overflow_to_free(struct heap_chunk_t* chunk, unsigned int 
         + sizeof(struct heap_chunk_t)
         + size);
     overflow->size = chunk->size - size - sizeof(struct heap_chunk_t);
+    overflow->chend = CHUNK_ID;
     chunk->size = size;
     kheap_add_chunk_free(overflow);
 }
 
 static void kheap_add_chunk_free(struct heap_chunk_t* chunk)
 {
-    if(chunk == _kheap_free)
+    if(chunk == _kheap_start)
     {
-        printk("Chunk == _kheap_free!\n");
+        if(_kheap_start->next == _kheap_start)
+        {
+            _kheap_start = 0;
+        }
+        else
+        {
+            _kheap_start = _kheap_start->next;
+        }
     }
 
     if(_kheap_free == 0)
@@ -151,29 +172,39 @@ static void kheap_add_chunk_free(struct heap_chunk_t* chunk)
         _kheap_free->next = _kheap_free;
         _kheap_free->prev = _kheap_free;
     }
+    else if(chunk < _kheap_free)
+    {
+        chunk->next = _kheap_free;
+        chunk->prev = _kheap_free->prev;
+        _kheap_free->prev->next = chunk;
+        _kheap_free->prev = chunk;
+        _kheap_free = chunk;
+    }
     else
     {
-        struct heap_chunk_t* iterator =  _kheap_free;
+        struct heap_chunk_t* iterator =  _kheap_free->prev;
         do
         {
             if(iterator < chunk)
             {
                 chunk->next = iterator->next;
                 chunk->prev = iterator;
+                iterator->next->prev = chunk;
                 iterator->next = chunk;
-                chunk->next->prev = chunk;
+
                 break;
             }
             iterator = iterator->prev;
         } while(iterator->prev != _kheap_free);
     }
+    kheap_merge_freelist_bottom(chunk);
+    kheap_merge_freelist_top(chunk);
 }
 
 static void kheap_add_chunk_heap(struct heap_chunk_t* chunk)
 {
     if(chunk == _kheap_free)
     {
-
         if(_kheap_free->next == _kheap_free)
         {
             _kheap_free = 0;
@@ -190,20 +221,61 @@ static void kheap_add_chunk_heap(struct heap_chunk_t* chunk)
         _kheap_start->next = _kheap_start;
         _kheap_start->prev = _kheap_start;
     }
+    else if(chunk < _kheap_start)
+    {
+        chunk->next = _kheap_start;
+        chunk->prev = _kheap_start->prev;
+        _kheap_start->prev->next = chunk;
+        _kheap_start->prev = chunk;
+        _kheap_start = chunk;
+    }
     else
     {
-        struct heap_chunk_t* iterator =  _kheap_start;
+        struct heap_chunk_t* iterator =  _kheap_start->prev;
         do
         {
             if(iterator < chunk)
             {
                 chunk->next = iterator->next;
                 chunk->prev = iterator;
+                iterator->next->prev = chunk;
                 iterator->next = chunk;
-                chunk->next->prev = chunk;
+
                 break;
             }
             iterator = iterator->prev;
         } while(iterator->prev != _kheap_start);
+    }
+}
+
+static void kheap_merge_freelist_bottom(struct heap_chunk_t* chunk)
+{
+    struct heap_chunk_t* next = chunk->next;
+
+    unsigned int chunk_end = (unsigned int)chunk
+        + sizeof(struct heap_chunk_t)
+        + chunk->size;
+
+    if((struct heap_chunk_t*)chunk_end == chunk->next)
+    {
+        chunk->size += next->size + sizeof(struct heap_chunk_t);
+        chunk->next = next->next;
+        next->next->prev = chunk;
+    }
+}
+
+static void kheap_merge_freelist_top(struct heap_chunk_t* chunk)
+{
+    struct heap_chunk_t* prev = chunk->prev;
+
+    unsigned int prev_end = (unsigned int)prev
+        + sizeof(struct heap_chunk_t)
+        + prev->size;
+
+    if((unsigned int)chunk == prev_end)
+    {
+        prev->size += chunk->size + sizeof(struct heap_chunk_t);
+        prev->next = chunk->next;
+        prev->next->prev = prev;
     }
 }
