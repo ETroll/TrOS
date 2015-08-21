@@ -5,11 +5,15 @@
 #include <tros/driver.h>
 #include <tros/irq.h>
 #include <tros/hal/io.h>
+#include <tros/hal/dma.h>
 #include <tros/tros.h>
 #include <tros/scheduler.h> //temp sleep location
 
-#define FLOPPY_IRQ 6
-#define FDD_SECTORS_PER_TRACK 18
+#define FLOPPY_DMA              0x1000  //A 4K block has been reserved
+#define FLOPPY_DMA_CHANNEL      2
+#define FLOPPY_IRQ              6
+#define FDD_SECTORS_PER_TRACK   18
+
 
 //FDD Controller IO ports
 enum FDD_OI_PORT
@@ -120,12 +124,6 @@ typedef struct
 
 void fdd_irq_handler(cpu_registers_t* regs);
 
-// Temp DMA functions before a generic DMA driver have been created
-void fdd_dma_init();
-void fdd_dma_read();
-void fdd_dma_write();
-
-
 // Driver interface functions
 int floppy_read(unsigned char *buffer, unsigned int sector);
 int floppy_write(unsigned char *data, unsigned int sector);
@@ -185,12 +183,18 @@ int floppy_open()
 
     if(irq_register_handler(FLOPPY_IRQ + IRQ_BASE, &fdd_irq_handler))
     {
-        fdd_dma_init();
+        dma_reset();
+        dma_channel_mask(FLOPPY_DMA_CHANNEL);
+        dma_flipflop_reset(1);
+
+        dma_channel_set_address(FLOPPY_DMA_CHANNEL, FLOPPY_DMA);
+        dma_flipflop_reset(1);
+
+        dma_channel_set_count(FLOPPY_DMA_CHANNEL, 512);
+        dma_channel_set_read(FLOPPY_DMA_CHANNEL);
+        dma_unmask();
+
         fdd_reset();
-
-        //steprate=13ms, load_time=1ms unload_time=15ms, DMA=ON
-        //fdd_send_drivedata(13, 1, 15, 1);   //NOTE: Is this needed?
-
         return 1;
     }
     else
@@ -214,11 +218,10 @@ void fdd_irq_handler(cpu_registers_t* regs)
 //Sector comes as a Logical Block Address
 int floppy_read(unsigned char *buffer, unsigned int sector)
 {
-    //TODO: Sett DMA to point to buffer addr
-
     chs_t chs = fdd_lba_to_chs(sector);
     fdd_motor_on();
     printk("CHS: %d / %d / %d\n", chs.track, chs.head, chs.sector);
+
 
     if(floppy_seek(chs.track, chs.head))
     {
@@ -227,7 +230,7 @@ int floppy_read(unsigned char *buffer, unsigned int sector)
         unsigned int cylinder = 0;
         unsigned char result[7];
 
-        fdd_dma_read();
+        dma_channel_set_read(FLOPPY_DMA_CHANNEL); //needed?
 
         fdd_send_command(FDD_CMD_READ_SECT
             | FDD_CMD_EXT_MULTITRACK
@@ -302,32 +305,6 @@ int floppy_seek(unsigned int track, unsigned int head)
     }
 
     return 0;
-}
-void fdd_dma_init()
-{
-    pio_outb(0x06, 0x0a);
-    pio_outb(0xff, 0xd8);
-    pio_outb(0x00, 0x04);
-    pio_outb(0x10, 0x04);
-    pio_outb(0xff, 0xd8);
-    pio_outb(0xff, 0x05);
-    pio_outb(0x23, 0x05);
-    pio_outb(0x00, 0x80);
-    pio_outb(0x02, 0x0a);
-}
-
-void fdd_dma_read()
-{
-    pio_outb(0x06, 0x0a);
-    pio_outb(0x56, 0x0b);
-    pio_outb(0x02, 0x0a);
-}
-
-void fdd_dma_write()
-{
-    pio_outb(0x06, 0x0a);
-    pio_outb(0x5a, 0x0b);
-    pio_outb(0x02, 0x0a);
 }
 
 static chs_t fdd_lba_to_chs(int lba)
