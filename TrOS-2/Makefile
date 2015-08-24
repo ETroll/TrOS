@@ -10,7 +10,7 @@ all: $(FOLDERS) $(MODULES)
 
 rebuild: clean all image
 
-qemu: rebuild run
+qemu: all image run
 
 run:
 	qemu-system-i386 -fda build/TrOS.img -monitor stdio -m 256 #-cpu 486 #-d cpu_reset
