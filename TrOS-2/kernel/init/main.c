@@ -14,14 +14,16 @@
 
 #include <trell/trell.h>
 
+//Drivers baked in to the kernel
 extern int kbd_driver_initialize();
 extern int floppy_driver_initialize(unsigned char device);
 extern int vga_driver_initialize();
 
+//Filesystems baked in to the kernel
+extern int fat16_fs_initialize();
+
 void (*__putch)(char c);
 void (*__puts)(const char* str);
-
-void kernel_tmp_cmd();
 
 void kernel_early()
 {
@@ -43,36 +45,9 @@ void kernel_early()
 	__asm("sti");
 }
 
-void kernel_drivers()
+void kernel_memory(uint32_t stack_top, multiboot_info_t* multiboot)
 {
-	driver_initialize();
-
-	hwd_floppy_t fd = hwdetect_floppy_disks();
-	printk("FDC Primary is:   %s\n", fd.master_desc);
-	printk("FDC Secondary is: %s\n\n", fd.slave_desc);
-
-	kbd_driver_initialize();
-	if(fd.master > 0)
-	{
-		floppy_driver_initialize(0);
-	}
-	if(fd.slave > 0)
-	{
-		floppy_driver_initialize(1);
-	}
-
-	vga_driver_initialize();
-
-	//TODO: RAMDISK DRIVER
-	//TODO: VFS DRIVER
-	//TODO: FAT DRIVER?
-}
-
-void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
-{
-    kernel_early();
-
-    uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
+	uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
     pmm_region_t* regions = (pmm_region_t*)0x1000;
 
     int mmap_size = pmm_initialize(stack_top, memSize, regions);
@@ -87,8 +62,39 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
 	vmm_initialize();
 	kheap_initialize();
+}
 
+void kernel_drivers()
+{
+	driver_initialize();
+
+	hwd_floppy_t fd = hwdetect_floppy_disks();
+	if(fd.master > 0)
+	{
+		floppy_driver_initialize(0);
+	}
+	if(fd.slave > 0)
+	{
+		floppy_driver_initialize(1);
+	}
+
+	kbd_driver_initialize();
+	vga_driver_initialize();
+
+}
+
+void kernel_filesystems()
+{
+	fat16_fs_initialize();
+}
+
+void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
+{
+    kernel_early();
+
+	kernel_memory(stack_top, multiboot);
 	kernel_drivers();
+	kernel_filesystems();
 
 	//Lets set up basic console
 	trell_initialize();

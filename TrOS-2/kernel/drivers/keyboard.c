@@ -2,7 +2,7 @@
 #include <tros/hal/io.h>
 #include <tros/irq.h>
 #include <tros/tros.h>
-#include <ds/ringbuffer.h>
+#include <tros/ds/ringbuffer.h>
 #include <string.h>
 #include <keyboard.h>
 
