@@ -54,7 +54,7 @@ int vga_driver_initialize()
     //Black backround, White text
     __vga_current_color = 0x0F;
 
-    printk("** Initalizing 80x25 VGA driver\n");
+    printk("** Initalizing 80x25 VGA driver - ");
 	return driver_register(&drv);
 }
 

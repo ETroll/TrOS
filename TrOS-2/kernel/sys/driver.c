@@ -1,53 +1,70 @@
 #include <tros/driver.h>
+#include <tros/ds/list.h>
+#include <tros/kheap.h>
 #include <string.h>
 
-#define MAX_DRIVERS 10
+// Small "hack" before .bss loading functions properly in the bootloader
+// Forcing the _drivers variable in to the .data section
+// TODO: http://wiki.osdev.org/ELF_Tutorial#The_BSS_and_SHT_NOBITS
 
-static device_driver_t drivers[MAX_DRIVERS];
-static int next_driver_id = 0;
+list_t* _drivers = (list_t*)EMPTY_LIST;
 
-void driver_initialize()
-{
-    next_driver_id = 0;
-    for (int i = 0; i < MAX_DRIVERS; i++)
-    {
-        drivers[i].driver = 0;
-        drivers[i].name[0] = '\0';
-        drivers[i].type = DRV_NONE;
-    }
-}
 int driver_register(device_driver_t* driver)
 {
-    for(int i = 0; i<next_driver_id; i++)
+    if(_drivers == (list_t*)EMPTY_LIST)
     {
-        if(strcmp(drivers[i].name, driver->name) == 0)
+        _drivers = (list_t*)kmalloc(sizeof(list_t));
+        _drivers->head = 0;
+        _drivers->size = 0;
+    }
+
+    list_node_t* node = _drivers->head;
+    while(node != 0)
+    {
+        device_driver_t* device = (device_driver_t*)node->data;
+        if(strcmp(device->name, driver->name) == 0)
         {
             return -1;
         }
+        node = node->next;
     }
 
-    drivers[next_driver_id].driver = (void*)driver->driver;
-    drivers[next_driver_id].type = driver->type;
-    strcpy(drivers[next_driver_id].name, driver->name);
+    device_driver_t* data = (device_driver_t*)kmalloc(sizeof(device_driver_t));
+    data->driver = (void*)driver->driver;
+    data->type = driver->type;
+    strcpy(data->name, driver->name);
 
-    return next_driver_id++;
+    list_add(_drivers, data);
+    return _drivers->size;
 }
 
 device_driver_t* driver_find_device(char* name)
 {
+    list_node_t* node = _drivers->head;
     device_driver_t* driver = 0;
-    for (int i = 0; i < MAX_DRIVERS; i++)
+
+    while(node != 0)
     {
-        if(strcmp(drivers[i].name, name) == 0)
+        device_driver_t* device = (device_driver_t*)node->data;
+        if(strcmp(device->name, name) == 0)
         {
-            driver = &drivers[i];
+            driver = device;
             break;
         }
+        node = node->next;
     }
     return driver;
 }
 
 device_driver_t* driver_find_device_id(int id)
 {
-	return &drivers[id];
+    list_node_t* node = list_get_at_index(_drivers, id);
+    if(node != 0)
+    {
+        return (device_driver_t*)node->data;
+    }
+    else
+    {
+        return 0;
+    }
 }

@@ -4,6 +4,10 @@
 #ifndef INCLUDE_DS_LIST_H
 #define INCLUDE_DS_LIST_H
 
+// Small "hack" before .bss loading functions properly in the bootloader
+// Used to force the empty lists get in the .data section
+#define EMPTY_LIST 0xFADE1234
+
 typedef struct list_node
 {
     void* data;

@@ -58,10 +58,11 @@ struct vfs_dirent* vfs_readdir(vfs_node_t* inode, unsigned int index);
 vfs_node_t* vfs_finddir(vfs_node_t*, char* name);
 void vfs_create(char* name);
 void vfs_delete(char* name);
+int vfs_mount(char* device, char* fsname, char* path);
 
 
 //Maybe separate out in own FS.c/h?
 int fs_register(filesystem_t* fs);
-int fs_mount(char* device, char* fsname, char* path);
+
 
 #endif

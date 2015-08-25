@@ -131,7 +131,7 @@ int kbd_driver_initialize()
     };
     _is_open = 0;
 
-    printk("** Initalizing generic keyboard driver\n");
+    printk("** Initalizing generic keyboard driver - ");
 	return driver_register(&drv);
 }
 

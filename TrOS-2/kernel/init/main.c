@@ -5,9 +5,9 @@
 #include <tros/hal/VGA.h>
 #include <tros/scheduler.h>
 #include <tros/irq.h>
-#include <tros/driver.h>
 #include <tros/pmm.h>	// REMOVE
 #include <tros/vmm.h> 	// REMOVE
+#include <tros/fs/vfs.h>
 #include <tros/kheap.h>
 #include <tros/hwdetect.h>
 #include <multiboot.h>
@@ -66,25 +66,23 @@ void kernel_memory(uint32_t stack_top, multiboot_info_t* multiboot)
 
 void kernel_drivers()
 {
-	driver_initialize();
-
 	hwd_floppy_t fd = hwdetect_floppy_disks();
 	if(fd.master > 0)
 	{
-		floppy_driver_initialize(0);
+		floppy_driver_initialize(0) ? printk("OK\n") : printk("FAILED!\n");
 	}
 	if(fd.slave > 0)
 	{
-		floppy_driver_initialize(1);
+		floppy_driver_initialize(1) ? printk("OK\n") : printk("FAILED!\n");
 	}
 
-	kbd_driver_initialize();
-	vga_driver_initialize();
-
+	kbd_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
+	vga_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
 }
 
 void kernel_filesystems()
 {
+	vfs_initialize();
 	fat16_fs_initialize();
 }
 
@@ -95,6 +93,13 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 	kernel_memory(stack_top, multiboot);
 	kernel_drivers();
 	kernel_filesystems();
+
+	if(!vfs_mount("fdd", "fat16", "/"))
+	{
+		printk("Error mounting root folder. Halting!\n");
+		__asm("cli;");
+		__asm("hlt;");
+	}
 
 	//Lets set up basic console
 	trell_initialize();
