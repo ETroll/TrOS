@@ -19,7 +19,7 @@ typedef struct
 void list_add(list_t* list, void* data);
 void list_add_back(list_t* list, void* data);
 void list_remove_all(list_t* list);
-list_node_t* list_remove(list_t* list, list_node_t* node);
+void list_remove(list_t* list, list_node_t* node);
 list_node_t* list_get_at_index(list_t* list, unsigned int index);
 
 

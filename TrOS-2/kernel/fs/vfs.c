@@ -1,6 +1,9 @@
 // vfs.c
 // Primitive VFS implementation
 #include <tros/fs/vfs.h>
+#include <tros/ds/list.h>
+#include <tros/kheap.h>
+#include <string.h>
 
 // ------
 //  / (Root - System disk)
@@ -102,11 +105,27 @@ void vfs_delete(char* name)
 
 /// FS functions
 /// ---------------------
+list_t* _fs_filesystems = 0;
 
 int fs_register(filesystem_t* fs)
 {
-    return 0;
+    if(_fs_filesystems == 0)
+    {
+        _fs_filesystems = (list_t*)kmalloc(sizeof(list_t));
+        _fs_filesystems->head = 0;
+        _fs_filesystems->size = 0;
+    }
+
+    filesystem_t* data = (filesystem_t*)kmalloc(sizeof(filesystem_t));
+    strcpy(data->name, fs->name);
+    data->fops = fs->fops;
+    data->fs_super = fs->fs_super;
+
+    list_add(_fs_filesystems, data);
+
+    return _fs_filesystems->size-1;
 }
+
 int fs_mount(char* device, char* fsname, char* path)
 {
     return 0;

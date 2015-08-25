@@ -7,7 +7,7 @@
 
 void list_add(list_t* list, void* data)
 {
-    list_node_t* new_node = kmalloc(sizeof(list_node_t));
+    list_node_t* new_node = (list_node_t*)kmalloc(sizeof(list_node_t));
     new_node->data = data;
     new_node->next = list->head;
     list->head = new_node;
@@ -16,7 +16,7 @@ void list_add(list_t* list, void* data)
 
 void list_add_back(list_t* list, void* data)
 {
-    list_node_t* new_node = kmalloc(sizeof(list_node_t));
+    list_node_t* new_node = (list_node_t*)kmalloc(sizeof(list_node_t));
     new_node->data = data;
     new_node->next = 0;
 
@@ -53,7 +53,7 @@ void list_remove_all(list_t* list)
     }
 }
 
-list_node_t* list_remove(list_t* list, list_node_t* node)
+void list_remove(list_t* list, list_node_t* node)
 {
     list_node_t* prev = 0;
     list_node_t* curr = list->head;
@@ -76,11 +76,7 @@ list_node_t* list_remove(list_t* list, list_node_t* node)
         }
         curr->next = 0;
         list->size--;
-        return curr;
-    }
-    else
-    {
-        return 0;
+        kfree(curr);
     }
 }
 

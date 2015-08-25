@@ -4,6 +4,8 @@
 #ifndef INCLUDE_TROS_VFS_H
 #define INCLUDE_TROS_VFS_H
 
+#include <tros/driver.h>
+
 #define FILE_NAME_MAX 256
 
 struct vfs_node;
@@ -24,10 +26,12 @@ typedef struct
 typedef struct vfs_node
 {
     char name[FILE_NAME_MAX];
-    unsigned int inodenum;
+    unsigned int inode;
     unsigned int size;
     unsigned int flags;
     fs_operations_t* fsops;
+    driver_block_t* device;
+
 } vfs_node_t;
 
 struct vfs_dirent
