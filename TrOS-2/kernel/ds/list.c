@@ -53,7 +53,7 @@ void list_remove_all(list_t* list)
     }
 }
 
-void list_remove(list_t* list, list_node_t* node)
+void list_node_remove(list_t* list, list_node_t* node)
 {
     list_node_t* prev = 0;
     list_node_t* curr = list->head;

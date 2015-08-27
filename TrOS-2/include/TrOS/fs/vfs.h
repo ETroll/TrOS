@@ -8,22 +8,22 @@
 
 #define FILE_NAME_MAX 256
 
-struct vfs_node;
+struct fs_node;
 struct vfs_dirent;
 
 typedef struct
 {
-    unsigned int (*fs_read)(struct vfs_node* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
-    unsigned int (*fs_write)(struct vfs_node* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
-    void (*fs_open)(struct vfs_node* inode);
-    void (*fs_close)(struct vfs_node* inode);
-    struct vfs_dirent* (*fs_readdir)(struct vfs_node* inode, unsigned int index); //Needed?
-    struct vfs_node* (*fs_finddir)(struct vfs_node* inode, char* name);
-    void (*fs_create)(struct vfs_node* inode, char* name);
-    void (*fs_delete)(struct vfs_node* inode);
+    unsigned int (*fs_read)(struct fs_node* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
+    unsigned int (*fs_write)(struct fs_node* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
+    void (*fs_open)(struct fs_node* inode);
+    void (*fs_close)(struct fs_node* inode);
+    struct vfs_dirent* (*fs_readdir)(struct fs_node* inode, unsigned int index); //Needed?
+    struct fs_node* (*fs_finddir)(struct fs_node* inode, char* name);
+    void (*fs_create)(struct fs_node* inode, char* name);
+    void (*fs_delete)(struct fs_node* inode);
 } fs_operations_t;
 
-typedef struct vfs_node
+typedef struct fs_node
 {
     char name[FILE_NAME_MAX];
     unsigned int inode;
@@ -32,7 +32,7 @@ typedef struct vfs_node
     fs_operations_t* fsops;
     driver_block_t* device;
 
-} vfs_node_t;
+} fs_node_t;
 
 struct vfs_dirent
 {
@@ -44,18 +44,18 @@ typedef struct
 {
     char* name;
     fs_operations_t* fops;
-    void (*fs_super)();         //TODO: Need something here. How should it init?
+    void (*fs_mount)(fs_node_t* mountpoint);
 
 } filesystem_t;
 
 void vfs_initialize();
 
-unsigned int vfs_read(vfs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
-unsigned int vfs_write(vfs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
-void vfs_open(vfs_node_t* inode);
-void vfs_close(vfs_node_t* inode);
-struct vfs_dirent* vfs_readdir(vfs_node_t* inode, unsigned int index);
-vfs_node_t* vfs_finddir(vfs_node_t*, char* name);
+unsigned int vfs_read(fs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
+unsigned int vfs_write(fs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer);
+void vfs_open(fs_node_t* inode);
+void vfs_close(fs_node_t* inode);
+struct vfs_dirent* vfs_readdir(fs_node_t* inode, unsigned int index);
+fs_node_t* vfs_finddir(fs_node_t*, char* name);
 void vfs_create(char* name);
 void vfs_delete(char* name);
 int vfs_mount(char* device, char* fsname, char* path);
@@ -63,6 +63,7 @@ int vfs_mount(char* device, char* fsname, char* path);
 
 //Maybe separate out in own FS.c/h?
 int fs_register(filesystem_t* fs);
+filesystem_t* fs_lookup(char* name);
 
 
 #endif

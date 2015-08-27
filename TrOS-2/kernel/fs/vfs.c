@@ -2,6 +2,7 @@
 // Primitive VFS implementation
 #include <tros/fs/vfs.h>
 #include <tros/ds/list.h>
+#include <tros/ds/tree.h>
 #include <tros/kheap.h>
 #include <tros/driver.h>
 #include <tros/tros.h>
@@ -16,7 +17,7 @@
 //  -- Applications/
 //  -- Volumes/
 
-vfs_node_t *vfs_root = 0;
+tree_t* _vfs_tree = 0;
 
 enum VFS_FLAGS
 {
@@ -27,10 +28,12 @@ enum VFS_FLAGS
 
 void vfs_initialize()
 {
-    //TODO: Set up root node
+    _vfs_tree = (tree_t*)kmalloc(sizeof(tree_t));
+    _vfs_tree->root = 0;
+    _vfs_tree->size = 0;
 }
 
-unsigned int vfs_read(vfs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer)
+unsigned int vfs_read(fs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer)
 {
     if(inode->fsops->fs_read != 0)
     {
@@ -42,7 +45,7 @@ unsigned int vfs_read(vfs_node_t* inode, unsigned int offset, unsigned int size,
     }
 }
 
-unsigned int vfs_write(vfs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer)
+unsigned int vfs_write(fs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer)
 {
     if(inode->fsops->fs_write != 0)
     {
@@ -54,7 +57,7 @@ unsigned int vfs_write(vfs_node_t* inode, unsigned int offset, unsigned int size
     }
 }
 
-void vfs_open(vfs_node_t* inode)
+void vfs_open(fs_node_t* inode)
 {
     if(inode->fsops->fs_open != 0)
     {
@@ -62,15 +65,15 @@ void vfs_open(vfs_node_t* inode)
     }
 }
 
-void vfs_close(vfs_node_t* inode)
+void vfs_close(fs_node_t* inode)
 {
-    if(inode->fsops->fs_close != 0 && inode != vfs_root)
+    if(inode->fsops->fs_close != 0)// && inode != vfs_root)
     {
         inode->fsops->fs_close(inode);
     }
 }
 
-struct vfs_dirent* vfs_readdir(vfs_node_t* inode, unsigned int index)
+struct vfs_dirent* vfs_readdir(fs_node_t* inode, unsigned int index)
 {
     if((inode->flags & VFS_FLAG_DIRECTORY) && inode->fsops->fs_readdir)
     {
@@ -82,7 +85,7 @@ struct vfs_dirent* vfs_readdir(vfs_node_t* inode, unsigned int index)
     }
 }
 
-vfs_node_t* vfs_finddir(vfs_node_t* inode, char* name)
+fs_node_t* vfs_finddir(fs_node_t* inode, char* name)
 {
     if((inode->flags & VFS_FLAG_DIRECTORY) && inode->fsops->fs_finddir)
     {
@@ -107,8 +110,11 @@ void vfs_delete(char* name)
 int vfs_mount(char* device, char* fsname, char* path)
 {
     device_driver_t* drv = driver_find_device(device);
+
     if(drv->type == DRV_BLOCK)
     {
+        //TODO: Check if path is taken by another mountpoint
+        fs_node_t* mnt = (fs_node_t*)kmalloc(sizeof(fs_node_t));
         return 1;
     }
     else
@@ -135,8 +141,26 @@ int fs_register(filesystem_t* fs)
 
     strcpy(data->name, fs->name);
     data->fops = fs->fops;
-    data->fs_super = fs->fs_super;
+    data->fs_mount = fs->fs_mount;
     list_add(_fs_filesystems, data);
 
     return _fs_filesystems->size;
+}
+
+filesystem_t* fs_lookup(char* name)
+{
+    list_node_t* node = _fs_filesystems->head;
+    filesystem_t* fs = 0;
+
+    while(node != 0)
+    {
+        filesystem_t* tmp = (filesystem_t*)node->data;
+        if(strcmp(tmp->name, name) == 0)
+        {
+            fs = tmp;
+            break;
+        }
+        node = node->next;
+    }
+    return fs;
 }

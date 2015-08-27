@@ -3,7 +3,7 @@
 
 #include <tros/fs/vfs.h>
 
-void fat16_super();
+void fat16_mount(fs_node_t* mountpoint);
 
 
 static fs_operations_t fops =
@@ -24,12 +24,12 @@ int fat16_fs_initialize()
     {
         .name = "fat16",
         .fops = &fops,
-        .fs_super = fat16_super
+        .fs_mount = fat16_mount
     };
     return fs_register(&fs);
 }
 
-void fat16_super()
+void fat16_mount(fs_node_t* mountpoint)
 {
-
+    
 }
