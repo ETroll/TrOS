@@ -8,6 +8,7 @@
 #include <tros/hal/dma.h>
 #include <tros/tros.h>
 #include <tros/scheduler.h> //temp sleep location
+#include <string.h>
 
 #define FLOPPY_DMA              0x1000  //A 4K block has been reserved
 #define FLOPPY_DMA_CHANNEL      2
@@ -125,7 +126,7 @@ typedef struct
 void fdd_irq_handler(cpu_registers_t* regs);
 
 // Driver interface functions
-int floppy_read(unsigned char *buffer, unsigned int sector);
+int floppy_read(unsigned char *buffer, unsigned int block, unsigned nblocks);
 int floppy_write(unsigned char *data, unsigned int sector);
 void floppy_format(unsigned int track, unsigned int head);
 int floppy_seek(unsigned int track, unsigned int head);
@@ -216,62 +217,58 @@ void fdd_irq_handler(cpu_registers_t* regs)
 }
 
 //Sector comes as a Logical Block Address
-int floppy_read(unsigned char *buffer, unsigned int sector)
+int floppy_read(unsigned char *buffer, unsigned int block, unsigned nblocks)
 {
-    chs_t chs = fdd_lba_to_chs(sector);
     fdd_motor_on();
-    printk("CHS: %d / %d / %d\n", chs.track, chs.head, chs.sector);
-
-
-    if(floppy_seek(chs.track, chs.head))
+    //printk("CHS: %d / %d / %d\n", chs.track, chs.head, chs.sector);
+    unsigned int blocks_read = 0;
+    for(blocks_read = 0; blocks_read<nblocks; blocks_read++)
     {
-        //read a block
-        unsigned int status = 0;
-        unsigned int cylinder = 0;
-        unsigned char result[7];
-
-        dma_channel_set_read(FLOPPY_DMA_CHANNEL); //needed?
-
-        fdd_send_command(FDD_CMD_READ_SECT
-            | FDD_CMD_EXT_MULTITRACK
-            | FDD_CMD_EXT_SKIP
-            | FDD_CMD_EXT_DENSITY);
-
-        fdd_send_command(chs.head << 2 | __fdd_current_drive );
-        fdd_send_command(chs.track);
-        fdd_send_command(chs.head);
-        fdd_send_command(chs.sector);
-        fdd_send_command(FDD_SECTOR_DTL_512);
-        fdd_send_command(((sector + 1) >= FDD_SECTORS_PER_TRACK) ?
-            FDD_SECTORS_PER_TRACK :
-            sector + 1);
-        fdd_send_command(FDD_GAP3_LENGTH_3_5); //NOTE: Can change! Depends on device
-        fdd_send_command(0xFF);
-
-        fdd_wait_irq();
-
-        for(int i=0; i<7; i++)
+        unsigned int current_block = block+blocks_read;
+        chs_t chs = fdd_lba_to_chs(current_block);
+        if(floppy_seek(chs.track, chs.head))
         {
-            result[i] = fdd_read_data();
+            //read a block
+            unsigned int status = 0;
+            unsigned int cylinder = 0;
+            unsigned char result[7];
+
+            dma_channel_set_read(FLOPPY_DMA_CHANNEL); //needed?
+
+            fdd_send_command(FDD_CMD_READ_SECT
+                | FDD_CMD_EXT_MULTITRACK
+                | FDD_CMD_EXT_SKIP
+                | FDD_CMD_EXT_DENSITY);
+
+            fdd_send_command(chs.head << 2 | __fdd_current_drive );
+            fdd_send_command(chs.track);
+            fdd_send_command(chs.head);
+            fdd_send_command(chs.sector);
+            fdd_send_command(FDD_SECTOR_DTL_512);
+            fdd_send_command(((current_block + 1) >= FDD_SECTORS_PER_TRACK) ?
+                FDD_SECTORS_PER_TRACK :
+                current_block + 1);
+            fdd_send_command(FDD_GAP3_LENGTH_3_5); //NOTE: Can change! Depends on device
+            fdd_send_command(0xFF);
+
+            fdd_wait_irq();
+
+            for(int i=0; i<7; i++)
+            {
+                result[i] = fdd_read_data();
+            }
+
+            fdd_check_interrupt_status(&status, &cylinder);
+
+            memcpy(buffer+(512*blocks_read), (void*)FLOPPY_DMA, 512);
         }
-
-        fdd_check_interrupt_status(&status, &cylinder);
-
-        fdd_motor_off();
-
-        // unsigned char* tmp = (unsigned char*)DMA_BUFFER;
-        // for(int i = 0; i<512; i++)
-        // {
-        //     buffer[i] = tmp[i];
-        // }
-
-        //printk("%d - %d\n", chs.sector, result[5]);
-        return (int)(chs.sector- result[5]); //number of sectors read
+        else
+        {
+            break;
+        }
     }
-    else
-    {
-        return 0;
-    }
+    fdd_motor_off();
+    return blocks_read;
 }
 
 int floppy_write(unsigned char *data, unsigned int sector)

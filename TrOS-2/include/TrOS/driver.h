@@ -45,7 +45,7 @@ typedef struct
 
 typedef struct
 {
-	int (*read) (unsigned char *buffer, unsigned int sector);
+	int (*read) (unsigned char *buffer, unsigned int block, unsigned nblocks);
 	int (*write) (unsigned char *data, unsigned int sector);
     void (*format) (unsigned int track, unsigned int head);
     int (*seek) (unsigned int track, unsigned int head);

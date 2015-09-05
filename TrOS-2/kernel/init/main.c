@@ -20,7 +20,7 @@ extern int floppy_driver_initialize(unsigned char device);
 extern int vga_driver_initialize();
 
 //Filesystems baked in to the kernel
-extern int fat16_fs_initialize();
+extern int fat12_fs_initialize();
 
 void (*__putch)(char c);
 void (*__puts)(const char* str);
@@ -83,7 +83,7 @@ void kernel_drivers()
 void kernel_filesystems()
 {
 	vfs_initialize();
-	fat16_fs_initialize();
+	fat12_fs_initialize();
 }
 
 void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
@@ -94,7 +94,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 	kernel_drivers();
 	kernel_filesystems();
 
-	if(!vfs_mount("fdd", "fat16", "/"))
+	if(!vfs_mount("fdd", "fat12", "/"))
 	{
 		printk("Error mounting root folder. Halting!\n");
 		__asm("cli;");

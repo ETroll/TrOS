@@ -7,6 +7,7 @@
 #include <tros/tros.h>
 #include <tros/driver.h>
 #include <tros/kheap.h>
+#include <tros/fs/vfs.h>
 #include <string.h>
 #include <stdio.h>
 #include <keyboard.h>
@@ -36,6 +37,7 @@ static unsigned int __trell_line_pos;
 
 static driver_char_t* __trell_vga_driver;
 
+static char curr_working_dir[255];
 
 static void trell_cmd();
 void trell_clear();
@@ -100,6 +102,7 @@ void trell_initialize()
     __trell_history_current = __trell_history_bottom;
 
     //printk("trell_history at %x", &__trell_history);
+    strcpy(curr_working_dir, "/");
     trell_cmd();
 
     __trell_vga_driver->close();
@@ -287,46 +290,52 @@ void kernel_run_command(char* cmd)
         {
             printk("Usage: mmap <startblock> (<numblocks>)\n");
         }
-	}
-	else if(strcmp(argv[0], "rs") == 0)
-	{
-		if(argc > 1)
-		{
-			driver_block_t* fdd = (driver_block_t*)driver_find_device("fdd")->driver;
-			if(fdd != 0)
-			{
-				fdd->open();
+    }
+    else if(strcmp(argv[0], "ls") == 0)
+    {
+        fs_node_t* dir = kopen(curr_working_dir);
+        printk("Dir %s at %x\n", curr_working_dir, dir);
+        unsigned int index = 0;
 
-				//Bit of a hack for now, since I hardcoded DMA to 0x1000
-				unsigned char* buffer = (unsigned char*)0x1000;
+        dirent_t* dirent = vfs_readdir(dir, index);
+        while (dirent != 0)
+        {
+            printk("Dirent: %x - %s\n", dirent, dirent->name);
+            //kfree(dirent);
 
-				int sect = atoi(argv[1]);
-				//printk("Reading sector: %d\n", sect);
-				fdd->read(buffer, sect);
-
-				for(int i = 0; i<10; i++)
-				{
-					printk("%x: %x\n", &buffer[i], buffer[i]);
-				}
-				printk("\n");
-				//printk("\n\n %d sectors read\n", num);
-
-				fdd->close();
-			}
-			else
-			{
-				printk("ERROR: Could not find a floppy disk drive\n");
-			}
-		}
-		else
-		{
-			printk("Usage: rs <sect>, where <sect> is a integer\n");
-		}
-	}
-	else
-	{
-		printk("Unknown command\n");
-	}
+            index++;
+            dirent = vfs_readdir(dir, index);
+        }
+        vfs_close(dir);
+        kfree(dir); //Not freed in VFS yet..
+    }
+    else if(strcmp(argv[0], "cd") == 0)
+    {
+        if(argc > 1)
+        {
+            fs_node_t* dir = kopen(argv[1]);
+            if(dir)
+            {
+                if(dir->flags & VFS_FLAG_DIRECTORY)
+                {
+                    strcpy(curr_working_dir, argv[1]);
+                    vfs_close(dir);
+                }
+                else
+                {
+                    printk("%s is not a directory\n", argv[1]);
+                }
+            }
+        }
+    }
+    else if(strcmp(argv[0], "pwd") == 0)
+    {
+        printk("%s\n", curr_working_dir);
+    }
+    else
+    {
+    	printk("Unknown command\n");
+    }
 }
 
 static void trell_cmd()
@@ -335,6 +344,7 @@ static void trell_cmd()
 	int buffer_loc = 0;
 	int next_command = 0;
 	int key;
+
 	driver_hid_t* kbd = (driver_hid_t*)driver_find_device("kbd")->driver;
 	kbd->open();
 	while(1)
