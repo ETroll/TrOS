@@ -6,10 +6,6 @@
 
 #include <tros/ds/list.h>
 
-// Small "hack" before .bss loading functions properly in the bootloader
-// Used to force the empty lists get in the .data section
-#define EMPTY_TREE 0xFADE1234
-
 typedef struct tree_node
 {
     void* data;

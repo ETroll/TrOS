@@ -7,11 +7,11 @@
 // Forcing the _drivers variable in to the .data section
 // TODO: http://wiki.osdev.org/ELF_Tutorial#The_BSS_and_SHT_NOBITS
 
-list_t* _drivers = (list_t*)EMPTY_LIST;
+list_t* _drivers = 0;
 
 int driver_register(device_driver_t* driver)
 {
-    if(_drivers == (list_t*)EMPTY_LIST)
+    if(_drivers == 0)
     {
         _drivers = (list_t*)kmalloc(sizeof(list_t));
         _drivers->head = 0;
