@@ -47,8 +47,10 @@ ImageSize   db 0
 LoadingMsg 	db "Stage2: Preparing to load kernel.", 0x0D, 0x0A, 0x00
 FailureMsg 	db 0x0D, 0x0A, "*** FATAL: MISSING OR CURRUPT KERNEL. Press Any Key to Reboot", 0x0D, 0x0A, 0x0A, 0x00
 BadHeader 	db "*** FATAL: KERNEL.ELF is not a valid ELF32 file", 0x0A, 0x00
-ElfHeader	db "Sec HdrAdr | Sec VMaddr | ELF Offset | Size bytes", 0x0A, 0x00
+ElfHeader	db "Sec HdrAdr | Sec VMaddr | ELF Offset | Size bytes | Type       | Action", 0x0A, 0x00
 Separator	db " | ", 0x00
+StrMove		db "Move", 0x00
+StrClear	db "Clear", 0x00
 
 ;EnableA20 trough keyboard output port
 BIOS_ENABLE_A20:
@@ -221,7 +223,7 @@ PROTECTED_MODE:
 		; Get VMem address. (Actually physical in this case)
 		mov edx, dword [Elf_SectionHeaderAddr];
 		cmp dword [edx + Elf32_Shdr.sh_addr], 0
-		je .next
+		je near .next
 
 		mov	ebx, Separator
 		call VGA_PUTS
@@ -243,15 +245,38 @@ PROTECTED_MODE:
 		push dword [edx + Elf32_Shdr.sh_size]
 		call VGA_PUT_HEX
 
-		push dword [edx + Elf32_Shdr.sh_size]		; size
-		push dword [edx + Elf32_Shdr.sh_addr]		; to
+		mov	ebx, Separator
+		call VGA_PUTS
 
+		; Get the type
+		mov ebx, dword [edx + Elf32_Shdr.sh_type]
+		mov eax, ebx;
+		push ebx
+		call VGA_PUT_HEX
+
+		mov	ebx, Separator
+		call VGA_PUTS
+
+		push dword [edx + Elf32_Shdr.sh_size]		; size
+		push dword [edx + Elf32_Shdr.sh_addr]		; to / VM Addr
+
+		cmp eax, 1
+		je .movebytes
+
+		call MEM_CLEAR_BYTES
+		mov	ebx, StrClear
+		call VGA_PUTS
+		jmp .next
+
+	.movebytes:
 		mov ebx, dword [edx + Elf32_Shdr.sh_offset]
 		add ebx, IMAGE_RMODE_BASE
 		push ebx 									; from
 		call MEM_MOVE_BYTES
+		mov	ebx, StrMove
+		call VGA_PUTS
 
-	.next
+	.next:
 		inc cl
 		xor eax, eax
 		mov al, byte [Elf_SectionHeaderSize]
@@ -266,6 +291,7 @@ EXECUTE_KERNEL:
 	mov ebp, eax
 	cli
 
+	hlt
 	; Execute Kernel
 	mov	eax, 0x2badb002				; multiboot magic. Needs to be in eax
 	mov	ebx, dword multiboot_data	; Multiboot struct. Needs to be in ebx

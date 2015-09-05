@@ -246,4 +246,25 @@ MEM_MOVE_WORDS:
 	pop ebp
 	ret 12
 
+; MEM_CLEAR_BYTES(void* addr, int length)
+MEM_CLEAR_BYTES:
+	push ebp
+	mov ebp, esp
+	pusha
+
+	mov al, 0x00
+	mov ebx, [ebp+8]
+	mov ecx, [ebp+12]
+
+	.loop:
+		mov [ebx], al
+		inc ebx
+		dec ecx
+		cmp ecx, 0
+		jne .loop
+
+	popa
+	mov esp, ebp
+	pop ebp
+	ret 8
 %endif
