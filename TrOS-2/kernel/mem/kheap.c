@@ -60,6 +60,8 @@ void* kmalloc(unsigned int size)
             if(_kheap_start != 0 && _kheap_free->prev > _kheap_start->prev)
             {
                 struct heap_chunk_t* last = _kheap_free->prev;
+                kheap_remove_chunk_free(last);
+
                 chunk = kheap_extend(size - last->size);
 
                 last->size += sizeof(struct heap_chunk_t) + chunk->size;
@@ -69,6 +71,10 @@ void* kmalloc(unsigned int size)
             {
                 chunk = kheap_extend(size);
             }
+        }
+        else
+        {
+            kheap_remove_chunk_free(chunk);
         }
     }
 
@@ -241,6 +247,14 @@ static void kheap_add_chunk_heap(struct heap_chunk_t* chunk)
     }
 }
 
+static void kheap_remove_chunk(struct heap_chunk_t* chunk)
+{
+    chunk->prev->next = chunk->next;
+    chunk->next->prev = chunk->prev;
+    chunk->next = 0;
+    chunk->prev = 0;
+}
+
 static void kheap_remove_chunk_heap(struct heap_chunk_t* chunk)
 {
     if(chunk == _kheap_start)
@@ -254,10 +268,23 @@ static void kheap_remove_chunk_heap(struct heap_chunk_t* chunk)
             _kheap_start = _kheap_start->next;
         }
     }
-    chunk->prev->next = chunk->next;
-    chunk->next->prev = chunk->prev;
-    chunk->next = 0;
-    chunk->prev = 0;
+    kheap_remove_chunk(chunk);
+}
+
+static void kheap_remove_chunk_free(struct heap_chunk_t* chunk)
+{
+    if(chunk == _kheap_free)
+    {
+        if(_kheap_free->next == _kheap_free)
+        {
+            _kheap_free = 0;
+        }
+        else
+        {
+            _kheap_free = _kheap_free->next;
+        }
+    }
+    kheap_remove_chunk(chunk);
 }
 
 static void kheap_merge_freelist_bottom(struct heap_chunk_t* chunk)

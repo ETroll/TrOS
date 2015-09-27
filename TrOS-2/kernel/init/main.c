@@ -27,7 +27,7 @@ void (*__puts)(const char* str);
 
 void kernel_early()
 {
-	//"init" VGA
+	//"init" VGA - Move to Bootloader to clear screen before passing control
 	vga_char_attrib_t clr = {
 		.bg = VGA_BLACK,
 		.font = VGA_WHITE
@@ -106,6 +106,6 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     while(1)
     {
-        __asm("nop;");
+        __asm("hlt;");
     }
 }
