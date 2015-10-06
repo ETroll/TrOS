@@ -291,6 +291,18 @@ void kernel_run_command(char* cmd)
             printk("Usage: mmap <startblock> (<numblocks>)\n");
         }
     }
+    else if(strcmp(argv[0], "user") == 0)
+    {
+        extern void tss_set_stack(uint16_t, uint16_t);
+        extern void enter_usermode();
+        int stack = 0;
+	    __asm("mov %0, %%esp;" : "=a"(stack));
+        tss_set_stack(0x10, stack); //Set the stack used by userland.
+        //TODO: Stop using the kernel stack, and have a own stack per userland proc.
+
+        enter_usermode();
+        while(1);
+    }
     else if(strcmp(argv[0], "ls") == 0)
     {
         fs_node_t* dir = kopen(curr_working_dir);

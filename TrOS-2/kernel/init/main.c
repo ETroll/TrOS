@@ -10,6 +10,7 @@
 #include <tros/fs/vfs.h>
 #include <tros/kheap.h>
 #include <tros/hwdetect.h>
+#include <tros/syscall.h>
 #include <multiboot.h>
 
 #include <trell/trell.h>
@@ -100,6 +101,9 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 		__asm("cli;");
 		__asm("hlt;");
 	}
+
+	syscall_initialize();
+
 
 	//Lets set up basic console
 	trell_initialize();

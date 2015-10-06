@@ -47,6 +47,8 @@ int vmm_initialize()
     {
        pte_t page = 0;
        pte_add_attribute(&page, PTE_PRESENT);
+       //TEMP:
+       pte_add_attribute(&page, PTE_USER);
        pte_set_block(&page, block);
 
        table_default->entries[PAGE_TABLE_INDEX(virt)] = page;
@@ -75,6 +77,8 @@ int vmm_initialize()
     pde_t* entry = &dir->entries[PAGE_DIRECTORY_INDEX(0xc0000000)];
     pde_add_attribute(entry, PDE_PRESENT);
     pde_add_attribute(entry, PDE_WRITABLE);
+    //TEMP:
+    pde_add_attribute(entry, PDE_USER);
     pde_set_pte(entry, (phy_address)table_3_gb);
 
     pde_t* entry2 = &dir->entries[PAGE_DIRECTORY_INDEX(0x00000000)];
