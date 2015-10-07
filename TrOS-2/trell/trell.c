@@ -10,7 +10,7 @@
 #include <tros/fs/vfs.h>
 #include <string.h>
 #include <stdio.h>
-#include <keyboard.h>
+#include <sys/keyboard.h>
 
 //Temp
 

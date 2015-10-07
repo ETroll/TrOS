@@ -4,7 +4,7 @@
 #include <tros/tros.h>
 #include <tros/ds/ringbuffer.h>
 #include <string.h>
-#include <keyboard.h>
+#include <sys/keyboard.h>
 
 #define KEY_DEVICE  0x60
 #define KEY_PENDING 0x64

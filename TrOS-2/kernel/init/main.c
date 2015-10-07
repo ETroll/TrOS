@@ -10,7 +10,7 @@
 #include <tros/fs/vfs.h>
 #include <tros/kheap.h>
 #include <tros/hwdetect.h>
-#include <multiboot.h>
+#include <sys/multiboot.h>
 
 #include <trell/trell.h>
 

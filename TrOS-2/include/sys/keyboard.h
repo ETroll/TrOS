@@ -1,4 +1,4 @@
-// keyboard.h
+// sys/keyboard.h
 // Keyboard key codes
 
 #ifndef INCLUDE_KEYBOARD_H
