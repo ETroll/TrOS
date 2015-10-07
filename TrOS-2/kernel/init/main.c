@@ -10,7 +10,6 @@
 #include <tros/fs/vfs.h>
 #include <tros/kheap.h>
 #include <tros/hwdetect.h>
-#include <tros/syscall.h>
 #include <multiboot.h>
 
 #include <trell/trell.h>
@@ -19,6 +18,7 @@
 extern int kbd_driver_initialize();
 extern int floppy_driver_initialize(unsigned char device);
 extern int vga_driver_initialize();
+extern void syscall_initialize();
 
 //Filesystems baked in to the kernel
 extern int fat12_fs_initialize();

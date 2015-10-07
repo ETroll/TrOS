@@ -1,4 +1,3 @@
-#include <tros/syscall.h>
 #include <tros/irq.h>
 
 #define MAX_SYSCALL 10
