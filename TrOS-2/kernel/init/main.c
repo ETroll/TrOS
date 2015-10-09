@@ -12,6 +12,8 @@
 #include <tros/hwdetect.h>
 #include <sys/multiboot.h>
 
+#include <tros/hal/tss.h>
+
 #include <trell/trell.h>
 
 //Drivers baked in to the kernel
@@ -49,10 +51,10 @@ void kernel_early()
 void kernel_memory(uint32_t stack_top, multiboot_info_t* multiboot)
 {
 	uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
-    pmm_region_t* regions = (pmm_region_t*)0x1000;
+	pmm_region_t* regions = (pmm_region_t*)0x1000;
 
-    int mmap_size = pmm_initialize(stack_top, memSize, regions);
-
+	int mmap_size = pmm_initialize(stack_top, memSize, regions);
+	printk("Kernel stack top at: %x \n", stack_top);
 	unsigned int kernel_region_size = (stack_top-0xC0000000) + mmap_size;
 	pmm_deinit_region(0x100000, kernel_region_size);
 
@@ -103,7 +105,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 	}
 
 	syscall_initialize();
-
+	//__asm("hlt;");
+	//tss_install(5, 0x10, 0);
 
 	//Lets set up basic console
 	trell_initialize();

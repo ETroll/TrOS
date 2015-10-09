@@ -10,7 +10,7 @@ void tss_set_stack(unsigned short kernelSS, unsigned short kernelESP)
     TSS.esp0 = kernelESP;
 }
 
-void tss_install(unsigned int sel, unsigned short kernelSS, unsigned short kernelESP)
+void tss_install(unsigned int sel, unsigned short ss0, unsigned short esp0)
 {
     uint32_t base = (uint32_t) &TSS;
 
@@ -25,12 +25,14 @@ void tss_install(unsigned int sel, unsigned short kernelSS, unsigned short kerne
     memset((void*)&TSS, 0, sizeof (tss_entry_t));
 
     //! set stack and segments
-    TSS.ss0 = kernelSS;
-    TSS.esp0 = kernelESP;
+    TSS.ss0 = ss0;
+    TSS.esp0 = esp0;
     TSS.cs = 0x0b;
     TSS.ss = 0x13;
     TSS.es = 0x13;
     TSS.ds = 0x13;
     TSS.fs = 0x13;
     TSS.gs = 0x13;
+
+    tss_flush_old();
 }

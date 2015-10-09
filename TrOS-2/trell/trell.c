@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/keyboard.h>
+#include <syscall.h>
 
 //Temp
 
@@ -294,13 +295,19 @@ void kernel_run_command(char* cmd)
     else if(strcmp(argv[0], "user") == 0)
     {
         extern void tss_set_stack(uint16_t, uint16_t);
+        extern void tss_install(unsigned int, unsigned short, unsigned short);
         extern void enter_usermode();
+
         int stack = 0;
-	    __asm("mov %0, %%esp;" : "=a"(stack));
-        tss_set_stack(0x10, stack); //Set the stack used by userland.
+	    __asm("mov %%esp, %0;" : "=a"(stack));
+        printk("Installing userland stack at %x\n", stack);
+        tss_install(5, 0x10, 0);
+        //tss_set_stack(0x10, stack); //Set the stack used by userland.
         //TODO: Stop using the kernel stack, and have a own stack per userland proc.
 
-        enter_usermode();
+        //enter_usermode();
+
+        //syscall_print("Hello userland!\n");
         while(1);
     }
     else if(strcmp(argv[0], "ls") == 0)

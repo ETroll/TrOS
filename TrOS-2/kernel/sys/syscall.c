@@ -3,12 +3,14 @@
 #define MAX_SYSCALL 10
 
 static void* _syscalls[MAX_SYSCALL];
-
 static void syscall_dispatcher(cpu_registers_t *regs);
+
+extern void (*__puts)(const char* str);
 
 void syscall_initialize()
 {
     irq_register_handler(0x80, &syscall_dispatcher);
+    _syscalls[0] = &__puts;
 }
 
 void syscall_dispatcher(cpu_registers_t *regs)
