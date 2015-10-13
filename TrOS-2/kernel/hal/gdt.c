@@ -17,8 +17,7 @@ static gdt_descriptor __gdt_descriptors[GDT_MAX_DESCRIPTORS];
 
 void gdt_initialize()
 {
-    uint16_t size = (sizeof(gdt_descriptor) * GDT_MAX_DESCRIPTORS) - 1;
-    __gdtr.size = (sizeof(gdt_descriptor) * 5) - 1;
+    __gdtr.size = (sizeof(gdt_descriptor) * GDT_MAX_DESCRIPTORS) - 1;
     __gdtr.base_address = (uint32_t)&__gdt_descriptors;
 
     //Null descriptor
@@ -64,7 +63,7 @@ void gdt_initialize()
         GDT_GRAND_32BIT |
         GDT_GRAND_LIMITHI_MASK);
 
-    printk("GDTR %x Base: %x, Size: %d/%x\n", &__gdtr, __gdtr.base_address, __gdtr.size, size);
+    printk("GDTR %x Base: %x, Size: %d bytes\n", &__gdtr, __gdtr.base_address, __gdtr.size);
 
 
     gdt_load((uint32_t)&__gdtr);

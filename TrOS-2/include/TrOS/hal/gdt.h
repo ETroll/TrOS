@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-#define GDT_MAX_DESCRIPTORS 5
+#define GDT_MAX_DESCRIPTORS 6
 
 // GDT descriptor flags
 // Set access bit

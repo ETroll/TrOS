@@ -65,6 +65,8 @@ extern void irq13();
 extern void irq14();
 extern void irq15();
 
+extern void isr128();
+
 void idt_install_ir(uint8_t irq, uint32_t base, uint16_t sel, uint8_t flags)
 {
     __idt_descriptors[irq].baseLo = base & 0xFFFF;
@@ -137,6 +139,8 @@ void idt_initialize()
     idt_install_ir(45, (uint32_t)irq13, 0x08, 0x8E);
     idt_install_ir(46, (uint32_t)irq14, 0x08, 0x8E);
     idt_install_ir(47, (uint32_t)irq15, 0x08, 0x8E);
+
+    idt_install_ir(0x80, (uint32_t)isr128, 0x08, 0x8E);
 
     for (int i = 48; i < MAX_INTERRUPTS; i++)
     {

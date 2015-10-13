@@ -1,5 +1,6 @@
 #include <tros/hal/gdt.h>
 #include <tros/hal/tss.h>
+#include <tros/tros.h>
 #include <string.h>
 
 static tss_entry_t TSS;
@@ -13,6 +14,8 @@ void tss_set_stack(unsigned short kernelSS, unsigned short kernelESP)
 void tss_install(unsigned int sel, unsigned short ss0, unsigned short esp0)
 {
     uint32_t base = (uint32_t) &TSS;
+
+    printk("TSS at %x Size: %d\n", base, sizeof(tss_entry_t));
 
     gdt_add_descriptor(sel, base, base + sizeof(tss_entry_t),
         GDT_DESC_ACCESS |
@@ -34,5 +37,5 @@ void tss_install(unsigned int sel, unsigned short ss0, unsigned short esp0)
     TSS.fs = 0x13;
     TSS.gs = 0x13;
 
-    tss_flush_old();
+    tss_flush();
 }

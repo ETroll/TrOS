@@ -302,12 +302,13 @@ void kernel_run_command(char* cmd)
 	    __asm("mov %%esp, %0;" : "=a"(stack));
         printk("Installing userland stack at %x\n", stack);
         tss_install(5, 0x10, 0);
-        //tss_set_stack(0x10, stack); //Set the stack used by userland.
+        tss_set_stack(0x10, stack); //Set the stack used by userland.
         //TODO: Stop using the kernel stack, and have a own stack per userland proc.
+        printk("Stack installed. Entering usermode! \n");
 
-        //enter_usermode();
+        enter_usermode();
 
-        //syscall_print("Hello userland!\n");
+        syscall_print("Hello userland!\n");
         while(1);
     }
     else if(strcmp(argv[0], "ls") == 0)
