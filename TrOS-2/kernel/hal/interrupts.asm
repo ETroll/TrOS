@@ -57,7 +57,6 @@ irq_fallback:
     cli
     push byte 0
     push byte 0x0F
-    jmp irq_common
 
 irq_common:
     pusha

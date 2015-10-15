@@ -15,7 +15,7 @@ void tss_install(unsigned int sel, unsigned short ss0, unsigned short esp0)
 {
     uint32_t base = (uint32_t) &TSS;
 
-    printk("TSS at %x Size: %d\n", base, sizeof(tss_entry_t));
+    //printk("TSS at %x Size: %d\n", base, sizeof(tss_entry_t));
 
     gdt_add_descriptor(sel, base, base + sizeof(tss_entry_t),
         GDT_DESC_ACCESS |

@@ -55,22 +55,23 @@ void irq_initialize(void)
 
 void irq_default_handler(cpu_registers_t regs)
 {
-	if (__irq_handlers[regs.irq_no] != 0)
+	unsigned char itq_no = regs.irq_no & 0xFF;
+	if (__irq_handlers[itq_no] != 0)
 	{
-		irq_handler handler = __irq_handlers[regs.irq_no];
+		irq_handler handler = __irq_handlers[itq_no];
 		handler(&regs);
 	}
-	else if(regs.irq_no < 32)
+	else if(itq_no < 32)
 	{
 		// If we have a CPU exception and it is not handled
 		// we are in touble.. Lets panic. (We did not bring a towel..)
-		kernel_panic(irq_names[regs.irq_no], &regs);
+		kernel_panic(irq_names[itq_no], &regs);
 	}
 	else
 	{
-		printk("Unhandled IRQ: %d\n", regs.irq_no);
-		if(regs.irq_no == 33) printk("ACK! %d \n", regs.irq_no-32);
-		pic_eoi(regs.irq_no-32);
+		printk("Unhandled IRQ: %d\n", itq_no);
+		if(itq_no == 33) printk("ACK! %d \n", itq_no-32);
+		pic_eoi(itq_no-32);
 	}
 }
 

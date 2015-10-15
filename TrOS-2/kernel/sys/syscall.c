@@ -1,4 +1,5 @@
 #include <tros/irq.h>
+#include <tros/tros.h>
 
 #define MAX_SYSCALL 10
 
@@ -10,7 +11,7 @@ extern void (*__puts)(const char* str);
 void syscall_initialize()
 {
     irq_register_handler(0x80, &syscall_dispatcher);
-    _syscalls[0] = &__puts;
+    _syscalls[0] = __puts;
 }
 
 void syscall_dispatcher(cpu_registers_t *regs)
@@ -18,6 +19,7 @@ void syscall_dispatcher(cpu_registers_t *regs)
     if (regs->eax < MAX_SYSCALL)
     {
         void *syscall = _syscalls[regs->eax];
+        printk("Syscall\n");
         int retval;
         __asm (" \
             push %1; \

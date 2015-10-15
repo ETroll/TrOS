@@ -12,6 +12,7 @@ void kernel_panic(const char* message, cpu_registers_t* regs)
     printk("EFLAGS: %x\n", regs->eflags);
     printk("User ESP: %x\n", regs->useresp);
     printk("eip=%x\n", regs->eip);
-    
+
+    __asm("cli;");
     __asm("hlt;");
 }
