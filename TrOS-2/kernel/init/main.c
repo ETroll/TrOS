@@ -91,7 +91,7 @@ void kernel_filesystems()
 
 void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
 {
-    kernel_early();
+	kernel_early();
 
 	kernel_memory(stack_top, multiboot);
 	kernel_drivers();

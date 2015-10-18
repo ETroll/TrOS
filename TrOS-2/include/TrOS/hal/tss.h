@@ -36,10 +36,8 @@ typedef struct  {
 } __attribute__((packed)) tss_entry_t;
 
 
-//extern void tss_flush(unsigned short sel);
-extern void tss_flush();
-extern void tss_flush_old();
-void tss_set_stack(unsigned short kernelSS, unsigned short kernelESP);
-void tss_install(unsigned int sel, unsigned short kernelSS, unsigned short kernelESP);
+extern void tss_flush(unsigned short sel);
+void tss_install(unsigned int sel);
+void tss_set_ring0_stack(unsigned short segment, unsigned short stackptr);
 
 #endif
