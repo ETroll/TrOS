@@ -1,5 +1,5 @@
 ; sheduling.asm
-; Platform dependent helper functions for sheduling
+; Platform dependent helper functions for sheduling and multitasking
 
 global enter_usermode
 enter_usermode:
@@ -34,25 +34,63 @@ enter_usermode:
 
 global tss_flush
 tss_flush:
-    cli
-    mov ax, 0x2B      ; Load the index of our TSS structure - The index is
-                      ; 0x28, as it is the 5th selector and each is 8 bytes
-                      ; long, but we set the bottom two bits (making 0x2B)
-                      ; so that it has an RPL of 3, not zero.
-    ltr ax            ; Load 0x2B into the task state register.
-    sti
-    ret
-
-global tss_flush_old
-tss_flush_old:
     push ebp
     mov ebp,esp
 
     cli
-	mov eax, 0x2B ;[ebp+8]
-	ltr ax
-	sti
+    mov eax, [ebp+8]
+    ltr ax
+    sti
 
     mov esp, ebp
     pop ebp
     ret
+
+global switch_task
+switch_task:
+    pusha
+    pushf
+    mov %cr3, %eax ;Push CR3
+    push %eax
+    mov 44(%esp), %eax ;The first argument, where to save
+    mov %ebx, 4(%eax)
+    mov %ecx, 8(%eax)
+    mov %edx, 12(%eax)
+    mov %esi, 16(%eax)
+    mov %edi, 20(%eax)
+    mov 36(%esp), %ebx ;EAX
+    mov 40(%esp), %ecx ;IP
+    mov 20(%esp), %edx ;ESP
+    add $4, %edx ;Remove the return value ;)
+    mov 16(%esp), %esi ;EBP
+    mov 4(%esp), %edi ;EFLAGS
+    mov %ebx, (%eax)
+    mov %edx, 24(%eax)
+    mov %esi, 28(%eax)
+    mov %ecx, 32(%eax)
+    mov %edi, 36(%eax)
+    pop %ebx ;CR3
+    mov %ebx, 40(%eax)
+    push %ebx ;Goodbye again ;)
+    mov 48(%esp), %eax ;Now it is the new object
+    mov 4(%eax), %ebx ;EBX
+    mov 8(%eax), %ecx ;ECX
+    mov 12(%eax), %edx ;EDX
+    mov 16(%eax), %esi ;ESI
+    mov 20(%eax), %edi ;EDI
+    mov 28(%eax), %ebp ;EBP
+    push %eax
+    mov 36(%eax), %eax ;EFLAGS
+    push %eax
+    popf
+    pop %eax
+    mov 24(%eax), %esp ;ESP
+    push %eax
+    mov 44(%eax), %eax ;CR3
+    mov %eax, %cr3
+    pop %eax
+    push %eax
+    mov 32(%eax), %eax ;EIP
+    xchg (%esp), %eax ;We do not have any more registers to use as tmp storage
+    mov (%eax), %eax ;EAX
+    ret ;This ends all!

@@ -79,7 +79,7 @@ irq_common:
 
     popa
     add esp, 8              ; Cleans up the pushed error code and pushed IRQ number
-    sti
+    ;sti
     iret                    ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 
 

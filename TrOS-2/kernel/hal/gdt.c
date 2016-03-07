@@ -65,6 +65,7 @@ void gdt_initialize()
 
     printk("GDTR %x Base: %x, Size: %d bytes\n", &__gdtr, __gdtr.base_address, __gdtr.size);
 
+    //TODO: Move TSS and GDT functionality together..
     tss_install(5);
     gdt_load((uint32_t)&__gdtr);
     tss_flush(5 * sizeof(gdt_descriptor));
