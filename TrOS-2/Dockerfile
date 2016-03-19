@@ -3,7 +3,7 @@ MAINTAINER Karl Syvert Løland <karl.syvert@myerart.net>
 
 # Set APT_GET_UPDATE to make consistent images
 ENV APT_GET_UPDATE 2016-03-01
-ENV code /tmp
+ENV code /src
 ENV toolchain /tool/gcc-i386-none-elf
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes update \
@@ -15,6 +15,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes update \
         make \
         wget \
         libmpc-dev \
+        dosfstools \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists
 
@@ -25,7 +26,8 @@ RUN wget http://ftp.gnu.org/gnu/binutils/binutils-2.24.tar.gz \
     && make \
     && make install \
     && cd .. \
-    && rm -rf binutils-2.24
+    && rm -rf binutils-2.24 \
+    && rm binutils-2.24.tar.gz
 
 RUN wget http://ftp.gnu.org/gnu/gcc/gcc-4.9.0/gcc-4.9.0.tar.gz \
     && tar xvzf gcc-4.9.0.tar.gz \
@@ -34,8 +36,16 @@ RUN wget http://ftp.gnu.org/gnu/gcc/gcc-4.9.0/gcc-4.9.0.tar.gz \
     && make all-gcc\
     && make install-gcc\
     && cd .. \
-    && rm -rf gcc-4.9.0
+    && rm -rf gcc-4.9.0 \
+    && rm gcc-4.9.0.tar.gz
 
-COPY . ${code}
+RUN DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes remove \
+    binutils \
+    gcc \
+    g++ \
+    wget \
+    libmpc-dev
+
+# COPY . ${code}
 WORKDIR ${code}
 ENTRYPOINT ["make"]

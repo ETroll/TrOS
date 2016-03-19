@@ -3,20 +3,14 @@
 MODULES := bootloader/stage1 bootloader/stage2 kernel
 FOLDERS := build build/tmp
 SUBCLEAN = $(addsuffix .clean,$(MODULES))
+IMAGE = build/tros.img
+TMPMOUNT = /mnt/floppy
 
 .PHONY: $(MODULES)
 
-all: $(FOLDERS) $(MODULES)
+all: $(FOLDERS) $(MODULES) image
 
 rebuild: clean all image
-
-qemu: all image run
-
-run:
-	qemu-system-i386 -fda build/TrOS.img -monitor stdio -m 256 #-cpu 486 #-d cpu_reset
-
-debug:
-	qemu-system-i386 -s -S -fda build/TrOS.img
 
 $(MODULES):
 	$(MAKE) -C $@
@@ -29,10 +23,16 @@ $(SUBCLEAN): %.clean:
 	$(MAKE) -C $* clean
 
 image:
-	gcc buildtools/elfinfo.c -o build/elfinfo -std=c99
 	rm build/tmp/*.mbr
-	go run buildtools/diskimg.go -out=build/ -boot=bootloader/stage1/bin/floppy.mbr \
-	-content=build/tmp/
+	rm $(IMAGE)
+	mkdosfs -F 12 -n "TROS" -C $(IMAGE) 1440
+	dd if=bootloader/stage1/bin/floppy.mbr of=$(IMAGE) bs=512 count=1 conv=notrunc
+	losetup /dev/loop0 $(IMAGE)
+	mkdir $(TMPMOUNT)
+	mount /dev/loop0 $(TMPMOUNT) -t msdos -o "fat=12"
+	cp -rfv build/tmp/* $(TMPMOUNT)
+	umount $(TMPMOUNT)
+	losetup -d /dev/loop0
 
 $(FOLDERS):
 	mkdir $@

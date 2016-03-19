@@ -20,7 +20,7 @@ MAP = kernel.map
 # CONFIGURATION
 FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib -Wl,-Map=$(DIR_OBJECT)$(MAP)
-INCLUDES = /tmp/include/
+INCLUDES = /src/include/
 LINKER_MAP = kernel.ld
 FOLDERS = . ds init hal irq sys mem drivers fs ../usrlib ../trell
 
