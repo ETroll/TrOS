@@ -21,6 +21,11 @@ function docker_cleanup {
     for arg in "$(docker ps -a -q)"; do
         eval "docker rm" $arg
     done
+
+}
+
+function qemu_cleanup {
+    eval "rm trace-*"
 }
 
 # Creates the bootable floppy disk image used by QEMU/Bosch
@@ -45,11 +50,13 @@ function rebuild {
 function run {
     eval "qemu-system-i386 -fda build/tros.img -monitor stdio -m 256"
     #-cpu 486 #-d cpu_reset
+    qemu_cleanup
 }
 
 # Runs qemu in GDB remote debug mode
 function debug {
     eval "qemu-system-i386 -s -S -fda build/tros.img"
+    qemu_cleanup
 }
 
 function select_func {

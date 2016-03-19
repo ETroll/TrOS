@@ -3,7 +3,7 @@
 
 #include <tros/tros.h>
 #include <tros/hal/VGA.h>
-#include <tros/scheduler.h>
+#include <tros/timer.h>
 #include <tros/irq.h>
 #include <tros/pmm.h>	// REMOVE
 #include <tros/vmm.h> 	// REMOVE
@@ -12,9 +12,8 @@
 #include <tros/hwdetect.h>
 #include <sys/multiboot.h>
 
-#include <tros/hal/tss.h>
-
 #include <trell/trell.h>
+#include <tros/process.h>
 
 //Drivers baked in to the kernel
 extern int kbd_driver_initialize();
@@ -43,7 +42,7 @@ void kernel_early()
 
 	//IRQ and Scheduling
 	irq_initialize();
-	scheduler_initialize(50);
+	timer_initialize(50);
 
 	__asm("sti");
 }
@@ -89,27 +88,37 @@ void kernel_filesystems()
 	fat12_fs_initialize();
 }
 
+static process_t main_process;
+static process_t other_process;
+static void otherMain()
+{
+    printk("Hello multitasking world!");
+    preempt();
+}
+
 void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
 {
 	kernel_early();
 
 	kernel_memory(stack_top, multiboot);
-	kernel_drivers();
-	kernel_filesystems();
-
-	if(!vfs_mount("fdd", "fat12", "/"))
-	{
-		printk("Error mounting root folder. Halting!\n");
-		__asm("cli;");
-		__asm("hlt;");
-	}
+	// kernel_drivers();
+	// kernel_filesystems();
+	//
+	// if(!vfs_mount("fdd", "fat12", "/"))
+	// {
+	// 	printk("Error mounting root folder. Halting!\n");
+	// 	__asm("cli;");
+	// 	__asm("hlt;");
+	// }
 
 	syscall_initialize();
-	//__asm("hlt;");
-	//tss_install(5, 0x10, 0);
+
+	printk("Switching to otherTask... \n");
+	preempt();
+	printk("Returned to mainTask!\n");
 
 	//Lets set up basic console
-	trell_initialize();
+	//trell_initialize();
 
     while(1)
     {

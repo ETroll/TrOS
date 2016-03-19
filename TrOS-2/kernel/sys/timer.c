@@ -1,4 +1,4 @@
-#include <tros/scheduler.h>
+#include <tros/timer.h>
 #include <tros/irq.h>
 #include <tros/hal/pit.h>
 #include <tros/hal/VGA.h>   //debug purposes for now
@@ -11,7 +11,7 @@ static unsigned int ticks;
 //     .font = VGA_BLACK
 // };
 
-static void scheduler_irq_callback(cpu_registers_t* regs)
+static void timer_irq_callback(cpu_registers_t* regs)
 {
     ticks++;
     //vga_position_t pos = vga_get_position();
@@ -22,15 +22,15 @@ static void scheduler_irq_callback(cpu_registers_t* regs)
     irq_eoi(0);
 }
 
-void scheduler_initialize(unsigned int frequency)
+void timer_initialize(unsigned int frequency)
 {
     ticks = 0;
-    irq_register_handler(32, &scheduler_irq_callback);
+    irq_register_handler(32, &timer_irq_callback);
 
     pit_initialize(frequency);
 }
 
-void scheduler_sleep(unsigned int wait)
+void timer_sleep(unsigned int wait)
 {
     wait = wait + ticks;
     while(wait > ticks)
