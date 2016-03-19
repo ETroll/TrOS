@@ -8,45 +8,70 @@
 #   - qemu-system-i386 needs to be present in ENV
 
 # Builds the docker image used for compiling the souce code
+
+IMAGENAME="tros"
+
 function docker_build_image {
-    exec "docker" "build" "-t" "tros" "."
+    eval "docker build -t $IMAGENAME ."
 }
 
 function docker_cleanup {
-    exec "docker" "rm" "$(docker ps -a -q)"
+    #cleans up everything for now, not good.
+    #docker rm $(docker ps -a -q)
+    for arg in "$(docker ps -a -q)"; do
+        eval "docker rm" $arg
+    done
 }
 
 # Creates the bootable floppy disk image used by QEMU/Bosch
 function image {
-    exec "docker" "run" "tros" "image"
+    eval "docker run --privileged -v /$PWD:/src $IMAGENAME image"
+    docker_cleanup
 }
 
 # Runs the docker container and builds the image
 function build {
-    exec "docker" "run" "--privileged" "-v" "/$PWD:/src" "tros"
+    eval "docker run --privileged -v /$PWD:/src $IMAGENAME"
     docker_cleanup
 }
 
 # Runs the docker container and rebuilds the image
 function rebuild {
-    exec "docker" "run" "tros" "rebuild"
+    eval "docker run --privileged -v /$PWD:/src $IMAGENAME rebuild"
     docker_cleanup
 }
 
 # Runs the floppy image
 function run {
-    exec "qemu-system-i386" "-fda" "build/tros.img" "-monitor" "stdio" "-m" "256"
+    eval "qemu-system-i386 -fda build/tros.img -monitor stdio -m 256"
     #-cpu 486 #-d cpu_reset
 }
 
 # Runs qemu in GDB remote debug mode
 function debug {
-    exec "qemu-system-i386" "-s" "-S" "-fda" "build/TrOS.img"
+    eval "qemu-system-i386 -s -S -fda build/tros.img"
 }
 
 function select_func {
-    echo $1
-    build
+    for arg in "${@}"; do
+        case $arg in
+            dockerbuild)
+                docker_build_image;;
+            image)
+                image;;
+            build)
+                build;;
+            rebuild)
+                rebuild;;
+            run)
+                run;;
+            debug)
+                debug;;
+            *)
+                echo "Unknown parameter"
+        esac
+    done
+    exit 1
 }
 
 if [ $# -eq 0 ]; then
@@ -57,7 +82,7 @@ if [ $# -eq 0 ]; then
         break
     done
 else
-    select_func $1
+    select_func $@
 fi
 
 exit 0
