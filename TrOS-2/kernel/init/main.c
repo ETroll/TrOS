@@ -88,14 +88,6 @@ void kernel_filesystems()
 	fat12_fs_initialize();
 }
 
-static process_t main_process;
-static process_t other_process;
-static void otherMain()
-{
-    printk("Hello multitasking world!");
-    preempt();
-}
-
 void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
 {
 	kernel_early();
@@ -111,11 +103,14 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 	// 	__asm("hlt;");
 	// }
 
-	syscall_initialize();
-
+	// syscall_initialize();
+    process_init();
+    //
 	printk("Switching to otherTask... \n");
-	preempt();
-	printk("Returned to mainTask!\n");
+    for(int i = 0; i<10; i++) {
+        process_preempt();
+        printk(" Returned to mainTask!\n");
+    }
 
 	//Lets set up basic console
 	//trell_initialize();

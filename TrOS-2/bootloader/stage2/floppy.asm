@@ -59,9 +59,9 @@ LBA_TO_CHS:
 ; ax - Starting sector
 ; es:ebx - Buffer to read to
 BIOS_FLOPPY_READSECTORS:
-    .readstart
+    .readstart:
         mov di, 0x0005                  ; five retries for error
-    .sectorloop
+    .sectorloop:
         push ax
         push bx
         push cx
@@ -82,7 +82,7 @@ BIOS_FLOPPY_READSECTORS:
         pop ax
         jnz .sectorloop                 ; attempt to read again
         int 0x18
-    .success
+    .success:
         pop cx
         pop bx
         pop ax

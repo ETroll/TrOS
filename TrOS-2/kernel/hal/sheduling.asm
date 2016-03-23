@@ -133,8 +133,12 @@ process_switch:
     ;mov 44(%eax), %eax ;CR3
     mov eax, [eax+44]
     ;mov %eax, %cr3
-    mov cr3, eax
+    xchg bx, bx ; BOCHS Magic debugger
+
+    ;mov cr3, eax ; For giggles, let CR3 be the same for now
     ;pop %eax
+
+    ; BOOM!
     pop eax
     ;push %eax
     push eax

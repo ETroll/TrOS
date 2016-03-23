@@ -112,6 +112,8 @@ bld/
 
 # QEMU Traces
 Trace-*
+bochsout.txt
+bx_enh_dbg.ini
 
 # NuGet Packages
 *.nupkg

@@ -100,7 +100,7 @@ VGA_PUTCH:
 		mov byte [_currentX], 0		; Reset X pos
 		inc byte [_currentY]
 
-	.done
+	.done:
 		popa
 		ret
 
@@ -162,7 +162,7 @@ VGA_PUTS:
 		inc edi
 		jmp .loop
 
-	.done
+	.done:
 		mov bh, byte [_currentY]
 		mov bl, byte [_currentX]
 		call VGA_MOVE_CURSOR

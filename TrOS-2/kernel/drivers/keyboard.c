@@ -182,19 +182,19 @@ int kbd_ioctl(unsigned int num, unsigned long param)
 
 void kbd_irq_handler(cpu_registers_t* regs)
 {
-    static int _extended = 0;
+    //static int _extended = 0;
 
     while(pio_inb(KEY_PENDING) & 2);
     int scancode = pio_inb(KEY_DEVICE);
 
     if (scancode == 0xE0 || scancode == 0xE1)
     {
-        _extended = 1;
+        //_extended = 1;
         //printk("extended\n");
     }
     else
     {
-        _extended = 0;
+        //_extended = 0;
         if (scancode & 0x80)
         {
             scancode -= 0x80;

@@ -6,6 +6,7 @@
 # REQUIREMENTS:
 #   - Docker
 #   - qemu-system-i386 needs to be present in ENV
+#   - bochs need to be present in ENV
 
 # Builds the docker image used for compiling the souce code
 
@@ -55,8 +56,9 @@ function run {
 
 # Runs qemu in GDB remote debug mode
 function debug {
-    eval "qemu-system-i386 -s -S -fda build/tros.img"
-    qemu_cleanup
+    #eval "qemu-system-i386 -s -S -fda build/tros.img"
+    eval "/c/Bochs-2.6.7/bochsdbg -q -f bochsrc.bxrc"
+    #qemu_cleanup
 }
 
 function select_func {

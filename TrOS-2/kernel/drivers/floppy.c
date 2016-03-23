@@ -231,7 +231,7 @@ int floppy_read(unsigned char *buffer, unsigned int block, unsigned nblocks)
             //read a block
             unsigned int status = 0;
             unsigned int cylinder = 0;
-            unsigned char result[7];
+            //unsigned char result[7];
 
             dma_channel_set_read(FLOPPY_DMA_CHANNEL); //needed?
 
@@ -255,7 +255,9 @@ int floppy_read(unsigned char *buffer, unsigned int block, unsigned nblocks)
 
             for(int i=0; i<7; i++)
             {
-                result[i] = fdd_read_data();
+                //result[i] = fdd_read_data();
+                //not using the result for now, but will
+                fdd_read_data();
             }
 
             fdd_check_interrupt_status(&status, &cylinder);
