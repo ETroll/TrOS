@@ -15,7 +15,7 @@ typedef struct registers
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // Pushed by pusha.
     uint32_t irq_no, err_code; // Interrupt number and error code (if applicable)
     uint32_t eip, cs, eflags, useresp, ss; // Pushed by the processor automatically.
-} cpu_registers_t;
+} __attribute__((packed))  cpu_registers_t;
 
 typedef void (*irq_handler)(cpu_registers_t*);
 

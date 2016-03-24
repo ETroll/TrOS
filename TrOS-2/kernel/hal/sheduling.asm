@@ -47,46 +47,26 @@ tss_flush:
     ret
 
 ; http://wiki.osdev.org/Kernel_Multitasking
-; http://www.imada.sdu.dk/Courses/DM18/Litteratur/IntelnATT.htm
 global process_switch
 process_switch:
     pusha
     pushf
-    ;mov %cr3, %eax ;Push CR3
-    mov eax, cr3
-    ;push %eax
+    mov eax, cr3 ;Push CR3
     push eax
-    ;mov 44(%esp), %eax ;The first argument, where to save
-    mov eax, [esp+44]
-    ;mov %ebx, 4(%eax)
-    ;mov %ecx, 8(%eax)
-    ;mov %edx, 12(%eax)
-    ;mov %esi, 16(%eax)
-    ;mov %edi, 20(%eax)
+    mov eax, [esp+44] ;The first argument, where to save
     mov [eax+4], ebx
     mov [eax+8], ecx
     mov [eax+12], edx
     mov [eax+16], esi
     mov [eax+20], edi
 
-    ;mov 36(%esp), %ebx ;EAX
-    ;mov 40(%esp), %ecx ;IP
-    ;mov 20(%esp), %edx ;ESP
-    mov ebx, [esp+36]
-    mov ecx, [esp+40]
-    mov edx, [esp+20]
+    mov ebx, [esp+36] ;EAX
+    mov ecx, [esp+40] ;EIP
+    mov edx, [esp+20] ;ESP
 
-    ;add $4, %edx ;Remove the return value ;)
-    add edx, 4
-    ;mov 16(%esp), %esi ;EBP
-    mov esi, [esp+16]
-    ;mov 4(%esp), %edi ;EFLAGS
-    mov edi, [esp+4]
-    ;mov %ebx, (%eax)
-    ;mov %edx, 24(%eax)
-    ;mov %esi, 28(%eax)
-    ;mov %ecx, 32(%eax)
-    ;mov %edi, 36(%eax)
+    add edx, 4 ;Remove the return value
+    mov esi, [esp+16] ;EBP
+    mov edi, [esp+4];EFLAGS
 
     mov [eax], ebx
     mov [eax+24], edx
@@ -94,21 +74,11 @@ process_switch:
     mov [eax+32], ecx
     mov [eax+36], edi
 
-    ;pop %ebx ;CR3
-    pop ebx
-    ;mov %ebx, 40(%eax)
+    pop ebx ;CR3
     mov [eax+40], ebx
-    ;push %ebx ;Goodbye again ;)
     push ebx
-    ;mov 48(%esp), %eax ;Now it is the new object
-    ;mov 4(%eax), %ebx ;EBX
-    ;mov 8(%eax), %ecx ;ECX
-    ;mov 12(%eax), %edx ;EDX
-    ;mov 16(%eax), %esi ;ESI
-    ;mov 20(%eax), %edi ;EDI
-    ;mov 28(%eax), %ebp ;EBP
 
-    mov eax, [esp+48]
+    mov eax, [esp+48] ;Now it is the new object
     mov ebx, [eax+4]
     mov ecx, [eax+8]
     mov edx, [eax+12]
@@ -116,36 +86,21 @@ process_switch:
     mov edi, [eax+20]
     mov ebp, [eax+28]
 
-
-    ;push %eax
     push eax
-    ;mov 36(%eax), %eax ;EFLAGS
-    mov eax, [eax+36]
-    ;push %eax
+    mov eax, [eax+36] ;EFLAGS
     push eax
     popf
-    ;pop %eax
     pop eax
-    ;mov 24(%eax), %esp ;ESP
-    mov esp, [eax+24]
-    ;push %eax
+    mov esp, [eax+24] ;ESP
     push eax
-    ;mov 44(%eax), %eax ;CR3
-    mov eax, [eax+44]
-    ;mov %eax, %cr3
-    xchg bx, bx ; BOCHS Magic debugger
+    mov eax, [eax+40] ;CR3
+    ;xchg bx, bx ; BOCHS Magic debugger
 
-    ;mov cr3, eax ; For giggles, let CR3 be the same for now
-    ;pop %eax
-
+    mov cr3, eax ; Set CR3 to provided pagedir
     ; BOOM!
     pop eax
-    ;push %eax
     push eax
-    ;mov 32(%eax), %eax ;EIP
-    mov eax, [eax+32]
-    ;xchg (%esp), %eax ;We do not have any more registers to use as tmp storage
-    xchg eax, [esp]
-    ;mov (%eax), %eax ;EAX
-    mov eax, [eax]
+    mov eax, [eax+32] ;EIP
+    xchg eax, [esp] ;We do not have any more registers to use as tmp storage
+    mov eax, [eax] ;EAX
     ret ;This ends all!

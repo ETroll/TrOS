@@ -76,8 +76,8 @@ void idt_install_ir(uint8_t irq, uint32_t base, uint16_t sel, uint8_t flags)
     __idt_descriptors[irq].reserved = 0;
     // We must uncomment the OR below when we get to using user-mode.
     // It sets the interrupt gate's privilege level to 3.
-    __idt_descriptors[irq].flags   = flags /* | 0x60 */;
-    //__idt_descriptors[irq].flags   = flags | 0x60;
+    //__idt_descriptors[irq].flags   = flags /* | 0x60 */;
+    __idt_descriptors[irq].flags   = flags | 0x60;
 }
 
 void idt_initialize()
@@ -141,10 +141,10 @@ void idt_initialize()
     idt_install_ir(46, (uint32_t)irq14, 0x08, 0x8E);
     idt_install_ir(47, (uint32_t)irq15, 0x08, 0x8E);
 
-    // for (int i = 48; i < MAX_INTERRUPTS; i++)
-    // {
-    //     idt_install_ir(i, (uint32_t)irq_fallback, 0x08, 0x8E);
-    // }
+    for (int i = 48; i < MAX_INTERRUPTS; i++)
+    {
+        idt_install_ir(i, (uint32_t)irq_fallback, 0x08, 0x8E);
+    }
 
     //Syscall ISR
     idt_install_ir(128, (uint32_t)isr128, 0x08, 0xEE);

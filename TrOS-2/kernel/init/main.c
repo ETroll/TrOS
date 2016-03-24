@@ -93,27 +93,21 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 	kernel_early();
 
 	kernel_memory(stack_top, multiboot);
-	// kernel_drivers();
-	// kernel_filesystems();
-	//
-	// if(!vfs_mount("fdd", "fat12", "/"))
-	// {
-	// 	printk("Error mounting root folder. Halting!\n");
-	// 	__asm("cli;");
-	// 	__asm("hlt;");
-	// }
+	kernel_drivers();
+	kernel_filesystems();
 
-	// syscall_initialize();
-    process_init();
-    //
-	printk("Switching to otherTask... \n");
-    for(int i = 0; i<10; i++) {
-        process_preempt();
-        printk(" Returned to mainTask!\n");
-    }
+	if(!vfs_mount("fdd", "fat12", "/"))
+	{
+		printk("Error mounting root folder. Halting!\n");
+		__asm("cli;");
+		__asm("hlt;");
+	}
+
+	syscall_initialize();
+
 
 	//Lets set up basic console
-	//trell_initialize();
+	trell_initialize();
 
     while(1)
     {

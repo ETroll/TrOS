@@ -17,6 +17,7 @@
 
 #include <tros/pmm.h>
 #include <tros/mmap.h>
+#include <tros/process.h>
 
 #define VGA_COLS 80
 #define TRELL_RCOLUMN_SIZE 11
@@ -205,6 +206,13 @@ void trell_puts(const char* str)
     }
 }
 
+// static void otherMain() {
+//     while(1) {
+//         printk("Hello multitasking world!\n");
+//         process_preempt();
+//     }
+// }
+
 void kernel_run_command(char* cmd)
 {
 	char* argv[5];	//NOTE: Hardcoded a maximum of 5 params for now
@@ -235,9 +243,14 @@ void kernel_run_command(char* cmd)
         printk("Commands:\n");
         printk(" - help: Displays this help message\n");
         printk(" - clr:  Clears the display\n");
-        printk(" - rs <sect>:  Reads the sector data from floppy\n");
+        //printk(" - rs <sect>:  Reads the sector data from floppy\n");
+        printk(" - memtest:  Runs a primitive memory test\n");
+        printk(" - mmap:  Lists taken and not taken physical blocks\n");
+        printk(" - usermode:  flips the CPU to ring0\n");
+        printk(" - ls/cd/pwd:  list and navigate FS\n");
+        printk(" - exec:  Executes a test process\n");
 	}
-    else if(strcmp(argv[0], "test") == 0)
+    else if(strcmp(argv[0], "memtest") == 0)
 	{
         if(argc > 1)
         {
@@ -292,7 +305,7 @@ void kernel_run_command(char* cmd)
             printk("Usage: mmap <startblock> (<numblocks>)\n");
         }
     }
-    else if(strcmp(argv[0], "user") == 0)
+    else if(strcmp(argv[0], "usermode") == 0)
     {
         extern void tss_set_ring0_stack(uint16_t, uint16_t);
         extern void enter_usermode();
@@ -309,6 +322,14 @@ void kernel_run_command(char* cmd)
 
         syscall_print("Hello userland!\n");
         while(1);
+    }
+    else if(strcmp(argv[0], "exec") == 0)
+    {
+        process_init();
+        for(int i = 0; i<2; i++) {
+            process_preempt();
+            printk(" Returned to mainTask!\n");
+        }
     }
     else if(strcmp(argv[0], "ls") == 0)
     {

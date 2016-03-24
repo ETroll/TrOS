@@ -17,7 +17,7 @@ typedef struct
     unsigned int eip;
     unsigned int eflags;
     unsigned int cr3;
-} registers_t;
+} __attribute__((packed)) registers_t;
 
 typedef struct process
 {
