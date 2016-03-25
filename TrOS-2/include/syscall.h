@@ -11,8 +11,21 @@
 #define DECL_SYSCALL4(fn,p1,p2,p3,p4) int syscall_##fn(p1,p2,p3,p4);
 #define DECL_SYSCALL5(fn,p1,p2,p3,p4,p5) int syscall_##fn(p1,p2,p3,p4,p5);
 
+//Processes
+DECL_SYSCALL0(fork);
+DECL_SYSCALL0(yield);
+DECL_SYSCALL0(getpid);
+DECL_SYSCALL1(exit, unsigned int);
+DECL_SYSCALL1(sleep, unsigned int);
 
-DECL_SYSCALL1(print, const char*);
+//Devices
+DECL_SYSCALL1(open, char*);
+DECL_SYSCALL1(close, unsigned int);
+DECL_SYSCALL1(peek, unsigned int);
+DECL_SYSCALL3(write, unsigned int, const void*, unsigned int);
+DECL_SYSCALL3(read, unsigned int, void*, unsigned int);
 
+//Memory (TEMP) - Needs sbrk and other so a userland malloc can be created
+DECL_SYSCALL1(kmalloc, unsigned int);
 
 #endif

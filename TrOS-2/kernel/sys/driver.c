@@ -3,9 +3,9 @@
 #include <tros/kheap.h>
 #include <string.h>
 
-list_t* _drivers = 0;
+static list_t* _drivers = 0;
 
-int driver_register(device_driver_t* driver)
+int driver_register(device_driver_t* device)
 {
     if(_drivers == 0)
     {
@@ -17,8 +17,8 @@ int driver_register(device_driver_t* driver)
     list_node_t* node = _drivers->head;
     while(node != 0)
     {
-        device_driver_t* device = (device_driver_t*)node->data;
-        if(strcmp(device->name, driver->name) == 0)
+        device_driver_t* tmpdevice = (device_driver_t*)node->data;
+        if(strcmp(tmpdevice->name, device->name) == 0)
         {
             return -1;
         }
@@ -26,9 +26,29 @@ int driver_register(device_driver_t* driver)
     }
 
     device_driver_t* data = (device_driver_t*)kmalloc(sizeof(device_driver_t));
-    data->driver = (void*)driver->driver;
-    data->type = driver->type;
-    strcpy(data->name, driver->name);
+    data->driver = (void*)device->driver;
+    data->type = device->type;
+    data->id = _drivers->size;//TODO: Unsafe, when removal of drivers gets
+                            //      implemented, then this is no longer valid
+    switch (device->type)
+    {
+        case DRV_CHAR:
+            data->open = ((driver_char_t*)device->driver)->open;
+            data->close = ((driver_char_t*)device->driver)->close;
+            break;
+        case DRV_BLOCK:
+            data->open = ((driver_block_t*)device->driver)->open;
+            data->close = ((driver_block_t*)device->driver)->close;
+            break;
+        case DRV_HID:
+            data->open = ((driver_hid_t*)device->driver)->open;
+            data->close = ((driver_hid_t*)device->driver)->close;
+            break;
+        default:
+            data->open = 0;
+            data->close = 0;
+    }
+    strcpy(data->name, device->name);
 
     list_add(_drivers, data);
     return _drivers->size;
@@ -52,7 +72,7 @@ device_driver_t* driver_find_device(char* name)
     return driver;
 }
 
-device_driver_t* driver_find_device_id(int id)
+device_driver_t* driver_find_device_id(unsigned int id)
 {
     list_node_t* node = list_get_at_index(_drivers, id);
     if(node != 0)

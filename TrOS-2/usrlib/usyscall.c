@@ -48,4 +48,19 @@ int syscall_##fn(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) \
     return a; \
 }
 
-DEFN_SYSCALL1(print, 0, const char*);
+//Processes
+DEFN_SYSCALL0(fork, 0);
+DEFN_SYSCALL0(yield, 1);
+DEFN_SYSCALL0(getpid, 2);
+DEFN_SYSCALL1(exit, 3, unsigned int);
+DEFN_SYSCALL1(sleep, 4, unsigned int);
+
+//Devices
+DEFN_SYSCALL1(open, 5, char*);
+DEFN_SYSCALL1(close, 6, unsigned int);
+DEFN_SYSCALL1(peek, 7, unsigned int);
+DEFN_SYSCALL3(write, 8, unsigned int, const void*, unsigned int);
+DEFN_SYSCALL3(read, 9, unsigned int, void*, unsigned int);
+
+//Memory (TEMP) - Needs sbrk and other so a userland malloc can be created
+DEFN_SYSCALL1(kmalloc, 10, unsigned int);

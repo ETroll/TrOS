@@ -5,7 +5,7 @@
 #define INCLUDE_TROS_DRIVER_H
 
 #define TROS_DRIVER_OK          1
-#define TROS_DRIVER_WASOPEN     0
+#define TROS_DRIVER_WASOPEN     -2
 #define TROS_DRIVER_ERROR       -1
 
 typedef enum
@@ -21,8 +21,9 @@ typedef struct
 	char name[10]; //TODO: change to char*
 	driver_t type;
 	void* driver;
-    // int (*open) (void);
-	// void (*close) (void);
+    unsigned int id;
+    int (*open) (void);
+    void (*close) (void);
 } device_driver_t;
 
 typedef struct
@@ -57,6 +58,6 @@ typedef struct
 void driver_initialize();
 int driver_register(device_driver_t* driver);
 device_driver_t* driver_find_device(char* name);
-device_driver_t* driver_find_device_id(int id);
+device_driver_t* driver_find_device_id(unsigned int id);
 
 #endif

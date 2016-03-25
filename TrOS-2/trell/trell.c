@@ -305,24 +305,24 @@ void kernel_run_command(char* cmd)
             printk("Usage: mmap <startblock> (<numblocks>)\n");
         }
     }
-    else if(strcmp(argv[0], "usermode") == 0)
-    {
-        extern void tss_set_ring0_stack(uint16_t, uint16_t);
-        extern void enter_usermode();
-
-        int stack = 0;
-	    __asm("mov %%esp, %0;" : "=a"(stack));
-        //printk("Installing userland stack at %x\n", stack);
-
-        tss_set_ring0_stack(0x10, stack); //Set the stack used by userland.
-        //TODO: Stop using the kernel stack, and have a own stack per userland proc.
-        //printk("Stack installed. Entering usermode! \n");
-
-        enter_usermode();
-
-        syscall_print("Hello userland!\n");
-        while(1);
-    }
+    // else if(strcmp(argv[0], "usermode") == 0)
+    // {
+    //     extern void tss_set_ring0_stack(uint16_t, uint16_t);
+    //     extern void enter_usermode();
+    //
+    //     int stack = 0;
+	//     __asm("mov %%esp, %0;" : "=a"(stack));
+    //     //printk("Installing userland stack at %x\n", stack);
+    //
+    //     tss_set_ring0_stack(0x10, stack); //Set the stack used by userland.
+    //     //TODO: Stop using the kernel stack, and have a own stack per userland proc.
+    //     //printk("Stack installed. Entering usermode! \n");
+    //
+    //     enter_usermode();
+    //
+    //     //syscall_print("Hello userland!\n");
+    //     while(1);
+    // }
     else if(strcmp(argv[0], "exec") == 0)
     {
         process_init();
