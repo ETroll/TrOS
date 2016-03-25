@@ -28,4 +28,7 @@ DECL_SYSCALL3(read, unsigned int, void*, unsigned int);
 //Memory (TEMP) - Needs sbrk and other so a userland malloc can be created
 DECL_SYSCALL1(kmalloc, unsigned int);
 
+DECL_SYSCALL0(debug);
+DECL_SYSCALL3(read_hid, unsigned int, void*, unsigned int);
+
 #endif

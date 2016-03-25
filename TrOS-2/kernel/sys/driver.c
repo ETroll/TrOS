@@ -28,26 +28,9 @@ int driver_register(device_driver_t* device)
     device_driver_t* data = (device_driver_t*)kmalloc(sizeof(device_driver_t));
     data->driver = (void*)device->driver;
     data->type = device->type;
-    data->id = _drivers->size;//TODO: Unsafe, when removal of drivers gets
-                            //      implemented, then this is no longer valid
-    switch (device->type)
-    {
-        case DRV_CHAR:
-            data->open = ((driver_char_t*)device->driver)->open;
-            data->close = ((driver_char_t*)device->driver)->close;
-            break;
-        case DRV_BLOCK:
-            data->open = ((driver_block_t*)device->driver)->open;
-            data->close = ((driver_block_t*)device->driver)->close;
-            break;
-        case DRV_HID:
-            data->open = ((driver_hid_t*)device->driver)->open;
-            data->close = ((driver_hid_t*)device->driver)->close;
-            break;
-        default:
-            data->open = 0;
-            data->close = 0;
-    }
+    data->id = _drivers->size;  //TODO: Unsafe, when removal of drivers gets
+                                //      implemented, then this is no longer valid
+
     strcpy(data->name, device->name);
 
     list_add(_drivers, data);

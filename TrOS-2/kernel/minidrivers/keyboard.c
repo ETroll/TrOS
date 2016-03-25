@@ -108,7 +108,7 @@ static char _is_open;
 static ringbuffer_t _kb_data;
 
 int kbd_read(int* buffer, unsigned int count);
-int kbd_ioctl(unsigned int num, unsigned long param);
+int kbd_ioctl(unsigned int num, unsigned int param);
 int kbd_open();
 void kbd_close();
 void kbd_irq_handler(cpu_registers_t* regs);
@@ -175,7 +175,7 @@ int kbd_read(int* buffer, unsigned int count)
 	return read;
 }
 
-int kbd_ioctl(unsigned int num, unsigned long param)
+int kbd_ioctl(unsigned int num, unsigned int param)
 {
     return 0;
 }

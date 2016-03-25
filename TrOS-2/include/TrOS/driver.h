@@ -10,44 +10,49 @@
 
 typedef enum
 {
-    DRV_NONE,
     DRV_CHAR,
     DRV_BLOCK,
     DRV_HID
 } driver_t;
 
+// typedef struct
+// {
+//     int (*open) (void);
+//     void (*close) (void);
+//     int (*ioctl) (unsigned int num, unsigned long param);
+// } dops_t;   //Device operations shared accross all devices
+
 typedef struct
 {
-	char name[10]; //TODO: change to char*
-	driver_t type;
-	void* driver;
+    char name[10]; //TODO: change to char*
+    driver_t type;
+    void* driver;
     unsigned int id;
-    int (*open) (void);
-    void (*close) (void);
+
 } device_driver_t;
 
 typedef struct
 {
-	int (*read) (int *buffer, unsigned int count);
-	int (*ioctl) (unsigned int num, unsigned long param);
+    int (*read) (int *buffer, unsigned int count);
+    int (*ioctl) (unsigned int num, unsigned int param);
     int (*open) (void);
-	void (*close) (void);
+    void (*close) (void);
 } driver_hid_t;
 
 typedef struct
 {
-	int (*read) (char *buffer, unsigned int count);
+    int (*read) (char *buffer, unsigned int count);
     int (*write) (char *buffer, unsigned int count);
     int (*seek) (unsigned int pos);
-	int (*ioctl) (unsigned int num, unsigned int param);
+    int (*ioctl) (unsigned int num, unsigned int param);
     int (*open) (void);
-	void (*close) (void);
+    void (*close) (void);
 } driver_char_t;
 
 typedef struct
 {
-	int (*read) (unsigned char *buffer, unsigned int block, unsigned nblocks);
-	int (*write) (unsigned char *data, unsigned int sector);
+    int (*read) (unsigned char *buffer, unsigned int block, unsigned nblocks);
+    int (*write) (unsigned char *data, unsigned int sector);
     void (*format) (unsigned int track, unsigned int head);
     int (*seek) (unsigned int track, unsigned int head);
     int (*open) (void);

@@ -64,3 +64,7 @@ DEFN_SYSCALL3(read, 9, unsigned int, void*, unsigned int);
 
 //Memory (TEMP) - Needs sbrk and other so a userland malloc can be created
 DEFN_SYSCALL1(kmalloc, 10, unsigned int);
+
+//Other temoporary or debug calls:
+DEFN_SYSCALL0(debug, 11);
+DEFN_SYSCALL3(read_hid, 12, unsigned int, void*, unsigned int);

@@ -6,6 +6,13 @@
 static void* _syscalls[MAX_SYSCALL];
 //static void syscall_dispatcher(cpu_registers_t *regs);
 
+static int sys_debug()
+{
+    //TODO: Syscall for basic debug functionality
+    //      different parameters selects different dumps from the kernel
+    return -1;
+}
+
 static int sys_fork()
 {
     //TODO
@@ -39,9 +46,20 @@ static int sys_sleep(unsigned int ms)
 static int sys_open(char* name)
 {
     device_driver_t* device = driver_find_device(name);
-    if(device != 0 && device->open != 0)
+    if(device != 0)
     {
-        int result = device->open();
+        int result = -1;
+        switch (device->type) {
+            case DRV_BLOCK:
+                result = ((driver_block_t*)device->driver)->open();
+            break;
+            case DRV_HID:
+                result = ((driver_hid_t*)device->driver)->open();
+            break;
+            case DRV_CHAR:
+                result = ((driver_char_t*)device->driver)->open();
+            break;
+        }
         if(result > 0)
         {
             return device->id;
@@ -57,9 +75,19 @@ static int sys_open(char* name)
 static int sys_close(unsigned int fd)
 {
     device_driver_t* device = driver_find_device_id(fd);
-    if(device != 0 && device->close != 0)
+    if(device != 0)
     {
-        device->close();
+        switch (device->type) {
+            case DRV_BLOCK:
+                ((driver_block_t*)device->driver)->close();
+            break;
+            case DRV_HID:
+                ((driver_hid_t*)device->driver)->close();
+            break;
+            case DRV_CHAR:
+                ((driver_char_t*)device->driver)->close();
+            break;
+        }
         return 1;
     }
     return -1;
@@ -73,13 +101,41 @@ static int sys_peek(unsigned int fd)
 
 static int sys_write(unsigned int fd, const void *buffer, unsigned int count)
 {
-    //TODO
+    device_driver_t* device = driver_find_device_id(fd);
+    if(device != 0)
+    {
+        if(device->type == DRV_CHAR)
+        {
+            return ((driver_char_t*)device)->write((char*)buffer, count);
+        }
+    }
     return -1;
 }
 
 static int sys_read(unsigned int fd, void *buffer, unsigned int count)
 {
-    //TODO
+    device_driver_t* device = driver_find_device_id(fd);
+    if(device != 0)
+    {
+        if(device->type == DRV_CHAR)
+        {
+            return ((driver_char_t*)device)->read((char*)buffer, count);
+        }
+    }
+    return -1;
+}
+
+//TODO: Fix or redo the "hid" driver
+static int sys_read_hid(unsigned int fd, void *buffer, unsigned int count)
+{
+    device_driver_t* device = driver_find_device_id(fd);
+    if(device != 0)
+    {
+        if(device->type == DRV_HID)
+        {
+            return ((driver_hid_t*)device)->read((int*)buffer, count);
+        }
+    }
     return -1;
 }
 
@@ -133,6 +189,8 @@ void syscall_initialize()
     _syscalls[8] = &sys_write;
     _syscalls[9] = &sys_read;
     _syscalls[10] = &sys_tmp_kmalloc;
+    _syscalls[11] = &sys_debug;
+    _syscalls[12] = &sys_read_hid;
 
     irq_register_handler(0x80, &syscall_dispatcher);
 }
