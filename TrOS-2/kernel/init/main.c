@@ -12,7 +12,6 @@
 #include <tros/hwdetect.h>
 #include <sys/multiboot.h>
 
-#include <trell/trell.h>
 #include <tros/process.h>
 
 //Drivers baked in to the kernel
@@ -26,8 +25,9 @@ extern int fat12_fs_initialize();
 //other, maybe use a correct header file?
 extern void syscall_initialize();
 
-void (*__putch)(char c);
-void (*__puts)(const char* str);
+extern int trell_main();
+
+unsigned int tmp_userland_stack[1024];
 
 void kernel_early()
 {
@@ -38,9 +38,6 @@ void kernel_early()
     };
     vga_clear_screen(&clr);
     vga_set_color(&clr);
-
-    __putch = vga_putch;
-    __puts = vga_puts;
 
     //IRQ and Scheduling
     irq_initialize();
@@ -108,8 +105,29 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     syscall_initialize();
 
 
-    //Lets set up basic console
-    trell_initialize();
+    extern void tss_set_ring0_stack(uint16_t, uint32_t);
+    extern void enter_usermode();
+    int ring0_stack = 0;
+    int ring3_stack = (int)(tmp_userland_stack+1024);
+
+    __asm("mov %%esp, %0;" : "=a"(ring0_stack));
+    printk("Installing ring0 stack at %x\n", ring0_stack);
+    printk("Installing ring3 stack at %x\n", ring3_stack);
+
+    tss_set_ring0_stack(0x10, ring0_stack);
+    __asm("mov %0, %%ESP " : : "m"(ring3_stack));
+
+    //BOCHS_DEBUG;
+    //NOTE: The kernel stack should be "empty" at this moment. Except for the
+    //      parameters passed into kernel_main via the stack.
+    //      So we should be able to clear the stack if the stak has "leaked"?
+
+
+    enter_usermode();
+
+    trell_main();
+
+
 
     while(1)
     {

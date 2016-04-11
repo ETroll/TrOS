@@ -2,6 +2,7 @@
 ; Helper methods for IRQ handling
 
 extern irq_default_handler
+extern syscall_dispatcher
 
 global gdt_load
 gdt_load:
@@ -115,7 +116,7 @@ IRQ_NOERRCODE 28
 IRQ_NOERRCODE 29
 IRQ_NOERRCODE 30
 IRQ_NOERRCODE 31
-IRQ_NOERRCODE 128
+; IRQ_NOERRCODE 128
 IRQ 0,  32
 IRQ 1,  33
 IRQ 2,  34
@@ -132,3 +133,46 @@ IRQ 12, 44
 IRQ 13, 45
 IRQ 14, 46
 IRQ 15, 47
+
+global syscall_isr
+syscall_isr:
+    cli
+    ;xchg bx, bx
+
+    push ebp
+    mov ebp, esp
+    sub esp, 8
+
+    mov [ebp-4], ds
+
+    mov [ebp-8], dword 0x10
+    mov ds, [ebp-8]
+    mov es, [ebp-8]
+    mov fs, [ebp-8]
+    mov gs, [ebp-8]
+    add esp, 4 ;clean up variable used to store 0x10
+
+
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+
+    call syscall_dispatcher
+
+    add esp, 24 ;syscall params
+
+    pop ebx
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+
+    mov esp, ebp
+    pop ebp
+
+    ;xchg bx, bx
+    sti
+    iretd

@@ -65,7 +65,7 @@ extern void irq13();
 extern void irq14();
 extern void irq15();
 
-extern void isr128();
+extern void syscall_isr();
 
 void idt_install_ir(uint8_t irq, uint32_t base, uint16_t sel, uint8_t flags)
 {
@@ -147,7 +147,7 @@ void idt_initialize()
     }
 
     //Syscall ISR
-    idt_install_ir(128, (uint32_t)isr128, 0x08, 0xEE);
+    idt_install_ir(128, (uint32_t)syscall_isr, 0x08, 0xEE);
 
     idt_load((uint32_t)&__idtr);
 }

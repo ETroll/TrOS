@@ -89,7 +89,7 @@ int vmm_initialize()
     pde_add_attribute(entry2, PDE_PRESENT);
     pde_add_attribute(entry2, PDE_WRITABLE);
     //TEMP:
-    pde_add_attribute(entry, PDE_USER);
+    pde_add_attribute(entry2, PDE_USER);
     pde_set_pte(entry2, (phy_address)table_default);
 
     __current_pdbr_addr = (phy_address)&dir->entries;

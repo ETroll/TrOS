@@ -10,7 +10,7 @@
 
 typedef enum
 {
-    DRV_CHAR,
+    DRV_CHAR = 0x01,
     DRV_BLOCK,
     DRV_HID
 } driver_t;

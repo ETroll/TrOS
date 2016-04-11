@@ -2,6 +2,7 @@
 #include <tros/ds/list.h>
 #include <tros/kheap.h>
 #include <string.h>
+// #include <tros/tros.h>
 
 static list_t* _drivers = 0;
 
@@ -30,10 +31,9 @@ int driver_register(device_driver_t* device)
     data->type = device->type;
     data->id = _drivers->size;  //TODO: Unsafe, when removal of drivers gets
                                 //      implemented, then this is no longer valid
-
     strcpy(data->name, device->name);
 
-    list_add(_drivers, data);
+    list_add_back(_drivers, data);
     return _drivers->size;
 }
 
@@ -60,6 +60,8 @@ device_driver_t* driver_find_device_id(unsigned int id)
     list_node_t* node = list_get_at_index(_drivers, id);
     if(node != 0)
     {
+        //device_driver_t* device = (device_driver_t*)node->data;
+        //printk("Found: %s(%i) for ID: %i\n", device->name, device->id, id);
         return (device_driver_t*)node->data;
     }
     else

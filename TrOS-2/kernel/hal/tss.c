@@ -5,10 +5,11 @@
 
 static tss_entry_t TSS;
 
-void tss_set_ring0_stack(unsigned short segment, unsigned short stackptr)
+void tss_set_ring0_stack(unsigned short segment, unsigned int stackptr)
 {
     TSS.ss0 = segment;
     TSS.esp0 = stackptr;
+
 }
 
 void tss_install(unsigned int sel)
@@ -26,7 +27,7 @@ void tss_install(unsigned int sel)
 
     //Setting default segments. The ss0 and esp0 will be changed
     //before switching to ring3
-    TSS.ss0 = 0x10;//ss0;
+    TSS.ss0 = 0x10;
     TSS.esp0 = 0x0;
     TSS.cs = 0x0b;
     TSS.ss = 0x13;

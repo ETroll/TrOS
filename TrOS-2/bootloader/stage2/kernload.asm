@@ -291,6 +291,8 @@ EXECUTE_KERNEL:
 	mov ebp, eax
 	cli
 
+    xchg bx, bx ; If using BOCHS, lets stop up a bit
+
 	; Execute Kernel
 	mov	eax, 0x2badb002				; multiboot magic. Needs to be in eax
 	mov	ebx, dword multiboot_data	; Multiboot struct. Needs to be in ebx

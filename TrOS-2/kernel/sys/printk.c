@@ -1,8 +1,5 @@
 #include <tros/hal/VGA.h>
 
-extern void (*__putch)(char c);
-extern void (*__puts)(const char* str);
-
 void printk(char* str, ...)
 {
 	register int* arguments = (int *)(&str);
@@ -11,7 +8,7 @@ void printk(char* str, ...)
 	{
 		if (*str != '%')
 		{
-			__putch(*str);
+			vga_putch(*str);
 		}
 		else
 		{
@@ -23,14 +20,14 @@ void printk(char* str, ...)
 				case 's':
 				{
 					const char* str = (const char*)*arguments;
-					__puts(str);
+					vga_puts(str);
 				}
 				break;
 
 				case 'c':
 				{
 					char arg = *arguments;
-					__putch(arg);
+					vga_putch(arg);
 				}
 				break;
 
@@ -44,13 +41,13 @@ void printk(char* str, ...)
 
 					if(arg < 0)
 					{
-						__putch('-');
+						vga_putch('-');
 						arg *= -1;
 					}
 
 					if(arg == 0)
 					{
-						__putch('0');
+						vga_putch('0');
 					}
 					else
 					{
@@ -61,7 +58,7 @@ void printk(char* str, ...)
 						}
 						for(int i = digit-1; i>=0; i--)
 						{
-							__putch(buffer[i]);
+							vga_putch(buffer[i]);
 						}
 					}
 				}
@@ -73,8 +70,8 @@ void printk(char* str, ...)
 					int arg = *arguments;
 					unsigned int nibble;
 
-					__putch('0');
-					__putch('x');
+					vga_putch('0');
+					vga_putch('x');
 					for(int i = 28; i >= 0; i-=4)
 					{
 						nibble = (arg >> i) & 0xF;
@@ -86,7 +83,7 @@ void printk(char* str, ...)
 						{
 							nibble += 0x30;
 						}
-						__putch(nibble);
+						vga_putch(nibble);
 					}
 				}
 				/* no break */

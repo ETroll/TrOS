@@ -17,6 +17,17 @@ typedef struct registers
     uint32_t eip, cs, eflags, useresp, ss; // Pushed by the processor automatically.
 } __attribute__((packed))  cpu_registers_t;
 
+typedef struct
+{
+    unsigned int edi;
+    unsigned int esi;
+    unsigned int edx;
+    unsigned int ecx;
+    unsigned int ebx;
+    unsigned int eax;
+} __attribute__((packed)) syscall_parameters_t;
+
+
 typedef void (*irq_handler)(cpu_registers_t*);
 
 void irq_initialize();

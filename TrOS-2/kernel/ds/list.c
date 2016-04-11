@@ -80,6 +80,8 @@ void list_node_remove(list_t* list, list_node_t* node)
     }
 }
 
+//NOTE: This gets the value at index FROM the HEAD!
+//      And the HEAD is the last inserted object
 list_node_t* list_get_at_index(list_t* list, unsigned int index)
 {
     if(index < list->size)

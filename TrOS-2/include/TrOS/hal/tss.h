@@ -38,6 +38,6 @@ typedef struct  {
 
 extern void tss_flush(unsigned short sel);
 void tss_install(unsigned int sel);
-void tss_set_ring0_stack(unsigned short segment, unsigned short stackptr);
+void tss_set_ring0_stack(unsigned short segment, unsigned int stackptr);
 
 #endif

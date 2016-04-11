@@ -21,14 +21,15 @@ DECL_SYSCALL1(sleep, unsigned int);
 //Devices
 DECL_SYSCALL1(open, char*);
 DECL_SYSCALL1(close, unsigned int);
-DECL_SYSCALL1(peek, unsigned int);
+DECL_SYSCALL2(seek, unsigned int, unsigned int);
 DECL_SYSCALL3(write, unsigned int, const void*, unsigned int);
 DECL_SYSCALL3(read, unsigned int, void*, unsigned int);
+DECL_SYSCALL3(ioctl, unsigned int, unsigned int, unsigned int);
 
 //Memory (TEMP) - Needs sbrk and other so a userland malloc can be created
 DECL_SYSCALL1(kmalloc, unsigned int);
 
-DECL_SYSCALL0(debug);
+DECL_SYSCALL1(debug, unsigned int);
 DECL_SYSCALL3(read_hid, unsigned int, void*, unsigned int);
 
 #endif

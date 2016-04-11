@@ -58,13 +58,14 @@ DEFN_SYSCALL1(sleep, 4, unsigned int);
 //Devices
 DEFN_SYSCALL1(open, 5, char*);
 DEFN_SYSCALL1(close, 6, unsigned int);
-DEFN_SYSCALL1(peek, 7, unsigned int);
+DEFN_SYSCALL2(seek, 7, unsigned int, unsigned int);
 DEFN_SYSCALL3(write, 8, unsigned int, const void*, unsigned int);
 DEFN_SYSCALL3(read, 9, unsigned int, void*, unsigned int);
+DEFN_SYSCALL3(ioctl, 10, unsigned int, unsigned int, unsigned int);
 
 //Memory (TEMP) - Needs sbrk and other so a userland malloc can be created
-DEFN_SYSCALL1(kmalloc, 10, unsigned int);
+DEFN_SYSCALL1(kmalloc, 11, unsigned int);
 
 //Other temoporary or debug calls:
-DEFN_SYSCALL0(debug, 11);
-DEFN_SYSCALL3(read_hid, 12, unsigned int, void*, unsigned int);
+DEFN_SYSCALL1(debug, 12, unsigned int);
+DEFN_SYSCALL3(read_hid, 13, unsigned int, void*, unsigned int);
