@@ -5,10 +5,11 @@ FOLDERS := build build/tmp
 SUBCLEAN = $(addsuffix .clean,$(MODULES))
 IMAGE = build/tros.img
 TMPMOUNT = /mnt/floppy
+DISKTOOL = build/trfs
 
 .PHONY: $(MODULES)
 
-all: $(FOLDERS) $(MODULES) image
+all: $(FOLDERS) $(MODULES) ramdisk image
 
 rebuild: clean all image
 
@@ -33,6 +34,16 @@ image:
 	cp -rfv build/tmp/* $(TMPMOUNT)
 	umount $(TMPMOUNT)
 	losetup -d /dev/loop0
+
+ramdisk: tools
+	$(DISKTOOL) -c build/tmp/initrd
+
+tools: $(FOLDERS)
+	gcc buildtools/elfinfo.c -o build/elfinfo -std=c99
+	gcc buildtools/initrd.c -o $(DISKTOOL) -std=c99
+	$(DISKTOOL) build/tmp/initrd -c
+	$(DISKTOOL) build/tmp/initrd -a build/elfinfo
+	$(DISKTOOL) build/tmp/initrd -l
 
 $(FOLDERS):
 	mkdir $@

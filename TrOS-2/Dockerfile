@@ -40,8 +40,6 @@ RUN wget http://ftp.gnu.org/gnu/gcc/gcc-4.9.0/gcc-4.9.0.tar.gz \
     && rm gcc-4.9.0.tar.gz
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes remove \
-    binutils \
-    gcc \
     g++ \
     wget \
     libmpc-dev

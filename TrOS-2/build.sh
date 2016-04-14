@@ -35,6 +35,11 @@ function image {
     docker_cleanup
 }
 
+function tools {
+    eval "docker run --privileged -v /$PWD:/src $IMAGENAME tools"
+    docker_cleanup
+}
+
 # Runs the docker container and builds the image
 function build {
     eval "docker run --privileged -v /$PWD:/src $IMAGENAME"
@@ -68,6 +73,8 @@ function select_func {
                 docker_build_image;;
             image)
                 image;;
+            tools)
+                tools;;
             build)
                 build;;
             rebuild)
@@ -85,7 +92,7 @@ function select_func {
 
 if [ $# -eq 0 ]; then
     PS3="Choose an option: "
-    select word in "dockerbuild" "image" "build" "rebuild" "run" "debug"
+    select word in "dockerbuild" "image" "tools" "build" "rebuild" "run" "debug"
     do
         select_func $word
         break
