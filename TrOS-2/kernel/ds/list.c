@@ -5,7 +5,7 @@
 #include <tros/kheap.h>
 
 
-void list_add(list_t* list, void* data)
+void list_add_front(list_t* list, void* data)
 {
     list_node_t* new_node = (list_node_t*)kmalloc(sizeof(list_node_t));
     new_node->data = data;
@@ -14,7 +14,7 @@ void list_add(list_t* list, void* data)
     list->size++;
 }
 
-void list_add_back(list_t* list, void* data)
+void list_add(list_t* list, void* data)
 {
     list_node_t* new_node = (list_node_t*)kmalloc(sizeof(list_node_t));
     new_node->data = data;
@@ -80,8 +80,6 @@ void list_node_remove(list_t* list, list_node_t* node)
     }
 }
 
-//NOTE: This gets the value at index FROM the HEAD!
-//      And the HEAD is the last inserted object
 list_node_t* list_get_at_index(list_t* list, unsigned int index)
 {
     if(index < list->size)

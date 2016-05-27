@@ -7,7 +7,7 @@
 
 static unsigned int _xPos = 0;
 static unsigned int _yPos = 0;
-static unsigned char _char_attrib = 0x1F;
+static unsigned char _char_attrib = 0x0F;
 
 static unsigned char _vga_calculate_color(vga_char_attrib_t* c);
 

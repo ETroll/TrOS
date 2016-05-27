@@ -2,7 +2,6 @@
 // TrOS kernel - Main entry
 
 #include <tros/tros.h>
-#include <tros/hal/VGA.h>   //REMOVE
 #include <tros/timer.h>
 #include <tros/irq.h>
 #include <tros/pmm.h>	// REMOVE
@@ -13,6 +12,8 @@
 #include <sys/multiboot.h>
 
 #include <tros/process.h>
+
+#include <string.h>
 
 //Drivers baked in to the kernel
 extern int kbd_driver_initialize();
@@ -31,15 +32,6 @@ unsigned int tmp_userland_stack[1024];
 
 void kernel_early()
 {
-    //"init" VGA - Move to Bootloader to clear screen before passing control
-    vga_char_attrib_t clr = {
-        .bg = VGA_BLACK,
-        .font = VGA_WHITE
-    };
-    vga_clear_screen(&clr);
-    vga_set_color(&clr);
-
-    //IRQ and Scheduling
     irq_initialize();
     timer_initialize(50);
 
@@ -95,7 +87,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     kernel_drivers();
     kernel_filesystems();
 
-    if(!vfs_mount("fdd", "fat12", "/"))
+    if(!vfs_mount("fdd", "fat12"))
     {
         printk("Error mounting root folder. Halting!\n");
         __asm("cli;");
@@ -104,6 +96,83 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     syscall_initialize();
 
+    // Test / DEBUG
+    fs_node_t* root = kopen("/fdd/");
+    printk("Directory /fdd/ (%x)\n", root);
+    unsigned int index = 0;
+
+    dirent_t* dirent = vfs_readdir(root, index);
+    printk("Dirent: %x(%d) ", dirent, index);
+    while (dirent != 0)
+    {
+        printk("%s - ", dirent->name);
+        if(dirent->flags & VFS_FLAG_DIRECTORY)
+        {
+            printk("DIR");
+        }
+        else
+        {
+            printk("FILE");
+        }
+        printk(" %x\n", dirent->name, dirent->flags);
+        kfree(dirent);
+
+        dirent = vfs_readdir(root, ++index);
+    }
+    vfs_close(root);
+    //kfree(dir); //Not freed in VFS yet..
+
+    // fs_node_t* testnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
+    // strcpy(testnode->name, "TEST");
+    // testnode->inode = 33+133;
+    // testnode->size = 9;
+    // testnode->flags = VFS_FLAG_FILE;
+    // testnode->fsops = root->fsops;
+    // testnode->device = root->device;
+    //
+    // unsigned char* filebuffer = (unsigned char*)kmalloc(testnode->size+1);
+    // unsigned int read_bytes = vfs_read(testnode, 0, testnode->size, filebuffer);
+    // filebuffer[testnode->size] = '\0';
+    //
+    // if(read_bytes > 0)
+    // {
+    //     printk("Read %s\n");
+    // }
+    // else
+    // {
+    //     printk("Failure reading file /TEST\n");
+    // }
+
+
+
+    // End Test / DEBUG
+
+
+
+    /*
+    #include <stdio.h>
+    #include <dirent.h>
+
+    int main()
+    {
+        DIR *dir;
+        struct dirent *dp;
+        char * file_name;
+        dir = opendir(".");
+        while ((dp=readdir(dir)) != NULL) {
+            printf("debug: %s\n", dp->d_name);
+            if ( !strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") )
+            {
+                // do nothing (straight logic)
+            } else {
+                file_name = dp->d_name; // use it
+                printf("file_name: \"%s\"\n",file_name);
+            }
+        }
+        closedir(dir);
+        return 0;
+    }
+    */
 
     extern void tss_set_ring0_stack(uint16_t, uint32_t);
     extern void enter_usermode();
@@ -122,12 +191,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     //      parameters passed into kernel_main via the stack.
     //      So we should be able to clear the stack if the stak has "leaked"?
 
-
-    enter_usermode();
-
-    trell_main();
-
-
+    // enter_usermode();
+    // trell_main();
 
     while(1)
     {

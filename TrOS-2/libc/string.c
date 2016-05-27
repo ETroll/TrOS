@@ -12,6 +12,17 @@ char* strcpy(char* dest, const char* src)
     return dest;
 }
 
+char* strncpy(char* dest, const char* src, unsigned int len)
+{
+    unsigned int size = 0;
+    while(size < len)
+    {
+        dest[size] = src[size];
+        size++;
+    }
+    return dest;
+}
+
 int strcmp(const char* str1, const char* str2)
 {
     while(*str1 == *str2)

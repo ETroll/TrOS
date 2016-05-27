@@ -36,14 +36,14 @@ image:
 	losetup -d /dev/loop0
 
 ramdisk: tools
-	$(DISKTOOL) -c build/tmp/initrd
+	$(DISKTOOL) build/tmp/initrd -c
+	echo "ABCD1234" > build/tmp/test
+	# $(DISKTOOL) build/tmp/initrd -a build/elfinfo
+	# $(DISKTOOL) build/tmp/initrd -l
 
 tools: $(FOLDERS)
 	gcc buildtools/elfinfo.c -o build/elfinfo -std=c99
 	gcc buildtools/initrd.c -o $(DISKTOOL) -std=c99
-	$(DISKTOOL) build/tmp/initrd -c
-	$(DISKTOOL) build/tmp/initrd -a build/elfinfo
-	$(DISKTOOL) build/tmp/initrd -l
 
 $(FOLDERS):
 	mkdir $@

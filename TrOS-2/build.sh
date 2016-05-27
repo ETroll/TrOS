@@ -54,7 +54,7 @@ function rebuild {
 
 # Runs the floppy image
 function run {
-    eval "qemu-system-i386 -fda build/tros.img -monitor stdio -m 256"
+    eval "qemu-system-i386 -fda build/tros.img -monitor stdio -m 256 -d cpu_reset"
     #-cpu 486 #-d cpu_reset
     qemu_cleanup
 }

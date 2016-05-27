@@ -293,6 +293,8 @@ EXECUTE_KERNEL:
 
     xchg bx, bx ; If using BOCHS, lets stop up a bit
 
+    call VGA_CLEAR_SCREEN
+
 	; Execute Kernel
 	mov	eax, 0x2badb002				; multiboot magic. Needs to be in eax
 	mov	ebx, dword multiboot_data	; Multiboot struct. Needs to be in ebx

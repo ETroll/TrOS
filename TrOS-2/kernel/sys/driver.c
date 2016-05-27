@@ -33,7 +33,7 @@ int driver_register(device_driver_t* device)
                                 //      implemented, then this is no longer valid
     strcpy(data->name, device->name);
 
-    list_add_back(_drivers, data);
+    list_add(_drivers, data);
     return _drivers->size;
 }
 

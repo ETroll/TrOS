@@ -1,69 +1,72 @@
 // vfs.c
 // Primitive VFS implementation
 #include <tros/fs/vfs.h>
-#include <tros/ds/list.h>
+#include <tros/fs.h>
 #include <tros/ds/tree.h>
 #include <tros/kheap.h>
-#include <tros/driver.h>
 #include <tros/tros.h>
 #include <string.h>
 
-// ------
-//  / (Root - System disk)
-//  -- System/
-//      -- Boot/
-//      -- Lib/
-//      -- Bin/
-//  -- Applications/
-//  -- Volumes/
-
-tree_t* _vfs_tree = 0;
+/*
+    /
+        fd0/
+            initrd
+            kernel.elf
+            krnldr.bin
+            test
+            folder/
+                test1
+                test2
+                ...
+        hd0/
+        cd0/
+        dvd0/
+*/
+tree_node_t* _vfs_root = 0;
 
 static fs_node_t* vfs_find_node(char* path);
+static fs_node_t* vfs_copy_node(fs_node_t* node);
+list_t* vfs_tokenize_path(char* path);
 
 void vfs_initialize()
 {
-    _vfs_tree = (tree_t*)kmalloc(sizeof(tree_t));
     fs_node_t* mnt = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 
     strcpy(mnt->name, "/");
     mnt->inode = 0;
     mnt->size = 0;
-    mnt->flags = VFS_FLAG_DIRECTORY;
+    mnt->flags = VFS_FLAG_ROOTDIR;
     mnt->fsops = 0;
     mnt->device = 0;
 
-    _vfs_tree->root = tree_node_create(mnt);
-    _vfs_tree->size = 1;
+    _vfs_root = tree_node_create(mnt);
 }
 
 unsigned int vfs_read(fs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer)
 {
-    if(inode->fsops->fs_read != 0)
+    //NOTE: Add guards against bad params?
+    //      - offset + size > filesize
+    int bytesread = 0;
+    if(inode && (inode->flags && VFS_FLAG_FILE) && inode->fsops->fs_read != 0)
     {
-        return inode->fsops->fs_read(inode, offset, size, buffer);
+        bytesread = inode->fsops->fs_read(inode, offset, size, buffer);
     }
-    else
-    {
-        return 0;
-    }
+    return bytesread;
 }
 
 unsigned int vfs_write(fs_node_t* inode, unsigned int offset, unsigned int size, unsigned char* buffer)
 {
-    if(inode->fsops->fs_write != 0)
+    int byteswritten = 0;
+    if(inode && (inode->flags && VFS_FLAG_FILE) && inode->fsops->fs_write != 0)
     {
-        return inode->fsops->fs_write(inode, offset, size, buffer);
+        byteswritten = inode->fsops->fs_write(inode, offset, size, buffer);
     }
-    else
-    {
-        return 0;
-    }
+    return byteswritten;
 }
 
 void vfs_open(fs_node_t* inode)
 {
-    if(inode->fsops->fs_open != 0)
+    if(inode && inode->fsops && inode->fsops->fs_open != 0)
     {
         inode->fsops->fs_open(inode);
     }
@@ -71,7 +74,7 @@ void vfs_open(fs_node_t* inode)
 
 void vfs_close(fs_node_t* inode)
 {
-    if(inode->fsops->fs_close != 0)// && inode != vfs_root)
+    if(inode && inode->fsops && inode->fsops->fs_close != 0)// && inode != vfs_root)
     {
         inode->fsops->fs_close(inode);
     }
@@ -79,14 +82,37 @@ void vfs_close(fs_node_t* inode)
 
 dirent_t* vfs_readdir(fs_node_t* inode, unsigned int index)
 {
-    if((inode->flags & VFS_FLAG_DIRECTORY) && inode->fsops->fs_readdir)
+    //printk("IN:%x I:%d ", inode, index);
+    dirent_t* entry = 0;
+    if(inode)
     {
-        return inode->fsops->fs_readdir(inode, index);
+        if((inode->flags & VFS_FLAG_ROOTDIR))
+        {
+            //printk("R ");
+            if(_vfs_root != 0)
+            {
+                tree_node_t* child = tree_get_child_index(_vfs_root, index);
+                //printk("C:%x ", child);
+                if(child)
+                {
+                    fs_node_t* mnt = (fs_node_t*)child->data;
+                    //printk("D:%x N: %s ", mnt, mnt->name);
+
+                    entry = (dirent_t*)kmalloc(sizeof(dirent_t));
+                    strcpy(entry->name, mnt->name);
+                    entry->inodenum = mnt->inode;
+                    entry->flags = mnt->flags;
+                }
+            }
+        }
+        else if((inode->flags & VFS_FLAG_DIRECTORY) && inode->fsops->fs_readdir)
+        {
+            //printk("DR ");
+            entry = inode->fsops->fs_readdir(inode, index);
+        }
     }
-    else
-    {
-        return 0;
-    }
+    //printk("\n");
+    return entry;
 }
 
 void vfs_create(char* name)
@@ -99,8 +125,9 @@ void vfs_delete(char* name)
 
 }
 
-int vfs_mount(char* device, char* fsname, char* path)
+int vfs_mount(char* device, char* fsname)
 {
+    int retcode = 0;
     device_driver_t* drv = driver_find_device(device);
 
     if(drv != 0 && drv->type == DRV_BLOCK)
@@ -108,111 +135,202 @@ int vfs_mount(char* device, char* fsname, char* path)
         filesystem_t* fs = fs_lookup(fsname);
         if(fs)
         {
-            //TODO: Error handling for missing filesystem
-            //TODO: Check if path is taken by another mountpoint
-            //TODO: Canonicalize path!
+            fs_node_t* mnt = (fs_node_t*)kmalloc(sizeof(fs_node_t));
 
-            fs_node_t* node = vfs_find_node(path);
-            if(node == 0)
-            {
-                //Example: /Volumes/CDROM
-                // -> Then /Volumes/ must exist, if not then ERROR!
-                //TODO: create node
-            }
+            strcpy(mnt->name, drv->name);
+            mnt->flags = VFS_FLAG_DIRECTORY | VFS_FLAG_MOUNTPOINT;
+            mnt->fsops = fs->fsops;
+            mnt->device = (driver_block_t*)drv->driver;
 
-            if((node->flags & VFS_FLAG_DIRECTORY) && !(node->flags & VFS_FLAG_MOUNTPOINT))
+            if(fs->mount(mnt))
             {
-                node->flags |= VFS_FLAG_MOUNTPOINT;
-                node->device = (driver_block_t*)drv->driver;
-                node->fsops = fs->fsops;
-
-                return fs->fs_mount(node);
-            }
-            else
-            {
-                return 0;
+                tree_node_insert(_vfs_root, tree_node_create(mnt));
+                retcode = 1;
             }
         }
-        else
-        {
-            return 0;
-        }
     }
-    else
-    {
-        return 0;
-    }
+    return retcode;
 }
 
 static fs_node_t* vfs_find_node(char* path)
 {
-    //TODO: Actually return a node...
-    return _vfs_tree->root->data;
-}
+    fs_node_t* node = 0;
+    unsigned int path_len = strlen(path);
 
-fs_node_t* kopen(char* path)
-{
-    if(_vfs_tree && _vfs_tree->root)
+    if(path_len > 0 && path[0] == PATH_DELIMITER)
     {
-        unsigned int path_len = strlen(path);
         if(path_len == 1)
         {
-            fs_node_t *vfs_root_clone = kmalloc(sizeof(fs_node_t));
-            memcpy(vfs_root_clone, _vfs_tree->root->data, sizeof(fs_node_t));
-            vfs_open(vfs_root_clone);
-
-            return vfs_root_clone;
+            node = vfs_copy_node((fs_node_t*)_vfs_root->data);
         }
         else
         {
-            return 0; //only support root now :P
+            list_t* tokenlist = vfs_tokenize_path(path);
+            if(tokenlist->size > 0)
+            {
+                printk("Got %d tokens\n", tokenlist->size);
+
+                fs_node_t* deviceroot = 0;
+                char* devicename = tokenlist->head->data;
+
+                for(int i = 0; i<_vfs_root->children->size; i++)
+                {
+                    //TODO: replace usage of tree_get_child_index with more effieient way
+                    fs_node_t* tmp = tree_get_child_index(_vfs_root, i)->data;
+                    if(strcmp(tmp->name, devicename) == 0)
+                    {
+                        deviceroot = tmp;
+                        break;
+                    }
+                }
+
+                if(deviceroot)
+                {
+                    printk("Found root: %s\n", deviceroot->name);
+                    if(tokenlist->size == 1)
+                    {
+                        node = vfs_copy_node(deviceroot);
+                    }
+                    else
+                    {
+                        fs_node_t* current_folder = vfs_copy_node(deviceroot);
+                        unsigned int failsafe = 0;
+                        list_node_t* target = tokenlist->head->next;
+
+                        while(failsafe < 300)
+                        {
+                            fs_node_t* foundnode = 0;
+                            unsigned int index = 0;
+
+                            dirent_t* dirent = vfs_readdir(current_folder, index);
+                            while (dirent != 0)
+                            {
+                                if(strcmp(dirent->name, target->data) == 0)
+                                {
+                                    foundnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
+                                    //TODO SET UP NODE from Dirent
+
+                                    kfree(dirent);
+                                    break;
+                                }
+                                else
+                                {
+                                    kfree(dirent);
+                                    dirent = vfs_readdir(current_folder, ++index);
+                                }
+                            }
+
+                            if(foundnode)
+                            {
+                                if(target->next)
+                                {
+                                    target = target->next;
+                                    kfree(current_folder);
+                                    current_folder = foundnode;
+                                    failsafe++;
+                                }
+                                else
+                                {
+                                    //Last node, we have a match!!
+                                    node = foundnode;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                //Could not find file
+                                printk("Could not find %s. Giving up!\n", target->data);
+                                break;
+                            }
+                        }
+                    }
+                }
+                else { printk("Did not find any device root\n");}
+            }
+            else { printk("Got NO tokens\n");}
+
+            list_remove_all(tokenlist);
+            kfree(tokenlist);
         }
     }
-    else
-    {
-        return 0;
-    }
+    printk("\n");
+    return node;
 }
 
-
-/// FS functions
-/// ---------------------
-list_t* _fs_filesystems = 0;
-
-int fs_register(filesystem_t* fs)
+//NOTE: Need _FULL_ path
+fs_node_t* kopen(char* path)
 {
-    if(_fs_filesystems == 0)
+    fs_node_t* node = 0;
+    if(_vfs_root)
     {
-        _fs_filesystems = (list_t*)kmalloc(sizeof(list_t));
-        _fs_filesystems->head = 0;
-        _fs_filesystems->size = 0;
-    }
-
-    filesystem_t* data = (filesystem_t*)kmalloc(sizeof(filesystem_t));
-    data->name = (char*)kmalloc(strlen(fs->name)+1);
-
-    strcpy(data->name, fs->name);
-    data->fsops = fs->fsops;
-    data->fs_mount = fs->fs_mount;
-    list_add(_fs_filesystems, data);
-
-    return _fs_filesystems->size;
-}
-
-filesystem_t* fs_lookup(char* name)
-{
-    list_node_t* node = _fs_filesystems->head;
-    filesystem_t* fs = 0;
-
-    while(node != 0)
-    {
-        filesystem_t* tmp = (filesystem_t*)node->data;
-        if(strcmp(tmp->name, name) == 0)
+        node = vfs_find_node(path);
+        if(node)
         {
-            fs = tmp;
+            vfs_open(node);
+        }
+    }
+    return node;
+}
+
+fs_node_t* vfs_copy_node(fs_node_t* node)
+{
+    fs_node_t* newnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
+    memcpy(newnode, node, sizeof(fs_node_t));
+    return newnode;
+}
+
+list_t* vfs_tokenize_path(char* path)
+{
+    unsigned int lastmatch = 1;
+    unsigned int nextmatch = 1;
+    unsigned int depth = 0;
+    unsigned int path_len = strlen(path);
+
+    list_t* tokens = (list_t*)kmalloc(sizeof(list_t));
+    tokens->head = 0;
+    tokens->size = 0;
+
+    while (depth++ < 255)
+    {
+        for(int i = lastmatch; i<path_len; i++)
+        {
+            if(path[i] == PATH_DELIMITER)
+            {
+                nextmatch = i+1;
+                break;
+            }
+        }
+        if(nextmatch == lastmatch)
+        {
+            nextmatch = path_len;
+        }
+
+        unsigned int tokensize = nextmatch-lastmatch;
+        if(tokensize > 0 && !(tokensize == 1 && path[lastmatch] == PATH_DELIMITER))
+        {
+            char* token = (char*)kmalloc(tokensize + 1);
+            strncpy(token, (path+lastmatch), tokensize);
+
+            if(token[tokensize-1] == PATH_DELIMITER)
+            {
+                //TODO: Flag as folder?
+                token[tokensize-1] = '\0';
+            }
+            else
+            {
+                token[tokensize] = '\0';
+            }
+            list_add(tokens, token);
+        }
+
+        if(nextmatch >= path_len)
+        {
             break;
         }
-        node = node->next;
+        else
+        {
+            lastmatch = nextmatch;
+        }
     }
-    return fs;
+    return tokens;
 }

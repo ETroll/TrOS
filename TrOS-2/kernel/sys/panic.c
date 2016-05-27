@@ -36,14 +36,14 @@ void kernel_panic(const char* message, cpu_registers_t* regs)
     // int base_pointer = 0;
     // __asm("mov %%ebp, %0;" : "=a"(base_pointer));
     //
-    // printk("Stacktrace: ")
+    // printk("Stacktrace: \n");
     // for(int i = 0; i<3; i++) {
     //     void* ebp = (void*) base_pointer;
     //     void* caller = (void*) (base_pointer+4);
     //
-    //     prink("EBP: %x - M: %x\n", base_pointer, caller);
+    //     printk("EBP: %x - M: %x\n", base_pointer, caller);
     //
-    //     base_pointer =
+    //     // base_pointer =
     // }
 
     __asm("cli;");

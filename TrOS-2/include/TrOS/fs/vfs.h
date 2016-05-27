@@ -7,16 +7,19 @@
 #include <tros/driver.h>
 
 #define FILE_NAME_MAX 256
-
-enum VFS_FLAGS
-{
-    VFS_FLAG_FILE       = 0x01,
-    VFS_FLAG_DIRECTORY  = 0x02,
-    VFS_FLAG_MOUNTPOINT = 0x04
-};
+#define PATH_DELIMITER '/'
 
 struct fs_node;
 struct fs_dirent;
+
+enum VFS_FLAGS
+{
+    VFS_FLAG_UNKNOWN    = 0x00,
+    VFS_FLAG_FILE       = 0x01,
+    VFS_FLAG_DIRECTORY  = 0x02,
+    VFS_FLAG_MOUNTPOINT = 0x04,
+    VFS_FLAG_ROOTDIR    = 0x08
+};
 
 typedef struct
 {
@@ -25,7 +28,6 @@ typedef struct
     void (*fs_open)(struct fs_node* inode);
     void (*fs_close)(struct fs_node* inode);
     struct fs_dirent* (*fs_readdir)(struct fs_node* inode, unsigned int index);
-    //struct fs_node* (*fs_finddir)(struct fs_node* inode, char* name);
     void (*fs_create)(struct fs_node* inode, char* name);
     void (*fs_delete)(struct fs_node* inode);
 } fs_operations_t;
@@ -38,21 +40,14 @@ typedef struct fs_node
     unsigned int flags;
     fs_operations_t* fsops;
     driver_block_t* device;
-
 } fs_node_t;
 
 typedef struct fs_dirent
 {
     char name[FILE_NAME_MAX];
     unsigned int inodenum;
+    unsigned char flags;
 } dirent_t;
-
-typedef struct
-{
-    char* name;
-    fs_operations_t* fsops;
-    int (*fs_mount)(fs_node_t* mountpoint);
-} filesystem_t;
 
 void vfs_initialize();
 
@@ -67,13 +62,8 @@ void vfs_delete(char* name);
 
 dirent_t* vfs_readdir(fs_node_t* inode, unsigned int index);
 
-int vfs_mount(char* device, char* fsname, char* path);
+int vfs_mount(char* device, char* fsname);
 
 fs_node_t* kopen(char* path);
-
-//Maybe separate out in own FS.c/h?
-int fs_register(filesystem_t* fs);
-filesystem_t* fs_lookup(char* name);
-
 
 #endif

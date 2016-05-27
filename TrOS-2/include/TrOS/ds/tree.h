@@ -21,7 +21,8 @@ typedef struct
 
 void tree_node_free(tree_node_t* node);
 tree_node_t* tree_node_create(void* data);
-void tree_node_insert(tree_t* tree, tree_node_t* parent, tree_node_t* node);
+void tree_node_insert(tree_node_t* parent, tree_node_t* node);
+tree_node_t* tree_get_child_index(tree_node_t* parent, unsigned int index);
 
 
 #endif

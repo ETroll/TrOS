@@ -32,9 +32,21 @@ void tree_node_free(tree_node_t* node)
     }
 }
 
-void tree_node_insert(tree_t* tree, tree_node_t* parent, tree_node_t* node)
+void tree_node_insert(tree_node_t* parent, tree_node_t* node)
 {
     list_add(parent->children, node);
     node->parent = parent;
-    tree->size++;
+}
+
+tree_node_t* tree_get_child_index(tree_node_t* parent, unsigned int index)
+{
+    list_node_t* node = list_get_at_index(parent->children, index);
+    if(node)
+    {
+        return (tree_node_t*)node->data;
+    }
+    else
+    {
+        return 0;
+    }
 }

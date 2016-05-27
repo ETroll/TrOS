@@ -7,7 +7,7 @@
 #include <tros/hal/io.h>
 #include <tros/hal/dma.h>
 #include <tros/tros.h>
-#include <tros/timer.h> //temp sleep location
+// #include <tros/timer.h> //temp sleep location
 #include <string.h>
 
 #define FLOPPY_DMA              0x1000  //A 4K block has been reserved
@@ -319,6 +319,7 @@ static chs_t fdd_lba_to_chs(int lba)
 static void fdd_wait_irq()
 {
     //TODO: Maybe implement SIGNALS to replace this shit?
+    //printk("-");
     while(__fdd_irq_fired == 0)
     {
         //printk(".");
@@ -392,13 +393,13 @@ static void fdd_motor_on()
         | motor
         | FDD_DOR_MASK_RESET
         | FDD_DOR_MASK_DMA, FDD_IO_DOR);
-	timer_sleep(5);
+	// timer_sleep(5); //To wait for the motor to start up on real HW.
 }
 
 static void fdd_motor_off()
 {
     pio_outb(FDD_DOR_MASK_RESET, FDD_IO_DOR);
-	timer_sleep(5);
+	// timer_sleep(5); //To wait for the motor to stop on real HW.
 }
 
 static void fdd_check_interrupt_status(unsigned int* status_reg0, unsigned int* cur_cylinder)
