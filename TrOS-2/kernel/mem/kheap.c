@@ -42,17 +42,22 @@ void kheap_initialize()
 
 void* kmalloc(unsigned int size)
 {
+    //printk("Allocating: %d bytes ", size);
     struct heap_chunk_t* chunk = 0;
 
     if(_kheap_free == 0)
     {
+        //printk("E ");
         chunk = kheap_extend(size);
+        //printk("%x ", chunk);
     }
     else
     {
+        //printk("S ");
         chunk = kheap_first_free(size);
         if(chunk == 0)
         {
+            //printk("F0 %x ",_kheap_free);
             // Is the address of the last free chunk larger than last chunk on the heaplist?
             //   Yes:    Increase with (wanted size)-(sizeof last free chunk)
             //           Combine the old chunk with the new chunk and add to heaplist
@@ -60,29 +65,35 @@ void* kmalloc(unsigned int size)
             if(_kheap_start != 0 && _kheap_free->prev > _kheap_start->prev)
             {
                 struct heap_chunk_t* last = _kheap_free->prev;
+                //TODO: if((int)(size - last->size) > 0)
+
                 kheap_remove_chunk_free(last);
-
+                //printk("L %d %d ", last->size, size - last->size);
                 chunk = kheap_extend(size - last->size);
-
+                //printk("E %d ", size - last->size);
                 last->size += sizeof(struct heap_chunk_t) + chunk->size;
                 chunk = last;
             }
             else
             {
+                //printk("E %d ", size);
                 chunk = kheap_extend(size);
             }
         }
         else
         {
+            //printk("FR ");
             kheap_remove_chunk_free(chunk);
         }
     }
-
+    //printk("A ");
     kheap_add_chunk_heap(chunk);
     if(chunk->size > size)
     {
+        //printk("OV %d/%d ", chunk->size, size);
         kheap_add_overflow_to_free(chunk, size);
     }
+    //printk("\n");
     return (void*)((unsigned int)chunk +sizeof(struct heap_chunk_t));
 }
 
@@ -92,6 +103,7 @@ void kfree(void* ptr)
 
     if(chunk->chend == CHUNK_ID)
     {
+        //printk("Free - C: %x S: %d\n", chunk, chunk->size);
         kheap_remove_chunk_heap(chunk);
         kheap_add_chunk_free(chunk);
     }
@@ -100,6 +112,7 @@ void kfree(void* ptr)
         //PANIC!
         printk("ERROR! - Trying to free unallocated memory at %x\n", ptr);
     }
+    //printk("\n");
 }
 
 static struct heap_chunk_t* kheap_extend(unsigned int size)
@@ -112,7 +125,6 @@ static struct heap_chunk_t* kheap_extend(unsigned int size)
     {
         amount++;
     }
-
     for(int i = 0; i<amount; i++)
     {
         void* phys = pmm_alloc_block();
@@ -135,23 +147,27 @@ static struct heap_chunk_t* kheap_first_free(unsigned int amount)
         struct heap_chunk_t* ret = 0;
         do
         {
+            //printk("%d/%d ", iterator->size, amount);
             if(iterator->size >= amount)
             {
+                //printk("F ");
                 ret = iterator;
                 break;
             }
             iterator = iterator->next;
-        } while(iterator->next != _kheap_free);
+        } while(iterator != _kheap_free);
         return ret;
     }
     else
     {
+        //printk("NF ");
         return 0;
     }
 }
 
 static void kheap_add_overflow_to_free(struct heap_chunk_t* chunk, unsigned int size)
 {
+    //printk("AOVF ");
     struct heap_chunk_t* overflow = (struct heap_chunk_t*)((unsigned int)chunk
         + sizeof(struct heap_chunk_t)
         + size);
@@ -163,25 +179,47 @@ static void kheap_add_overflow_to_free(struct heap_chunk_t* chunk, unsigned int 
 
 static void kheap_add_chunk_free(struct heap_chunk_t* chunk)
 {
+    //printk("ACF ");
     if(_kheap_free == 0)
     {
         _kheap_free = chunk;
         _kheap_free->next = _kheap_free;
         _kheap_free->prev = _kheap_free;
+        //printk("F ");
     }
     else if(chunk < _kheap_free)
     {
+        //printk("NH %x < %x ", chunk, _kheap_free);
+
         chunk->next = _kheap_free;
         chunk->prev = _kheap_free->prev;
         _kheap_free->prev->next = chunk;
         _kheap_free->prev = chunk;
         _kheap_free = chunk;
+
+        //printk("\n P: ");
+        // struct heap_chunk_t* iterator =  _kheap_free;
+        // do
+        // {
+        //     printk("%x (%d)-",iterator, iterator->size);
+        //     iterator = iterator->prev;
+        // } while(iterator != _kheap_free);
+        //printk("\n N: ");
+
+        // iterator = _kheap_free;
+        // do
+        // {
+            //printk("%x (%d)-",iterator, iterator->size);
+        //     iterator = iterator->next;
+        // } while(iterator != _kheap_free);
     }
     else
     {
+        //printk("E ");
         struct heap_chunk_t* iterator =  _kheap_free->prev;
         do
         {
+            //printk(".");
             if(iterator < chunk)
             {
                 chunk->next = iterator->next;
@@ -297,6 +335,7 @@ static void kheap_merge_freelist_bottom(struct heap_chunk_t* chunk)
 
     if((struct heap_chunk_t*)chunk_end == chunk->next)
     {
+        //printk("MB ");
         chunk->size += next->size + sizeof(struct heap_chunk_t);
         chunk->next = next->next;
         next->next->prev = chunk;
@@ -313,6 +352,7 @@ static void kheap_merge_freelist_top(struct heap_chunk_t* chunk)
 
     if((unsigned int)chunk == prev_end)
     {
+        //printk("MT ");
         prev->size += chunk->size + sizeof(struct heap_chunk_t);
         prev->next = chunk->next;
         prev->next->prev = prev;

@@ -97,12 +97,12 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     syscall_initialize();
 
     // Test / DEBUG
-    fs_node_t* root = kopen("/fdd/");
+    fs_node_t* root = kopen("/fdd");
     printk("Directory /fdd/ (%x)\n", root);
     unsigned int index = 0;
 
     dirent_t* dirent = vfs_readdir(root, index);
-    printk("Dirent: %x(%d) ", dirent, index);
+    printk("Dirent: %x(%d)\n", dirent, index);
     while (dirent != 0)
     {
         printk("%s - ", dirent->name);
@@ -120,6 +120,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
         dirent = vfs_readdir(root, ++index);
     }
     vfs_close(root);
+    kfree(root);
     //kfree(dir); //Not freed in VFS yet..
 
     // fs_node_t* testnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));

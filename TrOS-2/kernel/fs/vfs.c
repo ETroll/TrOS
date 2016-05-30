@@ -26,7 +26,8 @@ tree_node_t* _vfs_root = 0;
 
 static fs_node_t* vfs_find_node(char* path);
 static fs_node_t* vfs_copy_node(fs_node_t* node);
-list_t* vfs_tokenize_path(char* path);
+static list_t* vfs_tokenize_path(char* path);
+static fs_node_t* vfs_node_from_dir(fs_node_t* parent, dirent_t* dir);
 
 void vfs_initialize()
 {
@@ -168,7 +169,7 @@ static fs_node_t* vfs_find_node(char* path)
             list_t* tokenlist = vfs_tokenize_path(path);
             if(tokenlist->size > 0)
             {
-                printk("Got %d tokens\n", tokenlist->size);
+                //printk("Got %d tokens\n", tokenlist->size);
 
                 fs_node_t* deviceroot = 0;
                 char* devicename = tokenlist->head->data;
@@ -186,7 +187,7 @@ static fs_node_t* vfs_find_node(char* path)
 
                 if(deviceroot)
                 {
-                    printk("Found root: %s\n", deviceroot->name);
+                    //printk("Found root: %s\n", deviceroot->name);
                     if(tokenlist->size == 1)
                     {
                         node = vfs_copy_node(deviceroot);
@@ -207,9 +208,7 @@ static fs_node_t* vfs_find_node(char* path)
                             {
                                 if(strcmp(dirent->name, target->data) == 0)
                                 {
-                                    foundnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
-                                    //TODO SET UP NODE from Dirent
-
+                                    foundnode = vfs_node_from_dir(deviceroot, dirent);
                                     kfree(dirent);
                                     break;
                                 }
@@ -333,4 +332,23 @@ list_t* vfs_tokenize_path(char* path)
         }
     }
     return tokens;
+}
+
+fs_node_t* vfs_node_from_dir(fs_node_t* parent, dirent_t* dir)
+{
+    fs_node_t* node = 0;
+
+    if(dir)
+    {
+        node = (fs_node_t*)kmalloc(sizeof(fs_node_t));
+        strcpy(node->name, dir->name);
+        node->inode = dir->inodenum;
+        node->flags = dir->flags;
+        node->size = 0;
+        node->fsops = parent->fsops;
+        node->device = parent->device;
+    }
+
+
+    return node;
 }

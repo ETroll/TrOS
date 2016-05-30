@@ -220,15 +220,13 @@ static unsigned int fat12_write(struct fs_node* node, unsigned int offset,
  */
 static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
 {
-    // fat12_super_t super;
-    // printk("%d", sizeof(fat12_super_t));
-    // node->device->read((unsigned char*)&super, 0, 1);
-
+    //printk("Node: %x, inode: %d device: %x index: %d bps: %x\n", node, node->inode, node->device, index, FAT12_BPS);
     fat12_entry_t* directory = (fat12_entry_t*)kmalloc(FAT12_BPS);
     int di = index % FAT12_DIR_MAX;
     int sectors_read = 0;
     if(index < FAT12_DIR_MAX)
     {
+        //printk("Read dir: %x, inode %x device: %x read %x\n", directory, node->inode,  node->device->read);
         sectors_read = node->device->read((unsigned char*)directory, node->inode, 1);
     }
     else
@@ -237,9 +235,10 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
         // And load data into directory entry
         printk("ERROR! Not implemented index > 16!\n");
     }
-
+    
     if(sectors_read > 0)
     {
+        //printk("di: %d filn[0]: %x\n", di, directory[di].filename[0]);
         if(directory[di].filename[0] != 0x00 && directory[di].filename[0] != 0xE5)
         {
             dirent_t* entry = (dirent_t*)kmalloc(sizeof(dirent_t));
