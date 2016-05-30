@@ -41,6 +41,25 @@ static const char* irq_names[32] = {
 	"Reserved"
 };
 
+static const char* irq_hardware_names[16] = {
+    "System timer",
+    "Keyboard",
+    "Cascade interrupt for IRQs 8-15",
+    "COM2",
+    "COM1",
+    "Sound card",
+    "Floppy disk controller",
+    "First parallel port",
+    "Real-time clock",
+    "Open interrupt",
+    "Open interrupt",
+    "Open interrupt",
+    "PS/2 mouse",
+    "Floating point unit/coprocessor",
+    "Primary IDE channel",
+    "Secondary IDE channel"
+};
+
 void irq_initialize(void)
 {
     for(int i = 0; i<MAX_IRQ; i++)
@@ -55,23 +74,30 @@ void irq_initialize(void)
 
 void irq_default_handler(cpu_registers_t regs)
 {
-	unsigned char itq_no = regs.irq_no & 0xFF;
-	if (__irq_handlers[itq_no] != 0)
+	unsigned char irq_no = regs.irq_no & 0xFF;
+	if (__irq_handlers[irq_no] != 0)
 	{
-		irq_handler handler = __irq_handlers[itq_no];
+		irq_handler handler = __irq_handlers[irq_no];
 		handler(&regs);
 	}
-	else if(itq_no < 32)
+	else if(irq_no < 32)
 	{
 		// If we have a CPU exception and it is not handled
 		// we are in touble.. Lets panic. (We did not bring a towel..)
-		kernel_panic(irq_names[itq_no], &regs);
+		kernel_panic(irq_names[irq_no], &regs);
 	}
 	else
 	{
-		printk("Unhandled IRQ: %d\n", itq_no);
-		if(itq_no == 33) printk("ACK! %d \n", itq_no-32);
-		pic_eoi(itq_no-32);
+        unsigned int real_irqno = irq_no-32;
+        if(real_irqno < 16)
+        {
+            printk("Unhandled hardware IRQ: %d (%s)\n", real_irqno, irq_hardware_names[real_irqno]);
+        }
+        else
+        {
+            printk("Unhandled software IRQ: %d (%d)\n", real_irqno, irq_no);
+        }
+		pic_eoi(real_irqno);
 	}
 }
 

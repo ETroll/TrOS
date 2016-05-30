@@ -97,7 +97,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     syscall_initialize();
 
     // Test / DEBUG
-    fs_node_t* root = kopen("/fdd");
+    fs_node_t* root = kopen("/fdd/folder/");
     printk("Directory /fdd/ (%x)\n", root);
     unsigned int index = 0;
 
