@@ -184,6 +184,7 @@ int floppy_open()
 
     if(irq_register_handler(FLOPPY_IRQ + IRQ_BASE, &fdd_irq_handler))
     {
+        //printk("Floppy OPEN\n");
         dma_reset();
         dma_channel_mask(FLOPPY_DMA_CHANNEL);
         dma_flipflop_reset(1);
@@ -206,6 +207,7 @@ int floppy_open()
 
 void floppy_close()
 {
+    //printk("Floppy CLOSE\n");
     irq_remove_handler(FLOPPY_IRQ + IRQ_BASE);
 }
 

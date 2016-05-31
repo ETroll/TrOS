@@ -235,9 +235,10 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
         // And load data into directory entry
         printk("ERROR! Not implemented index > 16!\n");
     }
-    
+
     if(sectors_read > 0)
     {
+        
         //printk("di: %d filn[0]: %x\n", di, directory[di].filename[0]);
         if(directory[di].filename[0] != 0x00 && directory[di].filename[0] != 0xE5)
         {

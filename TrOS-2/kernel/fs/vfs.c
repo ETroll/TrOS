@@ -198,6 +198,7 @@ static fs_node_t* vfs_find_node(char* path)
                         unsigned int failsafe = 0;
                         list_node_t* target = tokenlist->head->next;
 
+                        vfs_open(deviceroot);
                         while(failsafe < 300)
                         {
                             fs_node_t* foundnode = 0;
@@ -206,6 +207,7 @@ static fs_node_t* vfs_find_node(char* path)
                             dirent_t* dirent = vfs_readdir(current_folder, index);
                             while (dirent != 0)
                             {
+                                printk("Comparing entry: %s with target: %s\n", dirent->name, target->data);
                                 if(strcmp(dirent->name, target->data) == 0)
                                 {
                                     foundnode = vfs_node_from_dir(deviceroot, dirent);
@@ -242,6 +244,7 @@ static fs_node_t* vfs_find_node(char* path)
                                 break;
                             }
                         }
+                        vfs_close(deviceroot);
                     }
                 }
                 else { printk("Did not find any device root\n");}

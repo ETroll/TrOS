@@ -114,6 +114,7 @@ bld/
 Trace-*
 bochsout.txt
 bx_enh_dbg.ini
+kernel.log
 
 # NuGet Packages
 *.nupkg
