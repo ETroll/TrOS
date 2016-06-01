@@ -226,7 +226,7 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
     int sectors_read = 0;
     if(index < FAT12_DIR_MAX)
     {
-        //printk("Read dir: %x, inode %x device: %x read %x\n", directory, node->inode,  node->device->read);
+        //printk("Read dir: %x, inode %d\n", directory, node->inode,  node->device->read);
         sectors_read = node->device->read((unsigned char*)directory, node->inode, 1);
     }
     else
@@ -238,8 +238,8 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
 
     if(sectors_read > 0)
     {
-        
-        //printk("di: %d filn[0]: %x\n", di, directory[di].filename[0]);
+
+        //printk("%d file: %s size %d cluster %d creation %d\n", di, directory[di].filename, directory[di].size, directory[di].firstcluster, directory[di].createdtime);
         if(directory[di].filename[0] != 0x00 && directory[di].filename[0] != 0xE5)
         {
             dirent_t* entry = (dirent_t*)kmalloc(sizeof(dirent_t));
@@ -247,7 +247,7 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
             strncpy((char*)&entry->name[8], directory[di].extension, 3);
             entry->name[11] = '\0';
 
-            entry->inodenum = directory[di].firstcluster + FAT12_SECT_OFFSET;
+            entry->inodenum = directory[di].firstcluster + (FAT12_SECT_OFFSET-2);
             entry->flags = 0;
 
             if((directory[di].attributes & FAT12_ATR_DIRECTORY) == FAT12_ATR_DIRECTORY)

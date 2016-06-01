@@ -96,11 +96,11 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     syscall_initialize();
 
+    char* path = "/fdd/FOLDER     /";
     // Test / DEBUG
-    fs_node_t* root = kopen("/fdd/FOLDER     /");
-    printk("Directory /fdd/ (%x)\n", root);
+    fs_node_t* root = kopen(path);
+    printk("Directory %s (%x)\n", path, root);
     unsigned int index = 0;
-    
     dirent_t* dirent = vfs_readdir(root, index);
     printk("Dirent: %x(%d)\n", dirent, index);
     while (dirent != 0)

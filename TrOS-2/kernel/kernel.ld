@@ -20,5 +20,10 @@ SECTIONS
         *(.kernel_stack)
     }
 
+    /DISCARD/ :
+    {
+        *(.eh_frame)
+    }
+
     end = .; _end = .; __end = .;
 }

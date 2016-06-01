@@ -18,7 +18,7 @@ MAP = kernel.map
 
 
 # CONFIGURATION
-FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
+FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector #-fno-asynchronous-unwind-tables
 LINKER_FLAGS = -ffreestanding -nostdlib -Wl,-Map=$(DIR_OBJECT)$(MAP)
 INCLUDES = /src/include/
 LINKER_MAP = kernel.ld
