@@ -2,10 +2,10 @@
 // Primitive VFS implementation
 #include <tros/fs/vfs.h>
 #include <tros/fs.h>
-#include <tros/ds/tree.h>
+#include <tros/klib/tree.h>
 #include <tros/kheap.h>
 #include <tros/tros.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 /*
     /

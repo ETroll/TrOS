@@ -1,7 +1,7 @@
 #include <tros/driver.h>
-#include <tros/ds/list.h>
+#include <tros/klib/list.h>
 #include <tros/kheap.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 // #include <tros/tros.h>
 
 static list_t* _drivers = 0;

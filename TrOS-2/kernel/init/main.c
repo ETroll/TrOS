@@ -9,11 +9,11 @@
 #include <tros/fs/vfs.h>
 #include <tros/kheap.h>
 #include <tros/hwdetect.h>
-#include <sys/multiboot.h>
+#include <tros/sys/multiboot.h>
 
 #include <tros/process.h>
 
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 //Drivers baked in to the kernel
 extern int kbd_driver_initialize();

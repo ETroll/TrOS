@@ -1,7 +1,7 @@
 #include <tros/hal/gdt.h>
 #include <tros/hal/tss.h>
 #include <tros/tros.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 static gdtr __gdtr;
 static gdt_descriptor __gdt_descriptors[GDT_MAX_DESCRIPTORS];

@@ -1,6 +1,6 @@
 #include <tros/hal/idt.h>
 #include <tros/hal/io.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 #include <tros/tros.h>
 

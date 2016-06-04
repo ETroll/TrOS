@@ -2,7 +2,7 @@
 #include <tros/pmm.h>
 #include <tros/irq.h>
 #include <tros/tros.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 #define PAGE_DIRECTORY_INDEX(x) (((x) >> 22) & 0x3ff)
 #define PAGE_TABLE_INDEX(x) (((x) >> 12) & 0x3ff)

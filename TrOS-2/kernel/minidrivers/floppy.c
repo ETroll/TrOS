@@ -8,7 +8,7 @@
 #include <tros/hal/dma.h>
 #include <tros/tros.h>
 // #include <tros/timer.h> //temp sleep location
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 #define FLOPPY_DMA              0x1000  //A 4K block has been reserved
 #define FLOPPY_DMA_CHANNEL      2

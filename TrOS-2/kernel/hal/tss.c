@@ -1,7 +1,7 @@
 #include <tros/hal/gdt.h>
 #include <tros/hal/tss.h>
 #include <tros/tros.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 static tss_entry_t TSS;
 

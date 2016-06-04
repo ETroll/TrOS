@@ -1,4 +1,4 @@
-#include <tros/ds/ringbuffer.h>
+#include <tros/klib/ringbuffer.h>
 
 void rb_init(ringbuffer_t* rb)
 {

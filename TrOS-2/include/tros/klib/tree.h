@@ -4,7 +4,7 @@
 #ifndef INCLUDE_DS_TREE_H
 #define INCLUDE_DS_TREE_H
 
-#include <tros/ds/list.h>
+#include <tros/klib/list.h>
 
 typedef struct tree_node
 {

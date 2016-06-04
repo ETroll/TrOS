@@ -6,7 +6,7 @@
 #include <tros/tros.h>
 #include <tros/kheap.h>
 
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 #define FAT12_DIR_MAX 16
 #define FAT12_BPS 512

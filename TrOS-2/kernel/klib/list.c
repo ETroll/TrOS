@@ -1,7 +1,7 @@
 // llist.c
 // Simple linked list implementation
 
-#include <tros/ds/list.h>
+#include <tros/klib/list.h>
 #include <tros/kheap.h>
 
 

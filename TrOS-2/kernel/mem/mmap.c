@@ -1,5 +1,5 @@
 #include <tros/mmap.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 #include <tros/tros.h>
 
 static unsigned int* __mmap_memory_map = 0;

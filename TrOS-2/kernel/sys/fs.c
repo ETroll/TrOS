@@ -1,7 +1,7 @@
 #include <tros/fs.h>
-#include <tros/ds/list.h>
+#include <tros/klib/list.h>
 #include <tros/kheap.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 list_t* _fs_filesystems = 0;
 

@@ -2,9 +2,9 @@
 #include <tros/hal/io.h>
 #include <tros/irq.h>
 #include <tros/tros.h>
-#include <tros/ds/ringbuffer.h>
-#include <string.h>
-#include <sys/keyboard.h>
+#include <tros/klib/ringbuffer.h>
+#include <tros/klib/kstring.h>
+#include <tros/sys/keyboard.h>
 
 #define KEY_DEVICE  0x60
 #define KEY_PENDING 0x64

@@ -1,7 +1,7 @@
 // tree.c
 // Simple generic tree implementation
 
-#include <tros/ds/tree.h>
+#include <tros/klib/tree.h>
 #include <tros/kheap.h>
 
 tree_node_t* tree_node_create(void* data)
