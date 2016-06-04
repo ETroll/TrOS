@@ -27,8 +27,6 @@ typedef struct
     unsigned short sects_track;     //Sectors per track
     unsigned short num_heads;       //NUmber of heads
     unsigned short num_hidden;      //Number of hidden sectors
-
-
 } __attribute__ ((packed)) fat12_super_t;
 
 typedef struct
@@ -52,9 +50,9 @@ enum FAT12_ATTRIBUTE
     FAT12_ATR_READONLY  = 0x01,
     FAT12_ATR_HIDDEN    = 0x02,
     FAT12_ATR_SYSTEM    = 0x04,
-    FAT12_ATR_VOLBL     = 0x08,
+    FAT12_ATR_VOLLBL    = 0x08,
     FAT12_ATR_DIRECTORY = 0x10,
-    FAT12_ATR_FILE      = 0x20,
+    FAT12_ATR_FILE      = 0x00,
 };
 
 static unsigned short fat12_table_entry(unsigned short sector, unsigned char* table);
@@ -243,21 +241,35 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
         if(directory[di].filename[0] != 0x00 && directory[di].filename[0] != 0xE5)
         {
             dirent_t* entry = (dirent_t*)kmalloc(sizeof(dirent_t));
-            strncpy(entry->name, directory[di].filename, 8);
-            strncpy((char*)&entry->name[8], directory[di].extension, 3);
-            entry->name[11] = '\0';
+            char tmpFilename[9];
+            char tmpExtension[4];
+
+            strncpy(tmpFilename, directory[di].filename, 8);
+            tmpFilename[8] = '\0';
+            strncpy(tmpExtension, directory[di].extension, 3);
+            tmpExtension[3] = '\0';
+            trimend(tmpFilename);
+            trimend(tmpExtension);
 
             entry->inodenum = directory[di].firstcluster + (FAT12_SECT_OFFSET-2);
-            entry->flags = 0;
+            entry->flags = VFS_FLAG_FILE;
 
             if((directory[di].attributes & FAT12_ATR_DIRECTORY) == FAT12_ATR_DIRECTORY)
             {
                 entry->flags |= VFS_FLAG_DIRECTORY;
             }
-            if((directory[di].attributes & FAT12_ATR_FILE) == FAT12_ATR_FILE)
+
+            strcpy(entry->name, tmpFilename);
+            if(strlen(tmpExtension)> 0)
             {
-                entry->flags |= VFS_FLAG_FILE;
+                unsigned int namelength = strlen(tmpFilename);
+                entry->name[namelength++] = '.';
+                strcpy((char*)&entry->name[namelength], tmpExtension);
             }
+
+            //entry->name[strlen(entry->name)] = '\0';
+
+            //printk("|%s| and |%s| makes: |%s| \n",tmpFilename, tmpExtension, entry->name);
             return entry;
         }
         else

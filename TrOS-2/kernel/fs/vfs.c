@@ -207,8 +207,8 @@ static fs_node_t* vfs_find_node(char* path)
                             dirent_t* dirent = vfs_readdir(current_folder, index);
                             while (dirent != 0)
                             {
-                                //printk("Comparing entry: %s with target: %s\n", dirent->name, target->data);
-                                if(strcmp(dirent->name, target->data) == 0)
+                                printk("Comparing entry: %s with target: %s\n", dirent->name, target->data);
+                                if(stricmp(dirent->name, target->data) == 0)
                                 {
                                     foundnode = vfs_node_from_dir(deviceroot, dirent);
                                     kfree(dirent);

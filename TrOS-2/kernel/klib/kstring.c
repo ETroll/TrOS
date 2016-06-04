@@ -37,6 +37,24 @@ int strcmp(const char* str1, const char* str2)
     return (*str1 - *str2);
 }
 
+int stricmp (const char *p1, const char *p2)
+{
+    unsigned char *s1 = (unsigned char *)p1;
+    unsigned char *s2 = (unsigned char *)p2;
+    unsigned char c1, c2;
+
+    do
+    {
+        c1 = (unsigned char)toupper((int)*s1++);
+        c2 = (unsigned char)toupper((int)*s2++);
+        if (c1 == '\0')
+        {
+            return c1 - c2;
+        }
+    } while (c1 == c2);
+    return c1 - c2;
+}
+
 unsigned int strlen (const char* str)
 {
     unsigned int len=0;
@@ -45,6 +63,24 @@ unsigned int strlen (const char* str)
         len++;
     }
     return len;
+}
+
+char* trimend(char* str)
+{
+    if(str != 0)
+    {
+        unsigned int length = strlen(str);
+        char* strend = str+length;
+        while(isspace(*(--strend)))
+        {
+            *strend = '\0';
+            if(strend == str)
+            {
+                break;
+            }
+        }
+    }
+    return str;
 }
 
 void* memcpy(void *dest, const void *src, unsigned int count)
@@ -78,7 +114,6 @@ int isalpha(char c)
     return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
 }
 
-
 int isspace(char c)
 {
     return (c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r');
@@ -87,4 +122,13 @@ int isspace(char c)
 int isdigit(char c)
 {
     return (c >= '0' && c <= '9');
+}
+
+char toupper(char c)
+{
+    if( c>='a' && c<='z')
+    {
+        c += ('A' - 'a');
+    }
+    return c;
 }

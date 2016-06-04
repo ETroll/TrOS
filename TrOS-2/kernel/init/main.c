@@ -96,7 +96,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     syscall_initialize();
 
-    char* path = "/fdd/FOLDER     /";
+    //char* path = "/fdd/FOLDER     /";
+    char* path = "/fdd/FOLDER/";
     // Test / DEBUG
     fs_node_t* root = kopen(path);
     printk("Directory %s (%x)\n", path, root);
