@@ -97,7 +97,6 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     syscall_initialize();
 
-    //char* path = "/fdd/FOLDER     /";
     char* path = "/fdd/FOLDER/";
     // Test / DEBUG
     fs_node_t* root = kopen(path);
@@ -122,60 +121,32 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
         dirent = vfs_readdir(root, ++index);
     }
     vfs_close(root);
-    kfree(root);
-    //kfree(dir); //Not freed in VFS yet..
 
-    // fs_node_t* testnode = (fs_node_t*)kmalloc(sizeof(fs_node_t));
-    // strcpy(testnode->name, "TEST");
-    // testnode->inode = 33+133;
-    // testnode->size = 9;
-    // testnode->flags = VFS_FLAG_FILE;
-    // testnode->fsops = root->fsops;
-    // testnode->device = root->device;
-    //
-    // unsigned char* filebuffer = (unsigned char*)kmalloc(testnode->size+1);
-    // unsigned int read_bytes = vfs_read(testnode, 0, testnode->size, filebuffer);
-    // filebuffer[testnode->size] = '\0';
-    //
-    // if(read_bytes > 0)
-    // {
-    //     printk("Read %s\n");
-    // }
-    // else
-    // {
-    //     printk("Failure reading file /TEST\n");
-    // }
 
+    fs_node_t* testfile = kopen("/fdd/trell");
+    if(testfile != 0)
+    {
+        printk("File found at %x\n", testfile);
+
+        unsigned int* filebuffer = (unsigned int*)kmalloc(testfile->size+1);
+        unsigned int read_bytes = vfs_read(testfile, 0, testfile->size, (unsigned char*)filebuffer);
+
+        if(read_bytes > 0)
+        {
+            for(int i = 0; i<testfile->size; i+=4)
+            {
+                printk("%x ", filebuffer[i]);
+            }
+        }
+        else
+        {
+            printk("Failure reading file trell\n");
+        }
+        vfs_close(testfile);
+    }
 
 
     // End Test / DEBUG
-
-
-
-    /*
-    #include <stdio.h>
-    #include <dirent.h>
-
-    int main()
-    {
-        DIR *dir;
-        struct dirent *dp;
-        char * file_name;
-        dir = opendir(".");
-        while ((dp=readdir(dir)) != NULL) {
-            printf("debug: %s\n", dp->d_name);
-            if ( !strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") )
-            {
-                // do nothing (straight logic)
-            } else {
-                file_name = dp->d_name; // use it
-                printf("file_name: \"%s\"\n",file_name);
-            }
-        }
-        closedir(dir);
-        return 0;
-    }
-    */
 
     extern void tss_set_ring0_stack(uint16_t, uint32_t);
     extern void enter_usermode();

@@ -75,9 +75,14 @@ void vfs_open(fs_node_t* inode)
 
 void vfs_close(fs_node_t* inode)
 {
-    if(inode && inode->fsops && inode->fsops->fs_close != 0)// && inode != vfs_root)
+    if(inode)
     {
-        inode->fsops->fs_close(inode);
+        kfree(inode);
+
+        if(inode->fsops && inode->fsops->fs_close != 0)// && inode != vfs_root)
+        {
+            inode->fsops->fs_close(inode);
+        }
     }
 }
 
@@ -169,7 +174,7 @@ static fs_node_t* vfs_find_node(char* path)
             list_t* tokenlist = vfs_tokenize_path(path);
             if(tokenlist->size > 0)
             {
-                //printk("Got %d tokens\n", tokenlist->size);
+                printk("Got %d tokens\n", tokenlist->size);
 
                 fs_node_t* deviceroot = 0;
                 char* devicename = tokenlist->head->data;
@@ -178,6 +183,7 @@ static fs_node_t* vfs_find_node(char* path)
                 {
                     //TODO: replace usage of tree_get_child_index with more effieient way
                     fs_node_t* tmp = tree_get_child_index(_vfs_root, i)->data;
+                    printk("Comparing %s with %s\n", tmp->name, devicename);
                     if(strcmp(tmp->name, devicename) == 0)
                     {
                         deviceroot = tmp;
