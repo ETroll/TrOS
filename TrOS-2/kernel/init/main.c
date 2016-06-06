@@ -26,13 +26,14 @@ extern int fat12_fs_initialize();
 //other, maybe use a correct header file?
 extern void syscall_initialize();
 
-extern int trell_main();
+extern void serial_init();
 
 unsigned int tmp_userland_stack[1024];
 
 void kernel_early()
 {
     irq_initialize();
+    serial_init();
     timer_initialize(50);
 
     __asm("sti");
