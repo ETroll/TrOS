@@ -231,6 +231,7 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
     {
         // Look up in FAT table or (Or if inode < 32, then increment to next)
         // And load data into directory entry
+        //TODO: Implement support for larger folders than 16
         printk("ERROR! Not implemented index > 16!\n");
     }
 

@@ -1,6 +1,6 @@
 #TrOS-2 Makefile
 
-MODULES := bootloader/stage1 bootloader/stage2 kernel
+MODULES := bootloader/stage1 bootloader/stage2 kernel trell
 FOLDERS := build build/tmp
 SUBCLEAN = $(addsuffix .clean,$(MODULES))
 IMAGE = build/tros.img
@@ -15,7 +15,8 @@ rebuild: clean all image
 
 $(MODULES):
 	$(MAKE) -C $@
-	cp -r $@/bin/*.* ./build/tmp
+	ls trell/bin
+	cp -r ./$@/bin/* ./build/tmp
 
 clean: $(SUBCLEAN)
 	rm -rf build/
@@ -37,7 +38,7 @@ image:
 
 ramdisk: tools
 	$(DISKTOOL) build/tmp/initrd -c
-	echo "ABCD1234" > build/tmp/test
+	#echo "ABCD1234" > build/tmp/test
 	# $(DISKTOOL) build/tmp/initrd -a build/elfinfo
 	# $(DISKTOOL) build/tmp/initrd -l
 
