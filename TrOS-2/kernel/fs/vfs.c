@@ -158,11 +158,13 @@ int vfs_mount(char* device, char* fsname)
     return retcode;
 }
 
+/***
+Returns a COPY of the node in the VFS. Remember to free it! (Or use vfs open/close)
+***/
 static fs_node_t* vfs_find_node(char* path)
 {
     fs_node_t* node = 0;
     unsigned int path_len = strlen(path);
-
     if(path_len > 0 && path[0] == PATH_DELIMITER)
     {
         if(path_len == 1)
@@ -174,8 +176,6 @@ static fs_node_t* vfs_find_node(char* path)
             list_t* tokenlist = vfs_tokenize_path(path);
             if(tokenlist->size > 0)
             {
-                printk("Got %d tokens\n", tokenlist->size);
-
                 fs_node_t* deviceroot = 0;
                 char* devicename = tokenlist->head->data;
 
@@ -183,10 +183,10 @@ static fs_node_t* vfs_find_node(char* path)
                 {
                     //TODO: replace usage of tree_get_child_index with more effieient way
                     fs_node_t* tmp = tree_get_child_index(_vfs_root, i)->data;
-                    printk("Comparing %s with %s\n", tmp->name, devicename);
+                    printk("Comparing %s (%x) with %s (%d)\n", tmp->name, tmp, devicename, i);
                     if(strcmp(tmp->name, devicename) == 0)
                     {
-                        deviceroot = tmp;
+                        deviceroot = vfs_copy_node(tmp);
                         break;
                     }
                 }
@@ -196,7 +196,7 @@ static fs_node_t* vfs_find_node(char* path)
                     //printk("Found root: %s\n", deviceroot->name);
                     if(tokenlist->size == 1)
                     {
-                        node = vfs_copy_node(deviceroot);
+                        node = deviceroot;
                     }
                     else
                     {
@@ -250,7 +250,7 @@ static fs_node_t* vfs_find_node(char* path)
                                 break;
                             }
                         }
-                        vfs_close(deviceroot);
+                        vfs_close(deviceroot); //deviceroot gets free'd
                     }
                 }
                 else { printk("Did not find any device root\n");}

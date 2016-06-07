@@ -115,7 +115,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
         {
             printk("FILE");
         }
-        printk(" %x\n", dirent->name, dirent->flags);
+        printk(" %x\n", dirent);
         kfree(dirent);
 
         dirent = vfs_readdir(root, ++index);
