@@ -11,6 +11,7 @@
 # Builds the docker image used for compiling the souce code
 
 IMAGENAME="tros"
+unamestr=`uname`
 
 function docker_build_image {
     eval "docker build -t $IMAGENAME ."
@@ -54,17 +55,21 @@ function rebuild {
 
 # Runs the floppy image
 function run {
-    eval "qemu-system-i386 -fda build/tros.img -monitor stdio -serial file:CON -m 256 -d cpu_reset"
-    #-cpu 486 #-d cpu_reset
-    #-serial stdio -- for unix
-    qemu_cleanup
+    if [[ "$unamestr" == 'MINGW64_NT-6.1' ]]; then
+        eval "qemu-system-i386 -fda build/tros.img -monitor stdio -serial file:CON -m 256 -d cpu_reset"
+        qemu_cleanup
+    else
+        eval "qemu-system-i386 -fda build/tros.img -serial stdio -m 256"
+    fi
 }
 
 # Runs qemu in GDB remote debug mode
 function debug {
-    #eval "qemu-system-i386 -s -S -fda build/tros.img"
-    eval "/c/Bochs-2.6.7/bochsdbg -q -f bochsrc.bxrc"
-    #qemu_cleanup
+    if [[ "$unamestr" == 'MINGW64_NT-6.1' ]]; then
+        eval "/c/Bochs-2.6.7/bochsdbg -q -f bochsrc.bxrc"
+    else
+        eval "qemu-system-i386 -s -S -fda build/tros.img"
+    fi
 }
 
 function select_func {

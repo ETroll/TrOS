@@ -15,7 +15,6 @@ rebuild: clean all image
 
 $(MODULES):
 	$(MAKE) -C $@
-	ls trell/bin
 	cp -r ./$@/bin/* ./build/tmp
 
 clean: $(SUBCLEAN)
