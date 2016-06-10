@@ -123,12 +123,12 @@ dirent_t* vfs_readdir(fs_node_t* inode, unsigned int index)
 
 void vfs_create(char* name)
 {
-
+    //TODO
 }
 
 void vfs_delete(char* name)
 {
-
+    //TODO
 }
 
 int vfs_mount(char* device, char* fsname)
@@ -183,7 +183,7 @@ static fs_node_t* vfs_find_node(char* path)
                 {
                     //TODO: replace usage of tree_get_child_index with more effieient way
                     fs_node_t* tmp = tree_get_child_index(_vfs_root, i)->data;
-                    printk("Comparing %s (%x) with %s (%d)\n", tmp->name, tmp, devicename, i);
+                    //printk("Comparing %s (%x) with %s (%d)\n", tmp->name, tmp, devicename, i);
                     if(strcmp(tmp->name, devicename) == 0)
                     {
                         deviceroot = vfs_copy_node(tmp);
@@ -213,7 +213,7 @@ static fs_node_t* vfs_find_node(char* path)
                             dirent_t* dirent = vfs_readdir(current_folder, index);
                             while (dirent != 0)
                             {
-                                printk("Comparing entry: %s with target: %s\n", dirent->name, target->data);
+                                //printk("Comparing entry: %s with target: %s\n", dirent->name, target->data);
                                 if(stricmp(dirent->name, target->data) == 0)
                                 {
                                     foundnode = vfs_node_from_dir(deviceroot, dirent);
