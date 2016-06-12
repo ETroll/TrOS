@@ -109,23 +109,6 @@ int fat12_mount(fs_node_t* mountpoint)
             mountpoint->inode = (super->num_fats * super->sects_fat) + 1;
             mountpoint->size = 0;
         }
-
-        // Test - Proof of concept
-        // printk("Starting with rootdir at: %d (%x)\n", mountpoint->inode);
-        // fat12_entry_t* rootdir = (fat12_entry_t*)kmalloc(super->bps);
-        // mountpoint->device->read((unsigned char*)rootdir, mountpoint->inode, 1);
-        //
-        // for(int i = 0; i<16 && rootdir[i].filename[0] != 0; i++)
-        // {
-        //     printk("%s %s - %x - %i - %ib\n",
-        //         rootdir[i].filename,
-        //         rootdir[i].extension,
-        //         rootdir[i].attributes,
-        //         rootdir[i].firstcluster,
-        //         rootdir[i].size);
-        // }
-        // kfree(rootdir);
-        // End test
         mountpoint->device->close();
         kfree(super);
     }
@@ -136,11 +119,6 @@ int fat12_mount(fs_node_t* mountpoint)
 static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
                                 unsigned int size, unsigned char* buffer)
 {
-    //Look up FAT entry for
-    //0. Read Super for BPS / 512;
-    //1. Calculate start sector based on offset
-    //unsigned int sector = node->inode + (offset / FAT12_BPS);
-
     unsigned int total_bytes_read = 0;
 
     fat12_super_t* super = (fat12_super_t*)kmalloc(FAT12_BPS);
@@ -149,18 +127,28 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
         unsigned char* fat_table = (unsigned char*)kmalloc(FAT12_BPS * super->sects_fat);
         if(node->device->read((unsigned char*)fat_table, 1, super->sects_fat) > 0)
         {
-            unsigned short sector = node->inode + (offset / FAT12_BPS);
-            unsigned char* readbuffer = (unsigned char*)kmalloc(FAT12_BPS);
-            unsigned int start_offset = offset;
+            unsigned short sector = node->inode;
+            unsigned int sectorOffset = (offset / FAT12_BPS);
+            for(int i = 0; i<sectorOffset; i++)
+            {
+                printk("Sect: %d -> ", sector);
+                sector = fat12_table_entry(sector, fat_table);
+                printk("Sect: %d ", sector);
+            }
 
+            unsigned char* readbuffer = (unsigned char*)kmalloc(FAT12_BPS);
+            unsigned int start_offset = (offset % FAT12_BPS);
             do
             {
+                printk("R %d(%d) ",size-total_bytes_read, sector);
                 unsigned int bytes_to_read = 0;
-                memset(readbuffer, '\0', FAT12_BPS); //Should I clear or kfree/kmalloc?
+                memset(readbuffer, '\0', FAT12_BPS);
                 if(node->device->read(readbuffer, sector, 1) > 0)
                 {
+                    printk("K ");
                     if(start_offset > 0)
                     {
+                        printk("O ");
                         if(start_offset + size < FAT12_BPS)
                         {
                             bytes_to_read = size;
@@ -176,6 +164,7 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
                     }
                     else
                     {
+                        printk("S ");
                         if((size-total_bytes_read) > FAT12_BPS)
                         {
                             bytes_to_read = FAT12_BPS;
@@ -187,23 +176,27 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
                         memcpy((buffer+total_bytes_read), readbuffer, bytes_to_read);
                     }
                     total_bytes_read += bytes_to_read;
-
+                    printk("TB %d ", total_bytes_read);
                     //get next sector from FAT
                     sector = fat12_table_entry(sector, fat_table);
                 }
                 else
                 {
                     //ABORT!
+                    printk("ABORT Error reading from sector ");
                     break;
                 }
             }
             while((size-total_bytes_read) > 0  && sector != 0x00 && sector < 0x0FF0);
+            printk("\n");
             kfree(readbuffer);
-        }
+        } else { printk("FAT12: Error reading FAT table\n"); }
+        printk("FAT %x ", fat_table);
         kfree(fat_table);
-    }
+        printk(".");
+    } else { printk("FAT12: Error reading super\n"); }
     kfree(super);
-
+    printk(".");
     return total_bytes_read;
 }
 
@@ -254,6 +247,7 @@ static dirent_t* fat12_readdir(fs_node_t* node, unsigned int index)
 
             entry->inodenum = directory[di].firstcluster + (FAT12_SECT_OFFSET-2);
             entry->flags = VFS_FLAG_FILE;
+            entry->size = directory[di].size;
 
             if((directory[di].attributes & FAT12_ATR_DIRECTORY) == FAT12_ATR_DIRECTORY)
             {

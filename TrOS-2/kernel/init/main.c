@@ -126,12 +126,12 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     fs_node_t* testfile = kopen("/fdd/trell");
     if(testfile != 0)
     {
-        printk("File found at %x\n", testfile);
+        printk("Found trell at %x size: %d - opening...\n", testfile, testfile->size);
 
         unsigned int* filebuffer = (unsigned int*)kmalloc(testfile->size+1);
         unsigned int read_bytes = vfs_read(testfile, 0, testfile->size, (unsigned char*)filebuffer);
 
-        if(read_bytes > 0)
+        if(read_bytes == testfile->size)
         {
             for(int i = 0; i<testfile->size; i+=4)
             {

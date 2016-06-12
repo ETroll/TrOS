@@ -108,6 +108,7 @@ dirent_t* vfs_readdir(fs_node_t* inode, unsigned int index)
                     strcpy(entry->name, mnt->name);
                     entry->inodenum = mnt->inode;
                     entry->flags = mnt->flags;
+                    entry->size = 0;
                 }
             }
         }
@@ -353,7 +354,7 @@ fs_node_t* vfs_node_from_dir(fs_node_t* parent, dirent_t* dir)
         strcpy(node->name, dir->name);
         node->inode = dir->inodenum;
         node->flags = dir->flags;
-        node->size = 0;
+        node->size = dir->size;
         node->fsops = parent->fsops;
         node->device = parent->device;
     }

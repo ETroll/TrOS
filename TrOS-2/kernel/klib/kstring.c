@@ -97,9 +97,9 @@ void* memcpy(void *dest, const void *src, unsigned int count)
 void* memset(void *dest, char val, unsigned int count)
 {
     unsigned char *temp = (unsigned char *)dest;
-    for(; count != 0; count--)
+    for(int i = 0; i<count; i++)
     {
-        temp[count] = val;
+        temp[i] = val;
     }
     return dest;
 }

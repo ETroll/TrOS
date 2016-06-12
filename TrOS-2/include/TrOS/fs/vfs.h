@@ -47,6 +47,7 @@ typedef struct fs_dirent
     char name[FILE_NAME_MAX];
     unsigned int inodenum;
     unsigned char flags;
+    unsigned int size;
 } dirent_t;
 
 void vfs_initialize();
