@@ -55,7 +55,7 @@ function rebuild {
 
 # Runs the floppy image
 function run {
-    if [[ "$unamestr" == 'MINGW64_NT-6.1' ]]; then
+    if [[ "$unamestr" == MINGW64_NT* ]]; then
         eval "qemu-system-i386 -fda build/tros.img -monitor stdio -serial file:CON -m 256 -d cpu_reset"
         qemu_cleanup
     else
@@ -65,7 +65,7 @@ function run {
 
 # Runs qemu in GDB remote debug mode
 function debug {
-    if [[ "$unamestr" == 'MINGW64_NT-6.1' ]]; then
+    if [[ "$unamestr" == MINGW64_NT* ]]; then
         eval "/c/Bochs-2.6.7/bochsdbg -q -f bochsrc.bxrc"
     else
         eval "qemu-system-i386 -s -S -fda build/tros.img"
