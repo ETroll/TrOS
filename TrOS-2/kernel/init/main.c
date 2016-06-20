@@ -123,19 +123,20 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     vfs_close(root);
 
 
-    fs_node_t* testfile = kopen("/fdd/trell");
+    //fs_node_t* testfile = kopen("/fdd/bin/trell");
+    fs_node_t* testfile = kopen("/fdd/folder/stuff.txt");
     if(testfile != 0)
     {
-        printk("Found trell at %x size: %d - opening...\n", testfile, testfile->size);
+        printk("Found file at %d size: %d - opening...\n", testfile->inode, testfile->size);
 
         unsigned int* filebuffer = (unsigned int*)kmalloc(testfile->size+1);
         unsigned int read_bytes = vfs_read(testfile, 0, testfile->size, (unsigned char*)filebuffer);
 
         if(read_bytes == testfile->size)
         {
-            for(int i = 0; i<testfile->size; i+=4)
+            for(int i = 0; i<testfile->size; i++)
             {
-                printk("%x ", filebuffer[i]);
+                printk("%c", ((char*)filebuffer)[i]);
             }
         }
         else
@@ -144,7 +145,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
         }
         vfs_close(testfile);
     }
-
+    printk("\n");
 
     // End Test / DEBUG
 

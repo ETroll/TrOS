@@ -120,8 +120,9 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
                                 unsigned int size, unsigned char* buffer)
 {
     unsigned int total_bytes_read = 0;
-
+    // printk("F");
     fat12_super_t* super = (fat12_super_t*)kmalloc(FAT12_BPS);
+    // printk("12 ");
     if(node->device->read((unsigned char*)super, 0, 1) > 0)
     {
         unsigned char* fat_table = (unsigned char*)kmalloc(FAT12_BPS * super->sects_fat);
@@ -131,24 +132,24 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
             unsigned int sectorOffset = (offset / FAT12_BPS);
             for(int i = 0; i<sectorOffset; i++)
             {
-                printk("Sect: %d -> ", sector);
+                // printk("Sect: %d -> ", sector);
                 sector = fat12_table_entry(sector, fat_table);
-                printk("Sect: %d ", sector);
+                // printk("Sect: %d ", sector);
             }
 
             unsigned char* readbuffer = (unsigned char*)kmalloc(FAT12_BPS);
             unsigned int start_offset = (offset % FAT12_BPS);
             do
             {
-                printk("R %d(%d) ",size-total_bytes_read, sector);
+                // printk("R %d(%d) ",size-total_bytes_read, sector);
                 unsigned int bytes_to_read = 0;
                 memset(readbuffer, '\0', FAT12_BPS);
                 if(node->device->read(readbuffer, sector, 1) > 0)
                 {
-                    printk("K ");
+                    // printk("K ");
                     if(start_offset > 0)
                     {
-                        printk("O ");
+                        // printk("O ");
                         if(start_offset + size < FAT12_BPS)
                         {
                             bytes_to_read = size;
@@ -164,7 +165,7 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
                     }
                     else
                     {
-                        printk("S ");
+                        // printk("S ");
                         if((size-total_bytes_read) > FAT12_BPS)
                         {
                             bytes_to_read = FAT12_BPS;
@@ -176,7 +177,7 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
                         memcpy((buffer+total_bytes_read), readbuffer, bytes_to_read);
                     }
                     total_bytes_read += bytes_to_read;
-                    printk("TB %d ", total_bytes_read);
+                    // printk("TB %d ", total_bytes_read);
                     //get next sector from FAT
                     sector = fat12_table_entry(sector, fat_table);
                 }
@@ -188,15 +189,12 @@ static unsigned int fat12_read(struct fs_node* node, unsigned int offset,
                 }
             }
             while((size-total_bytes_read) > 0  && sector != 0x00 && sector < 0x0FF0);
-            printk("\n");
+            // printk("\n");
             kfree(readbuffer);
         } else { printk("FAT12: Error reading FAT table\n"); }
-        printk("FAT %x ", fat_table);
         kfree(fat_table);
-        printk(".");
     } else { printk("FAT12: Error reading super\n"); }
     kfree(super);
-    printk(".");
     return total_bytes_read;
 }
 
@@ -296,8 +294,13 @@ static void fat12_close(struct fs_node* node)
 
 static unsigned short fat12_table_entry(unsigned short sector, unsigned char* table)
 {
-    unsigned int translated = (sector-FAT12_SECT_OFFSET) + 2;
+    //unsigned int translated = (sector-FAT12_SECT_OFFSET) + 2;
+    //printk("ST: %d/%d ", sector, translated);
+    unsigned int translated = sector * 1.5;
+    //printk("T: %d ", translated);
+
     unsigned short value = *(unsigned short*)&table[translated];
+    //printk("V: %x ", value);
 
     if(sector & 0x0001)
     {
@@ -307,5 +310,6 @@ static unsigned short fat12_table_entry(unsigned short sector, unsigned char* ta
     {
         value = value & 0x0FFF;
     }
+    //printk("FTL: %d ", value);
     return value;
 }

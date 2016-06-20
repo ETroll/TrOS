@@ -70,11 +70,11 @@ void* kmalloc(unsigned int size)
     }
     else
     {
-        //printk("S ");
+        // printk("S ");
         chunk = kheap_first_free(size);
         if(chunk == 0)
         {
-            //printk("F0 %x ",_kheap_free);
+            // printk("F0 %x ",_kheap_free);
             // Is the address of the last free chunk larger than last chunk on the heaplist?
             //   Yes:    Increase with (wanted size)-(sizeof last free chunk)
             //           Combine the old chunk with the new chunk and add to heaplist
@@ -96,15 +96,18 @@ void* kmalloc(unsigned int size)
         }
         else
         {
+            // printk("C %x ", chunk);
             kheap_remove_chunk_free(chunk);
         }
     }
+    // printk("A ");
     kheap_add_chunk_heap(chunk);
     if(chunk->size > size)
     {
+        // printk("OV ");
         kheap_add_overflow_to_free(chunk, size);
     }
-    // kheap_debug_printlist("Freelist after:", _kheap_free);
+    //kheap_debug_printlist("Freelist after:", _kheap_free);
     // printk("--/kmalloc- Returned %x \n", chunk);
     return (void*)((unsigned int)chunk +sizeof(struct heap_chunk_t));
 }
@@ -203,12 +206,14 @@ static void kheap_add_chunk_free(struct heap_chunk_t* chunk)
 {
     if(_kheap_free == 0)
     {
+        // printk("F == 0 ");
         _kheap_free = chunk;
         _kheap_free->next = _kheap_free;
         _kheap_free->prev = _kheap_free;
     }
     else if(chunk < _kheap_free)
     {
+        // printk("C < F ");
         chunk->next = _kheap_free;
         chunk->prev = _kheap_free->prev;
         _kheap_free->prev->next = chunk;
@@ -218,19 +223,30 @@ static void kheap_add_chunk_free(struct heap_chunk_t* chunk)
     }
     else
     {
+        // printk("C %x ", chunk);
+        // kheap_debug_printlist("Freelist ", _kheap_free);
+        unsigned char found = 0;
         struct heap_chunk_t* iterator =  _kheap_free->prev;
         do
         {
+            // printk("%x->",iterator);
             if(iterator < chunk)
             {
+                // printk("(%x < %x) ", iterator, chunk);
                 chunk->next = iterator->next;
                 chunk->prev = iterator;
                 iterator->next->prev = chunk;
                 iterator->next = chunk;
+                found = 1;
                 break;
             }
             iterator = iterator->prev;
-        } while(iterator->prev != _kheap_free);
+        } while(iterator != _kheap_free->prev);
+
+        if(!found)
+        {
+            printk("ERROR: Chunk not added to freelist");
+        }
     }
     kheap_merge_freelist_bottom(chunk);
     kheap_merge_freelist_top(chunk);
@@ -281,7 +297,7 @@ static void kheap_add_chunk_heap(struct heap_chunk_t* chunk)
                 break;
             }
             iterator = iterator->prev;
-        } while(iterator->prev != _kheap_start);
+        } while(iterator != _kheap_start->prev);
     }
 }
 

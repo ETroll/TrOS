@@ -44,7 +44,18 @@ function tools {
 # Runs the docker container and builds the image
 function build {
     eval "docker run --privileged -v /$PWD:/src $IMAGENAME"
+    local retval=$(echo $?)
     docker_cleanup
+    if [ $retval -ne 0 ] ; then
+       echo "make returned with exit code $retval, aborting!" >&2
+       return $retval
+    else
+        echo " "
+        echo "------ BUILD DONE ------"
+        echo " "
+        echo " "
+        echo " "
+    fi
 }
 
 # Runs the docker container and rebuilds the image
@@ -92,6 +103,12 @@ function select_func {
             *)
                 echo "Unknown parameter"
         esac
+
+        local _ret=$?
+        if [ $_ret -ne 0 ] ; then
+           echo "$arg returned with exit code $_ret, stopping action queue!"
+           exit 1
+        fi
     done
     exit 1
 }
