@@ -83,7 +83,6 @@ void kernel_filesystems()
 void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
 {
     kernel_early();
-
     kernel_memory(stack_top, multiboot);
     kernel_drivers();
     kernel_filesystems();
@@ -97,57 +96,6 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     syscall_initialize();
 
-    char* path = "/fdd/FOLDER/";
-    // Test / DEBUG
-    fs_node_t* root = kopen(path);
-    printk("Directory %s (%x)\n", path, root);
-    unsigned int index = 0;
-    dirent_t* dirent = vfs_readdir(root, index);
-    printk("Dirent: %x(%d)\n", dirent, index);
-    while (dirent != 0)
-    {
-        printk("%s - ", dirent->name);
-        if(dirent->flags & VFS_FLAG_DIRECTORY)
-        {
-            printk("DIR");
-        }
-        else
-        {
-            printk("FILE");
-        }
-        printk(" %x\n", dirent);
-        kfree(dirent);
-
-        dirent = vfs_readdir(root, ++index);
-    }
-    vfs_close(root);
-
-
-    //fs_node_t* testfile = kopen("/fdd/bin/trell");
-    fs_node_t* testfile = kopen("/fdd/folder/stuff.txt");
-    if(testfile != 0)
-    {
-        printk("Found file at %d size: %d - opening...\n", testfile->inode, testfile->size);
-
-        unsigned int* filebuffer = (unsigned int*)kmalloc(testfile->size+1);
-        unsigned int read_bytes = vfs_read(testfile, 0, testfile->size, (unsigned char*)filebuffer);
-
-        if(read_bytes == testfile->size)
-        {
-            for(int i = 0; i<testfile->size; i++)
-            {
-                printk("%c", ((char*)filebuffer)[i]);
-            }
-        }
-        else
-        {
-            printk("Failure reading file trell\n");
-        }
-        vfs_close(testfile);
-    }
-    printk("\n");
-
-    // End Test / DEBUG
 
     extern void tss_set_ring0_stack(uint16_t, uint32_t);
     extern void enter_usermode();
@@ -169,8 +117,15 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     // enter_usermode();
     // trell_main();
 
+    // This is the "idle process"
+
+    // 1. Make a Kernel Idle process with the current page-dir.
+    // 1.5 Set up and use current stack pointer
+    // 2. Jump to ring 3 (enter usermode)
+    // 2.5 FORK! (Then execute /bin/trell)
+    // 2.5.1. Clone the kernel page-dir, and create a new process as a child
     while(1)
     {
         __asm("hlt;");
-    }
+    } //TODO: Replace with a PANIC! (Since this will anywas result in a panic)
 }

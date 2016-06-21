@@ -12,13 +12,15 @@ vgaromimage: file="C:\Program Files (x86)\Bochs-2.6.7/VGABIOS-lgpl-latest"
 boot: floppy
 floppy_bootsig_check: disabled=0
 floppya: type=1_44, 1_44="build\tros.img", status=inserted, write_protected=0
-
+#floppy_command_delay: 50000
 
 ata0: enabled=0
 pci: enabled=1, chipset=i440fx
 vga: extension=vbe, update_freq=5
 cpu: count=1, ips=15000000, reset_on_triple_fault=0
 clock: sync=both
+#com1: enabled=1, mode=term, dev="serial.out"
+com1: enabled=1, mode=null
 
 print_timestamps: enabled=0
 

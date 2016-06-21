@@ -48,7 +48,7 @@ int vmm_initialize()
        pte_t page = 0;
        pte_add_attribute(&page, PTE_PRESENT);
        //TEMP:
-       pte_add_attribute(&page, PTE_USER);
+       //pte_add_attribute(&page, PTE_USER);
        pte_set_block(&page, block);
 
        table_default->entries[PAGE_TABLE_INDEX(virt)] = page;
@@ -62,7 +62,7 @@ int vmm_initialize()
        pte_add_attribute(&page, PTE_PRESENT);
 
        //TEMP:
-       pte_add_attribute(&page, PTE_USER);
+       //pte_add_attribute(&page, PTE_USER);
        pte_add_attribute(&page, PTE_WRITABLE); //TO write to stack
        pte_set_block(&page, block);
 
@@ -82,14 +82,14 @@ int vmm_initialize()
     pde_add_attribute(entry, PDE_PRESENT);
     pde_add_attribute(entry, PDE_WRITABLE);
     //TEMP:
-    pde_add_attribute(entry, PDE_USER);
+    //pde_add_attribute(entry, PDE_USER);
     pde_set_pte(entry, (phy_address)table_3_gb);
 
     pde_t* entry2 = &dir->entries[PAGE_DIRECTORY_INDEX(0x00000000)];
     pde_add_attribute(entry2, PDE_PRESENT);
     pde_add_attribute(entry2, PDE_WRITABLE);
     //TEMP:
-    pde_add_attribute(entry2, PDE_USER);
+    //pde_add_attribute(entry2, PDE_USER);
     pde_set_pte(entry2, (phy_address)table_default);
 
     __current_pdbr_addr = (phy_address)&dir->entries;
@@ -129,7 +129,7 @@ void vmm_map_page(void* phys, void* virt)
             pde_add_attribute(entry, PDE_PRESENT);
             pde_add_attribute(entry, PDE_WRITABLE);
             //TEMP:
-            pde_add_attribute(entry, PDE_USER);
+            //pde_add_attribute(entry, PDE_USER);
             pde_set_pte(entry, (unsigned int)table);
         }
     }
