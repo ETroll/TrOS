@@ -4,7 +4,6 @@
 
 #include <tros/tros.h>
 #include <tros/kheap.h>
-#include <tros/pmm.h>
 #include <tros/vmm.h>
 
 #define KERNEL_HEAP_START   0xD0000000
@@ -154,8 +153,7 @@ static struct heap_chunk_t* kheap_extend(unsigned int size)
     }
     for(int i = 0; i<amount; i++)
     {
-        void* phys = pmm_alloc_block();
-        vmm_map_page(phys, (void*)_kheap_next_virtual_addr);
+        vmm_map_create_page((void*)_kheap_next_virtual_addr, 0);
         _kheap_next_virtual_addr += BLOCK_SIZE;
     }
 

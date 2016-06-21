@@ -103,12 +103,14 @@ int vmm_initialize()
     return VMM_OK;
 }
 
-void vmm_map_page(void* phys, void* virt)
+void vmm_map_create_page(void* virt, unsigned int flags)
 {
     //NOTE: If this function needs to be sped up, then dont use the methods,
     //      but use the functionality from the functions without having to set
     //      up and tear down a stackframe every time. Right now I wanted easy
     //      to understand code over fast code.
+
+    void* phys = pmm_alloc_block();
 
     pdirectory_t* page_directory = vmm_get_directory();
     pde_t* dir = vmm_pdirectory_lookup_entry(page_directory, (vrt_address)virt);
@@ -118,6 +120,7 @@ void vmm_map_page(void* phys, void* virt)
         ptable_t* table = (ptable_t*)pmm_alloc_block();
         if(!table)
         {
+            pmm_free_block(phys);
             return;
         }
         else
@@ -129,7 +132,10 @@ void vmm_map_page(void* phys, void* virt)
             pde_add_attribute(entry, PDE_PRESENT);
             pde_add_attribute(entry, PDE_WRITABLE);
             //TEMP:
-            //pde_add_attribute(entry, PDE_USER);
+            if(flags > 0)
+            {   //for now we only have this "one" flag that can be set..
+                pde_add_attribute(entry, PDE_USER);
+            }
             pde_set_pte(entry, (unsigned int)table);
         }
     }
@@ -142,30 +148,30 @@ void vmm_map_page(void* phys, void* virt)
     pte_add_attribute(page, PTE_PRESENT);
 }
 
-int vmm_alloc_page(pte_t* page)
-{
-    void* block_addr = pmm_alloc_block();
-    if(!block_addr)
-    {
-        return -1;
-    }
-    else
-    {
-        pte_set_block(page, (unsigned int)block_addr);
-        pte_add_attribute(page, PTE_PRESENT);
-        return 1;
-    }
-}
-
-void vmm_free_page(pte_t* page)
-{
-    void* block_addr = (void*)pte_get_block_addr(*page);
-    if(block_addr)
-    {
-        pmm_free_block(block_addr);
-    }
-    pte_delete_attribute(page, PTE_PRESENT);
-}
+// int vmm_alloc_page(pte_t* page)
+// {
+//     void* block_addr = pmm_alloc_block();
+//     if(!block_addr)
+//     {
+//         return -1;
+//     }
+//     else
+//     {
+//         pte_set_block(page, (unsigned int)block_addr);
+//         pte_add_attribute(page, PTE_PRESENT);
+//         return 1;
+//     }
+// }
+//
+// void vmm_free_page(pte_t* page)
+// {
+//     void* block_addr = (void*)pte_get_block_addr(*page);
+//     if(block_addr)
+//     {
+//         pmm_free_block(block_addr);
+//     }
+//     pte_delete_attribute(page, PTE_PRESENT);
+// }
 
 int vmm_switch_pdirectory (pdirectory_t* dir)
 {

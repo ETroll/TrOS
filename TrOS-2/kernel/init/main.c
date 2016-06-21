@@ -39,7 +39,7 @@ void kernel_early()
     __asm("sti");
 }
 
-void kernel_memory(uint32_t stack_top, multiboot_info_t* multiboot)
+void kernel_memory_initialize(uint32_t stack_top, multiboot_info_t* multiboot)
 {
     uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
     pmm_region_t* regions = (pmm_region_t*)0x1000;
@@ -83,7 +83,7 @@ void kernel_filesystems()
 void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top)
 {
     kernel_early();
-    kernel_memory(stack_top, multiboot);
+    kernel_memory_initialize(stack_top, multiboot);
     kernel_drivers();
     kernel_filesystems();
 

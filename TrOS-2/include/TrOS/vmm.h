@@ -28,10 +28,10 @@ typedef struct
 
 
 int vmm_initialize();
-void vmm_map_page(void* phys, void* virt);
+void vmm_map_create_page(void* virt, unsigned int flags);
 
-int vmm_alloc_page(pte_t* page);
-void vmm_free_page(pte_t* page);
+// int vmm_alloc_page(pte_t* page);
+// void vmm_free_page(pte_t* page);
 
 int vmm_switch_pdirectory (pdirectory_t* dir);
 pdirectory_t* vmm_get_directory();
