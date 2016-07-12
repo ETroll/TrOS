@@ -236,6 +236,17 @@ pde_t* vmm_pdirectory_lookup_entry(pdirectory_t* dir, vrt_address addr)
     }
 }
 
+/***
+    Clones a page directory.
+    User mode pages are cloned, kernel pages are "linked"
+**/
+pdirectory_t * vmm_clone_directory(pdirectory_t * src)
+{
+    //TODO!
+
+    return 0;
+}
+
 void vmm_pagefault_handler(cpu_registers_t* regs)
 {
     unsigned int faulting_address = paging_error_addr();
