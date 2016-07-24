@@ -1,8 +1,8 @@
 #include <tros/timer.h>
 #include <tros/irq.h>
 #include <tros/hal/pit.h>
-#include <tros/hal/VGA.h>   //debug purposes for now
 #include <tros/tros.h>      //debug purposes for now
+#include <tros/process.h>
 
 static unsigned int ticks;
 
@@ -14,11 +14,8 @@ static unsigned int ticks;
 static void timer_irq_callback(cpu_registers_t* regs)
 {
     ticks++;
-    //vga_position_t pos = vga_get_position();
-    //vga_set_position(69,23);
-    //vga_set_color(&menu_color);
-    //printk("Ticks: %d\n", ticks);
-    //vga_set_position(pos.x, pos.y);
+    // printk(".");
+    process_preempt();
     irq_eoi(0);
 }
 

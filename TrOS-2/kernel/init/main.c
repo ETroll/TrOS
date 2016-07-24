@@ -15,6 +15,26 @@
 
 #include <tros/klib/kstring.h>
 
+#define DEFN_SYSCALL1(fn, num, P1) \
+int syscall_##fn(P1 p1) \
+{ \
+    int a; \
+    __asm("int $0x80" : "=a" (a) : "0" (num), "b" ((int)p1)); \
+    return a; \
+}
+
+#define DEFN_SYSCALL3(fn, num, P1, P2, P3) \
+int syscall_##fn(P1 p1, P2 p2, P3 p3) \
+{ \
+    int a; \
+    __asm("int $0x80" : "=a" (a) : "0" (num), "b" ((int)p1), "c" ((int)p2), "d"((int)p3)); \
+    return a; \
+}
+
+DEFN_SYSCALL1(open, 5, char*);
+DEFN_SYSCALL3(write, 8, unsigned int, const void*, unsigned int);
+
+
 //Drivers baked in to the kernel
 extern int kbd_driver_initialize();
 extern int floppy_driver_initialize(unsigned char device);
@@ -25,10 +45,12 @@ extern int fat12_fs_initialize();
 
 //other, maybe use a correct header file?
 extern void syscall_initialize();
-
 extern void serial_init();
 
-unsigned int tmp_userland_stack[1024];
+//unsigned int tmp_userland_stack[1024];
+
+void kernel_idle();
+void kernel_ring3_test();
 
 void kernel_early()
 {
@@ -97,17 +119,17 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     syscall_initialize();
 
 
-    extern void tss_set_ring0_stack(uint16_t, uint32_t);
-    extern void enter_usermode();
-    int ring0_stack = 0;
-    int ring3_stack = (int)(tmp_userland_stack+1024);
+    //extern void tss_set_ring0_stack(uint16_t, uint32_t);
+    //extern void enter_usermode();
+    //int ring0_stack = 0;
+    //int ring3_stack = (int)(tmp_userland_stack+1024);
 
-    __asm("mov %%esp, %0;" : "=a"(ring0_stack));
-    printk("Installing ring0 stack at %x\n", ring0_stack);
-    printk("Installing ring3 stack at %x\n", ring3_stack);
+    //__asm("mov %%esp, %0;" : "=a"(ring0_stack));
+    //printk("Installing ring0 stack at %x\n", ring0_stack);
+    //printk("Installing ring3 stack at %x\n", ring3_stack);
 
-    tss_set_ring0_stack(0x10, ring0_stack);
-    __asm("mov %0, %%ESP " : : "m"(ring3_stack));
+    //tss_set_ring0_stack(0x10, ring0_stack);
+    //__asm("mov %0, %%ESP " : : "m"(ring3_stack));
 
     //BOCHS_DEBUG;
     //NOTE: The kernel stack should be "empty" at this moment. Except for the
@@ -116,10 +138,11 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     // enter_usermode();
     // trell_main();
-
-    // This is the "idle process"
-
+    printk("Creating kernel idle proc and starting shell\n\n");
+    __asm("cli");
     // 1. Make a Kernel Idle process with the current page-dir.
+    process_create_idle(&kernel_idle);
+    process_exec_user(&kernel_ring3_test);
     // 1.5 Set up and use current stack pointer
     // 2. Jump to ring 3 (enter usermode)
     // 2.5 FORK! (Then execute /bin/trell)
@@ -128,4 +151,27 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     {
         __asm("hlt;");
     } //TODO: Replace with a PANIC! (Since this will anywas result in a panic)
+}
+
+// This is the "idle process"
+void kernel_idle()
+{
+    //This test code runs in ring1 - Kernelspace
+    while(1)
+    {
+        printk("IDLE \n");
+        //__asm("sti");
+        //__asm("hlt;");
+    }
+}
+
+void kernel_ring3_test()
+{
+    //This test code runs in ring3 - Userland
+    unsigned int vga = syscall_open("vga");
+    int character = (int)'u';
+    while(1)
+    {
+        //syscall_write(vga, &character, 1);
+    }
 }

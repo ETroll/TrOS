@@ -3,6 +3,9 @@
 
 char* strcpy(char *s1, const char *s2);
 char* strncpy(char *s1, const char *s2, unsigned int len);
+
+char* strdup(const char *s1);
+
 unsigned int strlen(const char* str);
 char* trimend(char* str);
 int strcmp(const char* a, const char* b);

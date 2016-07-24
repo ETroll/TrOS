@@ -12,12 +12,13 @@
 #define DTABLE_ADDR_SPACE_SIZE  0x100000000
 #define PAGE_SIZE               4096
 
+#define _USER_DEBUG 1
+
 pdirectory_t* __current_pdirectory = 0;
-unsigned int __current_pdbr_addr = 0;
 
 extern void paging_flush_tlb_entry(vrt_address addr);
 extern void paging_enable(int enable);
-extern void paging_load_PDBR(phy_address addr);
+extern void paging_load_PDBR(phy_address_t addr);
 extern unsigned int paging_get_PDBR();
 extern unsigned int paging_error_addr();
 
@@ -47,22 +48,29 @@ int vmm_initialize()
     {
        pte_t page = 0;
        pte_add_attribute(&page, PTE_PRESENT);
-       //TEMP:
-       //pte_add_attribute(&page, PTE_USER);
+
+#ifdef _USER_DEBUG
+       pte_add_attribute(&page, PTE_USER);
+#endif
        pte_set_block(&page, block);
 
        table_default->entries[PAGE_TABLE_INDEX(virt)] = page;
        last_addr = virt;
     }
-    printk("to %x \n", last_addr+4096);
+    printk("to %x ", last_addr+4096);
+    #ifdef _USER_DEBUG
+           printk(" (USER MODE RW+)");
+    #endif
+    printk("\n");
 
     for (int i=0, block=0x100000, virt=0xc0000000; i<1024; i++, block+=4096, virt+=4096)
     {
        pte_t page = 0;
        pte_add_attribute(&page, PTE_PRESENT);
 
-       //TEMP:
-       //pte_add_attribute(&page, PTE_USER);
+#ifdef _USER_DEBUG
+       pte_add_attribute(&page, PTE_USER);
+#endif
        pte_add_attribute(&page, PTE_WRITABLE); //TO write to stack
        pte_set_block(&page, block);
 
@@ -81,20 +89,23 @@ int vmm_initialize()
     pde_t* entry = &dir->entries[PAGE_DIRECTORY_INDEX(0xc0000000)];
     pde_add_attribute(entry, PDE_PRESENT);
     pde_add_attribute(entry, PDE_WRITABLE);
-    //TEMP:
-    //pde_add_attribute(entry, PDE_USER);
-    pde_set_pte(entry, (phy_address)table_3_gb);
+
+#ifdef _USER_DEBUG
+    pde_add_attribute(entry, PDE_USER);
+#endif
+
+    pde_set_pte(entry, (phy_address_t)table_3_gb);
 
     pde_t* entry2 = &dir->entries[PAGE_DIRECTORY_INDEX(0x00000000)];
     pde_add_attribute(entry2, PDE_PRESENT);
     pde_add_attribute(entry2, PDE_WRITABLE);
-    //TEMP:
-    //pde_add_attribute(entry2, PDE_USER);
-    pde_set_pte(entry2, (phy_address)table_default);
 
-    __current_pdbr_addr = (phy_address)&dir->entries;
+#ifdef _USER_DEBUG
+    pde_add_attribute(entry2, PDE_USER);
+#endif
 
-    //TODO: Make the updating of pdbr variable happen in vmm_switch_pdirectory
+    pde_set_pte(entry2, (phy_address_t)table_default);
+
     vmm_switch_pdirectory(dir);
 
     irq_register_handler(14, vmm_pagefault_handler);
@@ -131,11 +142,16 @@ void vmm_map_create_page(void* virt, unsigned int flags)
 
             pde_add_attribute(entry, PDE_PRESENT);
             pde_add_attribute(entry, PDE_WRITABLE);
-            //TEMP:
+
+#ifdef _USER_DEBUG
+            pde_add_attribute(entry, PDE_USER);
+#else
             if(flags > 0)
             {   //for now we only have this "one" flag that can be set..
                 pde_add_attribute(entry, PDE_USER);
             }
+#endif
+
             pde_set_pte(entry, (unsigned int)table);
         }
     }
@@ -146,6 +162,11 @@ void vmm_map_create_page(void* virt, unsigned int flags)
     //printk("Page at %x, set phys addr: %x\n", page, phys);
     pte_set_block(page, (unsigned int)phys);
     pte_add_attribute(page, PTE_PRESENT);
+    
+#ifdef _USER_DEBUG
+    pte_add_attribute(page, PTE_USER);
+    pte_add_attribute(page, PTE_WRITABLE);
+#endif
 }
 
 // int vmm_alloc_page(pte_t* page)
@@ -173,7 +194,7 @@ void vmm_map_create_page(void* virt, unsigned int flags)
 //     pte_delete_attribute(page, PTE_PRESENT);
 // }
 
-int vmm_switch_pdirectory (pdirectory_t* dir)
+int vmm_switch_pdirectory(pdirectory_t* dir)
 {
     if (!dir)
     {
@@ -182,7 +203,7 @@ int vmm_switch_pdirectory (pdirectory_t* dir)
     else
     {
         __current_pdirectory = dir;
-        paging_load_PDBR(__current_pdbr_addr);
+        paging_load_PDBR((phy_address_t)&dir->entries);
         return 1;
     }
 }
@@ -240,11 +261,11 @@ pde_t* vmm_pdirectory_lookup_entry(pdirectory_t* dir, vrt_address addr)
     Clones a page directory.
     User mode pages are cloned, kernel pages are "linked"
 **/
-pdirectory_t * vmm_clone_directory(pdirectory_t * src)
+pdirectory_t * vmm_clone_directory(pdirectory_t* src)
 {
     //TODO!
 
-    return 0;
+    return __current_pdirectory;
 }
 
 void vmm_pagefault_handler(cpu_registers_t* regs)

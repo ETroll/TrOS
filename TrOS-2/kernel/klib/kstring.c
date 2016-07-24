@@ -1,4 +1,5 @@
 #include <tros/klib/kstring.h>
+#include <tros/kheap.h>
 
 char* strcpy(char* dest, const char* src)
 {
@@ -21,6 +22,12 @@ char* strncpy(char* dest, const char* src, unsigned int len)
         size++;
     }
     return dest;
+}
+
+char* strdup(const char *s1)
+{
+    unsigned int size = strlen(s1);
+    return memcpy(kmalloc(size+1), s1, size+1);
 }
 
 int strcmp(const char* str1, const char* str2)

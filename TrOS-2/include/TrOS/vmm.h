@@ -44,4 +44,6 @@ unsigned int vmm_pdirectory_virt_to_index(vrt_address addr);
 void vmm_pdirectory_clear(pdirectory_t* dir);
 pde_t* vmm_pdirectory_lookup_entry(pdirectory_t* p, vrt_address addr);
 
+pdirectory_t * vmm_clone_directory(pdirectory_t* src);
+
 #endif

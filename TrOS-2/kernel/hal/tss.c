@@ -9,7 +9,6 @@ void tss_set_ring0_stack(unsigned short segment, unsigned int stackptr)
 {
     TSS.ss0 = segment;
     TSS.esp0 = stackptr;
-
 }
 
 void tss_install(unsigned int sel)
