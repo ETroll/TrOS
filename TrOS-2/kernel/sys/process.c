@@ -45,12 +45,16 @@ void process_switchto(process_t* next)
         next->regs.esp,
         next->thread.kernel_stack_ptr,
         next->pid);
+    printk("     EFLAGS: %x\n",
+        next->regs.eflags);
 
     tss_set_ring0_stack(0x10, next->thread.kernel_stack_ptr);
 
-    _current_process = next;
     process_t *prev = _current_process;
+    _current_process = next;
+
     process_switch(&prev->regs, &_current_process->regs);
+    //printk("DONE!\n");
 }
 
 void process_exec_user(void (*main)())

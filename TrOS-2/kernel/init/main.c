@@ -139,7 +139,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     // enter_usermode();
     // trell_main();
     printk("Creating kernel idle proc and starting shell\n\n");
-    __asm("cli");
+    //__asm("cli");
     // 1. Make a Kernel Idle process with the current page-dir.
     process_create_idle(&kernel_idle);
     process_exec_user(&kernel_ring3_test);
@@ -149,6 +149,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     // 2.5.1. Clone the kernel page-dir, and create a new process as a child
     while(1)
     {
+        printk("PANIC!");
         __asm("hlt;");
     } //TODO: Replace with a PANIC! (Since this will anywas result in a panic)
 }
@@ -159,9 +160,8 @@ void kernel_idle()
     //This test code runs in ring1 - Kernelspace
     while(1)
     {
-        printk("IDLE \n");
-        //__asm("sti");
-        //__asm("hlt;");
+        __asm("sti");
+        __asm("hlt;");
     }
 }
 
@@ -172,6 +172,7 @@ void kernel_ring3_test()
     int character = (int)'u';
     while(1)
     {
-        //syscall_write(vga, &character, 1);
+        //BOCHS_DEBUG;
+        syscall_write(vga, &character, 1);
     }
 }

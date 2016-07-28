@@ -14,7 +14,8 @@ static unsigned int ticks;
 static void timer_irq_callback(cpu_registers_t* regs)
 {
     ticks++;
-    // printk(".");
+    printk("#");
+    //BOCHS_DEBUG
     process_preempt();
     irq_eoi(0);
 }

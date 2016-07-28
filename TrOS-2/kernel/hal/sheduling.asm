@@ -109,4 +109,13 @@ process_switch:
     mov eax, [eax+32] ;EIP
     xchg eax, [esp] ;We do not have any more registers to use as tmp storage
     mov eax, [eax] ;EAX
+
+    ;Call the EOI so timer dont stop
+    ; #define PIC1_CREG 0x20
+    ; pio_outb(0x20, PIC1_CREG);
+    push eax
+    mov eax, 0x20
+    out 0x20, eax
+    pop eax
+
     ret ;This ends all!

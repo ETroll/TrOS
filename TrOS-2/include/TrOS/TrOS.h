@@ -3,7 +3,7 @@
 
 #include <tros/irq.h>
 #define GenerateInterrupt(arg) __asm__("int %0\n" : : "N"((arg)) : "cc", "memory")
-#define BOCHS_DEBUG __asm__("xchgw %bx, %bx")
+#define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
 
 
 #define IOCTL_VGA_COLOR         1
