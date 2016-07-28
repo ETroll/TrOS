@@ -47,8 +47,6 @@ extern int fat12_fs_initialize();
 extern void syscall_initialize();
 extern void serial_init();
 
-//unsigned int tmp_userland_stack[1024];
-
 void kernel_idle();
 void kernel_ring3_test();
 
@@ -111,47 +109,26 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     if(!vfs_mount("fdd", "fat12"))
     {
-        printk("Error mounting root folder. Halting!\n");
-        __asm("cli;");
-        __asm("hlt;");
+        kernel_panic("Error mounting root folder. Halting!", 0);
     }
 
     syscall_initialize();
-
-
-    //extern void tss_set_ring0_stack(uint16_t, uint32_t);
-    //extern void enter_usermode();
-    //int ring0_stack = 0;
-    //int ring3_stack = (int)(tmp_userland_stack+1024);
-
-    //__asm("mov %%esp, %0;" : "=a"(ring0_stack));
-    //printk("Installing ring0 stack at %x\n", ring0_stack);
-    //printk("Installing ring3 stack at %x\n", ring3_stack);
-
-    //tss_set_ring0_stack(0x10, ring0_stack);
-    //__asm("mov %0, %%ESP " : : "m"(ring3_stack));
-
-    //BOCHS_DEBUG;
-    //NOTE: The kernel stack should be "empty" at this moment. Except for the
-    //      parameters passed into kernel_main via the stack.
-    //      So we should be able to clear the stack if the stak has "leaked"?
-
-    // enter_usermode();
-    // trell_main();
     printk("Creating kernel idle proc and starting shell\n\n");
-    //__asm("cli");
-    // 1. Make a Kernel Idle process with the current page-dir.
+
+    // Make a Kernel Idle process with the current page-dir.
     process_create_idle(&kernel_idle);
-    process_exec_user(&kernel_ring3_test);
-    // 1.5 Set up and use current stack pointer
-    // 2. Jump to ring 3 (enter usermode)
-    // 2.5 FORK! (Then execute /bin/trell)
-    // 2.5.1. Clone the kernel page-dir, and create a new process as a child
+    //process_exec_user(&kernel_ring3_test);
+
+    char* argv[] =
+    {
+        "/bin/trell"
+    };
+    exec_elf32(argv[0], 1, argv);
+
     while(1)
     {
-        printk("PANIC!");
-        __asm("hlt;");
-    } //TODO: Replace with a PANIC! (Since this will anywas result in a panic)
+        kernel_panic("Reeached END OF KERNEL", 0);
+    }
 }
 
 // This is the "idle process"
