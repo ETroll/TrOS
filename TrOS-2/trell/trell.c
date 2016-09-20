@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <syscall.h>
-#include <tros/tros.h>
+
+#define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
 
 #define IOCTL_VGA_COLOR         1
 #define IOCTL_VGA_SCROLL_UP     2

@@ -45,7 +45,8 @@ extern void process_switch(registers_t* old, registers_t* new);
 
 void process_preempt();
 void process_switchto(process_t* next);
-void process_exec_user(void (*main)());
 void process_create_idle(void (*main)());
+
+void process_exec_user(unsigned int startAddr);
 
 #endif

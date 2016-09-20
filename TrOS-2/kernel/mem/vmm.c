@@ -71,6 +71,7 @@ int vmm_initialize()
 #ifdef _USER_DEBUG
        pte_add_attribute(&page, PTE_USER);
 #endif
+       //TODO: Remove writable and map own temporary kernel stack section as writable
        pte_add_attribute(&page, PTE_WRITABLE); //TO write to stack
        pte_set_block(&page, block);
 
@@ -162,7 +163,7 @@ void vmm_map_create_page(void* virt, unsigned int flags)
     //printk("Page at %x, set phys addr: %x\n", page, phys);
     pte_set_block(page, (unsigned int)phys);
     pte_add_attribute(page, PTE_PRESENT);
-    
+
 #ifdef _USER_DEBUG
     pte_add_attribute(page, PTE_USER);
     pte_add_attribute(page, PTE_WRITABLE);
@@ -264,6 +265,9 @@ pde_t* vmm_pdirectory_lookup_entry(pdirectory_t* dir, vrt_address addr)
 pdirectory_t * vmm_clone_directory(pdirectory_t* src)
 {
     //TODO!
+    // - Link the kernel pages
+    // - Link the Identitymapped <1Mb region
+    // - Empty / clear out rest
 
     return __current_pdirectory;
 }
