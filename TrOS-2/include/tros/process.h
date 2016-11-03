@@ -5,7 +5,7 @@
 #define INCLUDE_TROS_TASK_H
 
 #include <tros/vmm.h>
-#include <tros/tros.h>
+#include <stdint.h>
 
 typedef struct
 {

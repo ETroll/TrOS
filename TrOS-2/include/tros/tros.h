@@ -5,10 +5,6 @@
 //#define GenerateInterrupt(arg) __asm__("int %0\n" : : "N"((arg)) : "cc", "memory")
 #define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
 
-//temp
-typedef unsigned int uint32_t;
-typedef unsigned short uint16_t;
-
 //void printk_initialize(void (*putch)(char));
 void printk(char* str, ...);
 
