@@ -8,6 +8,7 @@
 #include <tros/vmm.h> 	// REMOVE
 #include <tros/fs/vfs.h>
 #include <tros/kheap.h>
+#include <tros/exec.h>
 #include <tros/hwdetect.h>
 #include <tros/sys/multiboot.h>
 

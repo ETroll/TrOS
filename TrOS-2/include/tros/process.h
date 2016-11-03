@@ -5,6 +5,7 @@
 #define INCLUDE_TROS_TASK_H
 
 #include <tros/vmm.h>
+#include <tros/tros.h>
 
 typedef struct
 {
@@ -45,8 +46,10 @@ extern void process_switch(registers_t* old, registers_t* new);
 
 void process_preempt();
 void process_switchto(process_t* next);
-void process_create_idle(void (*main)());
+void process_create_idle(void (*main)(), pdirectory_t*);
 
-void process_exec_user(unsigned int startAddr);
+// void process_exec_user(unsigned int startAddr);
+void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdirectory_t* pdir);
+
 
 #endif

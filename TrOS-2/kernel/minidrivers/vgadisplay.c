@@ -8,7 +8,12 @@
 #define VGA_COLS 80
 #define VGA_MEM_SIZE (VGA_COLS*2) + (VGA_ROWS*VGA_COLS*2)
 
-
+#define IOCTL_VGA_COLOR         1
+#define IOCTL_VGA_SCROLL_UP     2
+#define IOCTL_VGA_SCROLL_DOWN   3
+#define IOCTL_VGA_TOGGLE_CURSOR 4
+#define IOCTL_VGA_CLEAR_MEM     5
+#define IOCTL_VGA_SHOULD_SCROLL 6
 
 static unsigned char __vga_isopen = 0;
 static unsigned char __vga_xpos = 0;

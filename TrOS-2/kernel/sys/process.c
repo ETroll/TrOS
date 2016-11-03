@@ -65,7 +65,7 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdi
     proc->thread.user_stack_ptr = ustack;
     proc->thread.kernel_stack_ptr = kstack;
 
-    proc->thread.instr_ptr = (unsigned int)main;
+    proc->thread.instr_ptr = startAddr;
     proc->thread.priority = 1;
     proc->thread.state = 0;
 
