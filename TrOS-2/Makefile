@@ -36,7 +36,8 @@ image:
 	losetup /dev/loop0 $(IMAGE)
 	mkdir $(TMPMOUNT)
 	mount /dev/loop0 $(TMPMOUNT) -t msdos -o "fat=12"
-	cp -rf build/tmp/* $(TMPMOUNT)
+	cp --verbose -rf build/tmp/* $(TMPMOUNT)
+	ls -lha $(TMPMOUNT)
 	umount $(TMPMOUNT)
 	losetup -d /dev/loop0
 

@@ -77,7 +77,7 @@ function run {
 # Runs qemu in GDB remote debug mode
 function debug {
     if [[ "$unamestr" == MINGW64_NT* ]]; then
-        eval "/c/Bochs-2.6.7/bochsdbg -q -f bochsrc.bxrc"
+        eval "/c/Tools/Bochs-2.6.8/bochsdbg -q -f bochsrc.bxrc"
     else
         eval "qemu-system-i386 -s -S -fda build/tros.img"
     fi

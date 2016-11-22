@@ -6,8 +6,8 @@ magic_break: enabled=1
 
 megs: 32
 
-romimage: file="C:\Program Files (x86)\Bochs-2.6.7/BIOS-bochs-latest"
-vgaromimage: file="C:\Program Files (x86)\Bochs-2.6.7/VGABIOS-lgpl-latest"
+romimage: file="C:\Tools\Bochs-2.6.8\BIOS-bochs-latest"
+vgaromimage: file="C:\Tools\Bochs-2.6.8\VGABIOS-lgpl-latest"
 
 boot: floppy
 floppy_bootsig_check: disabled=0

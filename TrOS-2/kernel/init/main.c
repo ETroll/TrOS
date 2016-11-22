@@ -16,26 +16,6 @@
 
 #include <tros/klib/kstring.h>
 
-#define DEFN_SYSCALL1(fn, num, P1) \
-int syscall_##fn(P1 p1) \
-{ \
-    int a; \
-    __asm("int $0x80" : "=a" (a) : "0" (num), "b" ((int)p1)); \
-    return a; \
-}
-
-#define DEFN_SYSCALL3(fn, num, P1, P2, P3) \
-int syscall_##fn(P1 p1, P2 p2, P3 p3) \
-{ \
-    int a; \
-    __asm("int $0x80" : "=a" (a) : "0" (num), "b" ((int)p1), "c" ((int)p2), "d"((int)p3)); \
-    return a; \
-}
-
-DEFN_SYSCALL1(open, 5, char*);
-DEFN_SYSCALL3(write, 8, unsigned int, const void*, unsigned int);
-
-
 //Drivers baked in to the kernel
 extern int kbd_driver_initialize();
 extern int floppy_driver_initialize(unsigned char device);
@@ -128,7 +108,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     while(1)
     {
-        kernel_panic("Reeached END OF KERNEL", 0);
+        kernel_panic("Reached END OF KERNEL", 0);
     }
 }
 
@@ -140,17 +120,5 @@ void kernel_idle()
     {
         __asm("sti");
         __asm("hlt;");
-    }
-}
-
-void kernel_ring3_test()
-{
-    //This test code runs in ring3 - Userland
-    unsigned int vga = syscall_open("vga");
-    int character = (int)'u';
-    while(1)
-    {
-        //BOCHS_DEBUG;
-        syscall_write(vga, &character, 1);
     }
 }

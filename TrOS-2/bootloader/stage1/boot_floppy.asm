@@ -12,14 +12,14 @@ start:
 ;   db = 1 byte
 ;   dw = 2 byte
 ;   dd = 4 byte
-bpbOEM:                 db "TrOS    "
+bpbOEM:                 db "TrOS 2  "
 bpbBytesPerSector:      dw 512
 bpbSectorsPerCluster:   db 1
 bpbReservedSectors:     dw 1
 bpbNumberOfFATs:        db 2
 bpbRootEntries:         dw 224
 bpbTotalSectors:        dw 2880 ; Just a small "lie" for now..
-bpbMedia:               db 0xF8
+bpbMedia:               db 0xF0
 bpbSectorsPerFAT:       dw 9
 bpbSectorsPerTrack:     dw 18
 bpbHeadsPerCylinder:    dw 2
@@ -29,7 +29,7 @@ bsDriveNumber:          db 0
 bsUnused:               db 0
 bsExtBootSignature:     db 0x29
 bsSerialNumber:         dd 0xaac0ffee
-bsVolumeLabel:          db "TROS       "
+bsVolumeLabel:          db "TrOS 2     "
 bsFileSystem:           db "FAT12   "
 
 
