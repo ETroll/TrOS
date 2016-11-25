@@ -16,6 +16,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get --quiet --yes update \
         wget \
         libmpc-dev \
         dosfstools \
+        mtools \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists
 

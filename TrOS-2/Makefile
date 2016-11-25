@@ -5,14 +5,14 @@ USERLAND := trell
 FOLDERS := build build/tmp build/tmp/bin
 SUBCLEAN = $(addsuffix .clean,$(MODULES))
 IMAGE = build/tros.img
-TMPMOUNT = /mnt/floppy
 DISKTOOL = build/trfs
+
 
 .PHONY: $(MODULES) $(USERLAND)
 
-all: $(FOLDERS) $(MODULES) $(USERLAND) ramdisk image
+all: $(FOLDERS) $(MODULES) $(USERLAND) ramdisk $(IMAGE)
 
-rebuild: clean all image
+rebuild: clean all
 
 $(MODULES):
 	$(MAKE) -C $@
@@ -28,18 +28,12 @@ clean: $(SUBCLEAN)
 $(SUBCLEAN): %.clean:
 	$(MAKE) -C $* clean
 
-image:
+$(IMAGE):
 	rm build/tmp/*.mbr
-	rm $(IMAGE)
-	mkdosfs -n "TROS" -C $(IMAGE) 1440
-	dd if=bootloader/stage1/bin/floppy.mbr of=$(IMAGE) bs=512 count=1 conv=notrunc
-	losetup /dev/loop0 $(IMAGE)
-	mkdir $(TMPMOUNT)
-	mount /dev/loop0 $(TMPMOUNT) -t msdos -o "fat=12"
-	cp --verbose -rf build/tmp/* $(TMPMOUNT)
-	ls -lha $(TMPMOUNT)
-	umount $(TMPMOUNT)
-	losetup -d /dev/loop0
+	rm -f $@
+	mkdosfs -n "TROS" -C $@ 1440
+	dd if=bootloader/stage1/bin/floppy.mbr of=$@ bs=512 count=1 conv=notrunc
+	mcopy -i $@ ./build/tmp/* ::
 
 ramdisk: tools
 	$(DISKTOOL) build/tmp/initrd -c

@@ -66,12 +66,12 @@ function rebuild {
 
 # Runs the floppy image
 function run {
-    if [[ "$unamestr" == MINGW64_NT* ]]; then
-        eval "qemu-system-i386 -fda build/tros.img -monitor stdio -serial file:CON -m 256 -d cpu_reset"
-        qemu_cleanup
-    else
-        eval "qemu-system-i386 -fda build/tros.img -serial stdio -m 256"
-    fi
+    # if [[ "$unamestr" == MINGW64_NT* ]]; then
+    #     eval "qemu-system-i386 -fda build/tros.img -monitor stdio -serial file:CON -m 256 -d cpu_reset"
+    #     qemu_cleanup
+    # else
+         eval "qemu-system-i386 -fda build/tros.img -serial stdio -m 256 -d cpu_reset"
+    # fi
 }
 
 # Runs qemu in GDB remote debug mode
