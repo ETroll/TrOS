@@ -10,7 +10,6 @@
 
 #define PTABLE_ADDR_SPACE_SIZE  0x400000
 #define DTABLE_ADDR_SPACE_SIZE  0x100000000
-#define PAGE_SIZE               4096
 
 #define _USER_DEBUG 1
 
@@ -115,6 +114,18 @@ int vmm_initialize()
     return VMM_OK;
 }
 
+void vmm_create_and_map(vrt_address virt, unsigned int size, unsigned int flags)
+{
+    unsigned int blocks = size / VMM_BLOCK_SIZE;
+    if(size % VMM_BLOCK_SIZE > 0) blocks++;
+
+    unsigned int endAddr = virt + (VMM_BLOCK_SIZE * blocks);
+    for(unsigned int i = virt; i < endAddr; i += VMM_BLOCK_SIZE)
+    {
+        vmm_map_create_page(i, flags);
+    }
+}
+
 void vmm_map_create_page(vrt_address virt, unsigned int flags)
 {
     //NOTE: If this function needs to be sped up, then dont use the methods,
@@ -149,6 +160,7 @@ void vmm_map_create_page(vrt_address virt, unsigned int flags)
 #else
             if(flags > 0)
             {   //for now we only have this "one" flag that can be set..
+                //Add writable as well
                 pde_add_attribute(entry, PDE_USER);
             }
 #endif

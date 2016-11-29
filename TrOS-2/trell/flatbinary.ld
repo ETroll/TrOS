@@ -23,5 +23,6 @@ SECTIONS
     {
         *(.eh_frame)
     }
+
     end = .; _end = .; __end = .;
 }

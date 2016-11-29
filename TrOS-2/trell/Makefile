@@ -2,6 +2,7 @@
 # COMPILATION
 TOOLCHAIN = /tool/gcc-i386-none-elf/bin/
 GCC = $(TOOLCHAIN)i386-elf-gcc
+LD = $(TOOLCHAIN)i386-elf-ld
 
 # OUTPUT
 DIR_BUILD = bin/
@@ -24,10 +25,10 @@ OBJECTS_GCC := $(patsubst %.c, $(DIR_OBJECT)%.o, $(SRC_GCC))
 OBJECTS_ALL += $(OBJECTS_GCC)
 
 all: $(TARGET)
-	$(TOOLCHAIN)i386-elf-objcopy $(DIR_OBJECT)$(TARGET) -O binary $(DIR_BUILD)/$(TARGET)
+#	$(TOOLCHAIN)i386-elf-objcopy $(DIR_OBJECT)$(TARGET) -O binary $(DIR_BUILD)/$(TARGET)
 
 $(TARGET): $(DIR_BUILD) $(OBJECTS_GCC)
-	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(addprefix $(DIR_OBJECT), $(notdir $(OBJECTS_ALL))) -o $(DIR_OBJECT)$(TARGET)
+	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(addprefix $(DIR_OBJECT), $(notdir $(OBJECTS_ALL))) -o $(DIR_BUILD)/$(TARGET) #$(DIR_OBJECT)$(TARGET)
 
 $(OBJECTS_GCC): $(DIR_OBJECT)
 	$(GCC) $(FLAGS) -I$(INCLUDES) -c $(patsubst $(DIR_OBJECT)%.o, %.c, $@) -o $(patsubst $(@D)%.o, $(DIR_OBJECT)%.o, $@)

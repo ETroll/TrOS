@@ -18,7 +18,7 @@ MAP = kernel.map
 
 
 # CONFIGURATION
-FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector #-fno-asynchronous-unwind-tables
+FLAGS = -s -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector #-fno-asynchronous-unwind-tables
 LINKER_FLAGS = -ffreestanding -nostdlib -Wl,-Map=$(DIR_OBJECT)$(MAP)
 INCLUDES = /src/include/
 LINKER_MAP = kernel.ld
@@ -38,6 +38,7 @@ all: clean $(LIST)
 
 $(LIST) : $(TARGET)
 	$(TOOLCHAIN)i386-elf-objdump -D $(DIR_BUILD)$(TARGET) > $(DIR_OBJECT)/$(LIST)
+	$(TOOLCHAIN)i386-elf-strip --strip-unneeded $(DIR_BUILD)$(TARGET)
 
 $(TARGET): $(DIR_BUILD) $(OBJECTS_AS) $(OBJECTS_GCC)
 	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(OBJECTS_ALL) -o $(DIR_BUILD)$(TARGET)

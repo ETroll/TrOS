@@ -34,6 +34,7 @@ typedef struct
 
 
 int vmm_initialize();
+void vmm_create_and_map(vrt_address virt, unsigned int size, unsigned int flags);
 void vmm_map_create_page(vrt_address virt, unsigned int flags);
 
 // int vmm_alloc_page(pte_t* page);

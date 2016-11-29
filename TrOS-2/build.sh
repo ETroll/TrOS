@@ -70,7 +70,7 @@ function run {
     #     eval "qemu-system-i386 -fda build/tros.img -monitor stdio -serial file:CON -m 256 -d cpu_reset"
     #     qemu_cleanup
     # else
-         eval "qemu-system-i386 -fda build/tros.img -serial stdio -m 256 -no-reboot -d cpu_reset"
+         eval "qemu-system-i386 -fda build/tros.img -serial stdio -m 256 -d cpu_reset" # -s -S"
     # fi
 }
 
