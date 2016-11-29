@@ -8,7 +8,7 @@ IMAGE = build/tros.img
 DISKTOOL = build/trfs
 
 
-.PHONY: $(MODULES) $(USERLAND)
+.PHONY: $(MODULES) $(USERLAND) $(IMAGE)
 
 all: $(FOLDERS) $(MODULES) $(USERLAND) ramdisk $(IMAGE)
 

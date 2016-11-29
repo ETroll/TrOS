@@ -15,22 +15,23 @@ extern void enter_usermode(unsigned int location, unsigned int userstack);
 
 void process_preempt()
 {
-    if(_current_process != 0)
+    if(_current_process != 0 && num_proc > 1)
     {
+        BOCHS_DEBUG;
         process_switchto(_current_process->next);
     }
 }
 
 void process_switchto(process_t* next)
 {
-    // printk("SWCH TO EIP: %x CR3: %x ESP: %x kESP: %x pid: %d\n",
-    //     next->regs.eip,
-    //     next->regs.cr3,
-    //     next->regs.esp,
-    //     next->thread.kernel_stack_ptr,
-    //     next->pid);
-    // printk("     EFLAGS: %x\n",
-    //     next->regs.eflags);
+    printk("SWCH TO EIP: %x CR3: %x ESP: %x kESP: %x pid: %d\n",
+        next->regs.eip,
+        next->regs.cr3,
+        next->regs.esp,
+        next->thread.kernel_stack_ptr,
+        next->pid);
+    printk("     EFLAGS: %x\n",
+        next->regs.eflags);
 
     //NOTE: Hm.. not good? Do we need to keep this "fresh"?
     tss_set_ring0_stack(0x10, next->thread.kernel_stack_ptr);
@@ -83,11 +84,11 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdi
     _processes[num_proc++] = proc;
     _current_process = proc;
 
-    // printk("USER proc %x - EIP %x ESP: %x kESP: %x\n",
-    //     proc,
-    //     proc->regs.eip,
-    //     proc->regs.esp,
-    //     proc->thread.kernel_stack_ptr);
+    printk("USER proc %x - EIP %x ESP: %x kESP: %x\n",
+        proc,
+        proc->regs.eip,
+        proc->regs.esp,
+        proc->thread.kernel_stack_ptr);
 
     tss_set_ring0_stack(0x10, proc->thread.kernel_stack_ptr);
     enter_usermode(proc->thread.instr_ptr, proc->thread.user_stack_ptr);

@@ -115,7 +115,7 @@ int vmm_initialize()
     return VMM_OK;
 }
 
-void vmm_map_create_page(void* virt, unsigned int flags)
+void vmm_map_create_page(vrt_address virt, unsigned int flags)
 {
     //NOTE: If this function needs to be sped up, then dont use the methods,
     //      but use the functionality from the functions without having to set
@@ -125,7 +125,7 @@ void vmm_map_create_page(void* virt, unsigned int flags)
     void* phys = pmm_alloc_block();
 
     pdirectory_t* page_directory = vmm_get_directory();
-    pde_t* dir = vmm_pdirectory_lookup_entry(page_directory, (vrt_address)virt);
+    pde_t* dir = vmm_pdirectory_lookup_entry(page_directory, virt);
 
     if(!pde_is_present(*dir))
     {
@@ -139,7 +139,7 @@ void vmm_map_create_page(void* virt, unsigned int flags)
         {
             vmm_ptable_clear(table);
 
-            pde_t* entry = &page_directory->entries[PAGE_DIRECTORY_INDEX((vrt_address)virt)];
+            pde_t* entry = &page_directory->entries[PAGE_DIRECTORY_INDEX(virt)];
 
             pde_add_attribute(entry, PDE_PRESENT);
             pde_add_attribute(entry, PDE_WRITABLE);
@@ -158,8 +158,9 @@ void vmm_map_create_page(void* virt, unsigned int flags)
     }
 
     ptable_t* table = (ptable_t*)PAGE_GET_PHYSICAL_ADDRESS(dir);
-    pte_t* page = &table->entries[PAGE_TABLE_INDEX((vrt_address)virt)];
+    pte_t* page = &table->entries[PAGE_TABLE_INDEX(virt)];
 
+    //printk("Virt: %x set to phys addr: %x\n", virt, phys);
     //printk("Page at %x, set phys addr: %x\n", page, phys);
     pte_set_block(page, (unsigned int)phys);
     pte_add_attribute(page, PTE_PRESENT);

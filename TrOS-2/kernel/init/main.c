@@ -94,15 +94,17 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     }
 
     syscall_initialize();
-    printk("Creating kernel idle proc and starting shell\n\n");
 
+    printk("\n\n");
+
+    //printk("Creating kernel idle proc and starting shell\n\n");
     // Make a Kernel Idle process with the current page-dir.
     process_create_idle(&kernel_idle, vmm_get_directory());
     //process_exec_user(&kernel_ring3_test);
 
     char* argv[] =
     {
-        "/bin/trell"
+        "/fdd/bin/trell"
     };
     exec_elf32(argv[0], 1, argv);
 

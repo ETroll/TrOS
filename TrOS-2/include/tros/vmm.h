@@ -13,6 +13,12 @@
 #define VMM_ERROR_NOMEM -1
 #define VMM_OK          1
 
+#define VMM_BLOCK_SIZE      4096
+#define VMM_BLOCK_ALIGN     VMM_BLOCK_SIZE
+
+#define VMM_FLAG_USER   1
+#define VMM_FLAG_KERNEL 0
+
 typedef unsigned int vrt_address;
 
 typedef struct
@@ -28,7 +34,7 @@ typedef struct
 
 
 int vmm_initialize();
-void vmm_map_create_page(void* virt, unsigned int flags);
+void vmm_map_create_page(vrt_address virt, unsigned int flags);
 
 // int vmm_alloc_page(pte_t* page);
 // void vmm_free_page(pte_t* page);

@@ -153,7 +153,7 @@ static struct heap_chunk_t* kheap_extend(unsigned int size)
     }
     for(int i = 0; i<amount; i++)
     {
-        vmm_map_create_page((void*)_kheap_next_virtual_addr, 0);
+        vmm_map_create_page(_kheap_next_virtual_addr, VMM_FLAG_KERNEL);
         _kheap_next_virtual_addr += BLOCK_SIZE;
     }
 
