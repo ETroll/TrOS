@@ -17,21 +17,26 @@ void process_preempt()
 {
     if(_current_process != 0 && num_proc > 1)
     {
-        BOCHS_DEBUG;
+        // printk("\nprocess_preempt - Current proc: %x CR3: %x\n", _current_process, _current_process->regs.cr3);
+        // for(int i = 0; i < num_proc; i++)
+        // {
+        //     printk("%x process[%d]->next: %x\n",_processes[i], i, _processes[i]->next);
+        // }
         process_switchto(_current_process->next);
     }
 }
 
 void process_switchto(process_t* next)
 {
-    printk("SWCH TO EIP: %x CR3: %x ESP: %x kESP: %x pid: %d\n",
-        next->regs.eip,
-        next->regs.cr3,
-        next->regs.esp,
-        next->thread.kernel_stack_ptr,
-        next->pid);
-    printk("     EFLAGS: %x\n",
-        next->regs.eflags);
+    // printk("Swtiching to process: %x\n\n", next);
+    // printk("SWCH TO EIP: %x CR3: %x ESP: %x kESP: %x pid: %d\n",
+    //     next->regs.eip,
+    //     next->regs.cr3,
+    //     next->regs.esp,
+    //     next->thread.kernel_stack_ptr,
+    //     next->pid);
+    // printk("     EFLAGS: %x\n",
+    //     next->regs.eflags);
 
     //NOTE: Hm.. not good? Do we need to keep this "fresh"?
     tss_set_ring0_stack(0x10, next->thread.kernel_stack_ptr);
@@ -53,9 +58,13 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdi
     if(num_proc > 0)
     {
         process_t* prev = _processes[num_proc-1];
-        //printk("Next proc %x\n", _processes[0]);
+        printk("Next proc %x\n", _processes[0]);
+        printk("Prev proc %x\n", prev);
         proc->next = _processes[0];
         prev->next = proc;
+
+
+        printk("Test %x\n", _processes[0]->next);
     }
     else
     {
@@ -84,11 +93,12 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdi
     _processes[num_proc++] = proc;
     _current_process = proc;
 
-    printk("USER proc %x - EIP %x ESP: %x kESP: %x\n",
+    printk("\nUSER proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
         proc,
         proc->regs.eip,
         proc->regs.esp,
-        proc->thread.kernel_stack_ptr);
+        proc->thread.kernel_stack_ptr,
+        proc->regs.cr3);
 
     tss_set_ring0_stack(0x10, proc->thread.kernel_stack_ptr);
     enter_usermode(proc->thread.instr_ptr, proc->thread.user_stack_ptr);
@@ -106,7 +116,7 @@ void process_create_idle(void (*main)(), pdirectory_t* pdir)
 
         idleproc->thread.user_stack_ptr = 0;
         //16 byte stack, starts at location 16-4 = 12
-        idleproc->thread.kernel_stack_ptr = (unsigned int)kmalloc(16) + 12;
+        idleproc->thread.kernel_stack_ptr = (unsigned int)kmalloc(4096) + 4092;
         idleproc->thread.instr_ptr = (unsigned int)main;
         idleproc->thread.priority = 0;
         idleproc->thread.state = 0;
@@ -125,11 +135,12 @@ void process_create_idle(void (*main)(), pdirectory_t* pdir)
         _processes[num_proc++] = idleproc;
         _current_process = idleproc;
 
-        // printk("IDLE proc %x - EIP %x ESP: %x kESP: %x\n",
-        //     idleproc,
-        //     idleproc->regs.eip,
-        //     idleproc->regs.esp,
-        //     idleproc->thread.kernel_stack_ptr);
+        printk("IDLE proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
+            idleproc,
+            idleproc->regs.eip,
+            idleproc->regs.esp,
+            idleproc->thread.kernel_stack_ptr,
+            idleproc->regs.cr3);
     }
     else
     {

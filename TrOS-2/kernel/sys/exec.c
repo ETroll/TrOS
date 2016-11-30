@@ -68,12 +68,11 @@ int exec_elf32(char* path, int argc, char** argv)
                         //Maybe stop from executing if we occur this?
                     }
                 }
-                //TODO: Execute!
                 //All just temp for now
                 uint32_t ustackAddr = 0x400000;
                 vmm_map_create_page(ustackAddr, VMM_FLAG_USER);
                 ustackAddr += (VMM_BLOCK_SIZE - sizeof(unsigned int));
-
+                printk("\n\n");
                 process_exec_user(elf_header.e_entry,
                     ustackAddr,
                     (unsigned int)kmalloc(16384) + (16384 - sizeof(unsigned int)),

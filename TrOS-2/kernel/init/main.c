@@ -120,6 +120,7 @@ void kernel_idle()
     //This test code runs in ring1 - Kernelspace
     while(1)
     {
+        //printk("IDLE\n");
         __asm("sti");
         __asm("hlt;");
     }
