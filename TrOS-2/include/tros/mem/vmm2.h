@@ -18,7 +18,7 @@ typedef unsigned int virtual_addr_t;
 
 typedef struct {
     unsigned int present:1;
-    unsigned int rw:1;
+    unsigned int writable:1;
     unsigned int user:1;
     unsigned int writethrough:1;
     unsigned int cachedisable:1;

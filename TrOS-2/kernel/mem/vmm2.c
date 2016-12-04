@@ -4,7 +4,7 @@
 #include <tros/tros.h>
 #include <string.h>
 
-#define _USER_DEBUG 1 //Just a debug for now with flags
+// #define _USER_DEBUG 1 //Just a debug for now with flags
 
 //Virtual Address: 0x08048001
 //0000 1000 00|00 0100 1000|0000 0000 0001
@@ -55,8 +55,6 @@ vmm2_status_t vmm2_initialize(uint32_t stack, uint32_t size, uint32_t regionMapL
     // - Register page fault handler
     irq_register_handler(14, vmm2_pagefault_handler);
 
-    // - Verify pages!
-    // TODO!
     // - Swap out the page directory from bootlader!
     if(vmm2_switch_pagedir(_current_dir))
     {
@@ -199,6 +197,33 @@ void vmm2_pagefault_handler(cpu_registers_t* regs)
         printk("reserved ");
     }
     printk(") at %x\n", faulting_address);
+    printk("------------------------------------------------\n");
 
-    kernel_panic("PAGEFAULT!", regs);
+/*
+unsigned int present:1;
+unsigned int rw:1;
+unsigned int user:1;
+*/
+    page_entry_t* page_table = (page_entry_t*)&_current_dir->tables[DIRECTORY_INDEX(faulting_address)];
+    printk("TYPE       | INDEX | PRESENT | WRITABLE | USER\n");
+    printk("Directory  | %d     | %s     | %s       | %s\n",
+        DIRECTORY_INDEX(faulting_address),
+        page_table->present ? "Yes" : "No",
+        page_table->writable ? "Yes" : "No",
+        page_table->user ? "Yes" : "No"
+    );
+    if(page_table->present)
+    {
+        page_table_t* table = (page_table_t*)ENTRY_PHYS_ADDRESS((uint32_t*)page_table);
+        page_entry_t* page = (page_entry_t*)&table->entries[TABLE_INDEX(faulting_address)];
+        printk("Index      | %d     | %s     | %s       | %s\n",
+            TABLE_INDEX(faulting_address),
+            page->present ? "Yes" : "No",
+            page->writable ? "Yes" : "No",
+            page->user ? "Yes" : "No"
+        );
+        //print!
+    }
+    printk("\n");
+    kernel_panic("PAGEFAULT", regs);
 }
