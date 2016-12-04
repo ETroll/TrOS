@@ -10,9 +10,9 @@
 //0000 1000 00|00 0100 1000|0000 0000 0001
 // 0    8    0     4    8    0    0    1
 //|-----------|------------|-------------|
-//    10bit        10bit         12bit
-//    0x3FF        0x3FF         0xFFF
-//  PDir Index  Table Index     Phys Off (4K)
+//    10bit        10bit       12bit
+//    0x3FF        0x3FF       0xFFF
+//  PDir Index  Table Index   Phys Off (4K)
 
 #define DIRECTORY_INDEX(x) (((x) >> 22) & 0x3ff)
 #define TABLE_INDEX(x) (((x) >> 12) & 0x3ff)
@@ -199,11 +199,6 @@ void vmm2_pagefault_handler(cpu_registers_t* regs)
     printk(") at %x\n", faulting_address);
     printk("------------------------------------------------\n");
 
-/*
-unsigned int present:1;
-unsigned int rw:1;
-unsigned int user:1;
-*/
     page_entry_t* page_table = (page_entry_t*)&_current_dir->tables[DIRECTORY_INDEX(faulting_address)];
     printk("TYPE       | INDEX | PRESENT | WRITABLE | USER\n");
     printk("Directory  | %d     | %s     | %s       | %s\n",
