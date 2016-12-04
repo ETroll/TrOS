@@ -4,8 +4,8 @@
 #ifndef INCLUDE_TROS_TASK_H
 #define INCLUDE_TROS_TASK_H
 
-#include <tros/vmm.h>
 #include <stdint.h>
+#include <tros/mem/vmm2.h>
 
 typedef struct
 {
@@ -35,7 +35,7 @@ typedef struct process
 {
     thread_t thread;
     registers_t regs;
-    pdirectory_t* pagedir;
+    page_directory_t* pagedir;
     struct process *next;
     unsigned int pid;
 } process_t;
@@ -46,10 +46,10 @@ extern void process_switch(registers_t* old, registers_t* new);
 
 void process_preempt();
 void process_switchto(process_t* next);
-void process_create_idle(void (*main)(), pdirectory_t*);
+void process_create_idle(void (*main)());
 
 // void process_exec_user(unsigned int startAddr);
-void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdirectory_t* pdir);
+void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, page_directory_t* pdir);
 
 
 #endif

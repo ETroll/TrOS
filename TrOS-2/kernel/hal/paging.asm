@@ -37,11 +37,8 @@ paging_is_enabled:
 	pop ebp
 	ret
 
-; PDBR
-; Stores the physical address of the first page directory entry
-
-global paging_load_PDBR
-paging_load_PDBR:
+global paging_set_CR3
+paging_set_CR3:
 	push ebp
 	mov ebp,esp
 
@@ -52,8 +49,8 @@ paging_load_PDBR:
 	pop ebp
 	ret; 4
 
-global paging_get_PDBR
-paging_get_PDBR:
+global paging_get_CR3
+paging_get_CR3:
 	push ebp
 	mov ebp,esp
 
@@ -74,6 +71,7 @@ paging_error_addr:
 	pop ebp
 	ret; 4
 
+;Invalidate entry
 global paging_flush_tlb_entry
 paging_flush_tlb_entry:
 	push ebp

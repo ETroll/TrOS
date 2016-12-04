@@ -1,4 +1,4 @@
-#include <tros/mmap.h>
+#include <tros/mem/mmap.h>
 #include <tros/klib/kstring.h>
 #include <tros/tros.h>
 
@@ -71,11 +71,8 @@ int mmap_get_first_free_size(unsigned int size)
                         int bit = 1 << j;
                         if(!(__mmap_memory_map[i] & bit))
                         {
-
                             int start_bit = (i*32) + j;
-
                             //printk("Found bit %d : start_bit: %d\n", j, start_bit);
-
                             unsigned int free_bits = 0;
                             for(unsigned int count=0; count<=size; count++)
                             {

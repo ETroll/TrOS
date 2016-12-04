@@ -2,7 +2,7 @@
 // Simple linked list implementation
 
 #include <tros/klib/list.h>
-#include <tros/kheap.h>
+#include <tros/memory.h>
 
 
 void list_add_front(list_t* list, void* data)

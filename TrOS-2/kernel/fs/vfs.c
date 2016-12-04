@@ -3,7 +3,7 @@
 #include <tros/fs/vfs.h>
 #include <tros/fs.h>
 #include <tros/klib/tree.h>
-#include <tros/kheap.h>
+#include <tros/memory.h>
 #include <tros/tros.h>
 #include <tros/klib/kstring.h>
 

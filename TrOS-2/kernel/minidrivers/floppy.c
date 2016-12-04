@@ -161,7 +161,7 @@ static driver_block_t __fdd_driver = {
 int floppy_driver_initialize(unsigned char device)
 {
     device_driver_t drv = {
-        .name = "fdd",
+        .name = "fd0",
         .type = DRV_BLOCK,
         .driver = &__fdd_driver
     };

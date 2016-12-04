@@ -1,8 +1,8 @@
 #include <tros/driver.h>
 #include <tros/klib/list.h>
-#include <tros/kheap.h>
+#include <tros/memory.h>
 #include <tros/klib/kstring.h>
-// #include <tros/tros.h>
+#include <tros/tros.h>
 
 static list_t* _drivers = 0;
 
@@ -41,7 +41,6 @@ device_driver_t* driver_find_device(char* name)
 {
     list_node_t* node = _drivers->head;
     device_driver_t* driver = 0;
-
     while(node != 0)
     {
         device_driver_t* device = (device_driver_t*)node->data;

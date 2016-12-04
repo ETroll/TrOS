@@ -1,8 +1,8 @@
 #include <tros/process.h>
 #include <tros/exec.h>
 #include <tros/tros.h>
-#include <tros/kheap.h>
-#include <tros/vmm.h>
+#include <tros/memory.h>
+#include <tros/mem/vmm2.h>
 #include <string.h>
 #include <tros/fs/vfs.h>
 #include <tros/sys/elf32.h>
@@ -24,8 +24,8 @@ int exec_elf32(char* path, int argc, char** argv)
             && sizeof(Elf32_ProgramHeader_t) == elf_header.e_phentsize) //will fail if 64bit
             {
                 //TODO: Save old pagedir so we can fall back
-                pdirectory_t* pagedir = vmm_clone_directory(vmm_get_directory());
-                vmm_switch_pdirectory(pagedir);
+                page_directory_t* pagedir = vmm2_clone_directory(vmm2_get_directory());
+                vmm2_switch_pagedir(pagedir);
 
                 printk("We have a valid executable with entry at %x\n", elf_header.e_entry);
                 printk("\nType Offset      VirtAddr    PhysAddr    FileSiz     MemSiz     Align\n");
@@ -48,9 +48,14 @@ int exec_elf32(char* path, int argc, char** argv)
                         pgr_h.p_align);
 
                     if(pgr_h.p_type == ELF32_PT_LOAD
-                    && pgr_h.p_align == VMM_BLOCK_ALIGN)
+                    && pgr_h.p_align == VMM2_BLOCK_SIZE)
                     {
-                        vmm_create_and_map(pgr_h.p_vaddr, pgr_h.p_memsz, VMM_FLAG_USER);
+                        unsigned int blocks = pgr_h.p_memsz / VMM2_BLOCK_SIZE;
+                        if(pgr_h.p_memsz % VMM2_BLOCK_SIZE > 0) blocks++;
+
+                        //NOTE: Application is writable. Separate .data and .bss
+                        //      from .text
+                        vmm2_map(pgr_h.p_vaddr, blocks, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE);
                         if(pgr_h.p_filesz != pgr_h.p_memsz)
                         {
                             memset((void *)(pgr_h.p_vaddr + pgr_h.p_filesz),
@@ -70,8 +75,8 @@ int exec_elf32(char* path, int argc, char** argv)
                 }
                 //All just temp for now
                 uint32_t ustackAddr = 0x400000;
-                vmm_map_create_page(ustackAddr, VMM_FLAG_USER);
-                ustackAddr += (VMM_BLOCK_SIZE - sizeof(unsigned int));
+                vmm2_map(ustackAddr, 1, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE); //1 block - 4K stack
+                ustackAddr += (VMM2_BLOCK_SIZE - sizeof(unsigned int));
                 printk("\n\n");
                 process_exec_user(elf_header.e_entry,
                     ustackAddr,

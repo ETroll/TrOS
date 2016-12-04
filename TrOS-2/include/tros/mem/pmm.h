@@ -4,24 +4,16 @@
 #ifndef INCLUDE_TROS_PMM_H
 #define INCLUDE_TROS_PMM_H
 
-typedef struct {
-    unsigned int startLo;
-    unsigned int startHi;
-    unsigned int sizeLo;
-    unsigned int sizeHi;
-    unsigned int type;
-    unsigned int acpi_3_0;
-} pmm_region_t;
+typedef unsigned int physical_addr_t;
 
-typedef unsigned int phy_address_t;
-
-int pmm_initialize(unsigned int addr, unsigned int size, pmm_region_t* regions);
+int pmm_initialize(physical_addr_t addr, unsigned int size, physical_addr_t regions);
 
 //Enable a physical region for use with the PMM
-void pmm_init_region(phy_address_t addr, unsigned int size);
+void pmm_init_region(physical_addr_t addr, unsigned int size);
 
 //Disable a phyical region for use with the PMM
-void pmm_deinit_region(phy_address_t addr, unsigned int size);
+void pmm_deinit_region(physical_addr_t addr, unsigned int size);
+void pmm_deinit_block(physical_addr_t addr);
 void* pmm_alloc_block();
 void pmm_free_block(void* blockptr);
 void* pmm_alloc_blocks(unsigned int size);

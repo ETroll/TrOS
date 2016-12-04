@@ -4,11 +4,12 @@
 #include <tros/tros.h>
 #include <tros/timer.h>
 #include <tros/irq.h>
-#include <tros/pmm.h>	// REMOVE
-#include <tros/vmm.h> 	// REMOVE
+// #include <tros/pmm.h>	// REMOVE
+// #include <tros/vmm.h> 	// REMOVE
 #include <tros/fs/vfs.h>
-#include <tros/kheap.h>
+// #include <tros/memory.h>
 #include <tros/exec.h>
+#include <tros/memory.h>
 #include <tros/hwdetect.h>
 #include <tros/sys/multiboot.h>
 
@@ -29,7 +30,8 @@ extern void syscall_initialize();
 extern void serial_init();
 
 void kernel_idle();
-void kernel_ring3_test();
+
+// #define UNDERDEV 1
 
 void kernel_early()
 {
@@ -43,20 +45,15 @@ void kernel_early()
 void kernel_memory_initialize(uint32_t stack_top, multiboot_info_t* multiboot)
 {
     uint32_t memSize = 1024 + multiboot->memoryLo + multiboot->memoryHi*64;
-    pmm_region_t* regions = (pmm_region_t*)0x1000;
+    mem_usage_physical_t usage;
 
-    int mmap_size = pmm_initialize(stack_top, memSize, regions);
+    memory_initialize(stack_top, memSize, 0x1000);
+    memory_physical_usage(&usage);
     printk("Kernel stack top at: %x \n", stack_top);
-    unsigned int kernel_region_size = (stack_top-0xC0000000) + mmap_size;
-    pmm_deinit_region(0x100000, kernel_region_size);
-
-    printk("\nBlocks initialized: %i\nUsed or reserved blocks: %i\nFree blocks: %i\n\n",
-        pmm_get_block_count(),
-        pmm_get_use_block_count(),
-        pmm_get_free_block_count());
-
-    vmm_initialize();
-    kheap_initialize();
+    printk("\nBlocks initialized: %d\nUsed or reserved blocks: %d\nFree blocks: %d\n\n",
+        usage.total,
+        usage.used,
+        usage.free);
 }
 
 void kernel_drivers()
@@ -85,28 +82,42 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 {
     kernel_early();
     kernel_memory_initialize(stack_top, multiboot);
+
+
     kernel_drivers();
     kernel_filesystems();
 
-    if(!vfs_mount("fdd", "fat12"))
+    /*
+        fd0/
+            initrd
+            kernel.elf
+            krnldr.bin
+            test
+            folder/
+                test1
+                test2
+                ...
+        hd0/
+        cd0/
+        dvd0/
+    */
+
+    if(!vfs_mount("fd0", "fat12"))
     {
         kernel_panic("Error mounting root folder. Halting!", 0);
     }
 
     syscall_initialize();
-
     printk("\n\n");
-
-    //printk("Creating kernel idle proc and starting shell\n\n");
-    // Make a Kernel Idle process with the current page-dir.
-    process_create_idle(&kernel_idle, vmm_get_directory());
-    //process_exec_user(&kernel_ring3_test);
+#ifndef UNDERDEV
+    process_create_idle(&kernel_idle);
 
     char* argv[] =
     {
-        "/fdd/bin/trell"
+        "/fd0/bin/trell"
     };
     exec_elf32(argv[0], 1, argv);
+#endif
 
     while(1)
     {
@@ -117,10 +128,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 // This is the "idle process"
 void kernel_idle()
 {
-    //This test code runs in ring1 - Kernelspace
     while(1)
     {
-        //printk("IDLE\n");
         __asm("sti");
         __asm("hlt;");
     }

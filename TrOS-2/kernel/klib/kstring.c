@@ -1,5 +1,5 @@
 #include <tros/klib/kstring.h>
-#include <tros/kheap.h>
+#include <tros/memory.h>
 
 char* strcpy(char* dest, const char* src)
 {

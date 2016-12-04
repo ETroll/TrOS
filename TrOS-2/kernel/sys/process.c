@@ -1,5 +1,5 @@
 #include <tros/process.h>
-#include <tros/kheap.h>
+#include <tros/memory.h>
 #include <tros/tros.h>
 #include <tros/hal/tss.h>
 
@@ -49,7 +49,7 @@ void process_switchto(process_t* next)
 }
 
 //void process_exec_user(void (*main)())
-void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdirectory_t* pdir)
+void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, page_directory_t* pdir)
 {
     process_t* proc = (process_t*)kmalloc(sizeof(process_t));
     proc->pagedir = pdir;
@@ -58,17 +58,17 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdi
     if(num_proc > 0)
     {
         process_t* prev = _processes[num_proc-1];
-        printk("Next proc %x\n", _processes[0]);
-        printk("Prev proc %x\n", prev);
+        // printk("Next proc %x\n", _processes[0]);
+        // printk("Prev proc %x\n", prev);
         proc->next = _processes[0];
         prev->next = proc;
 
 
-        printk("Test %x\n", _processes[0]->next);
+        // printk("Test %x\n", _processes[0]->next);
     }
     else
     {
-        printk("Looping....\n");
+        // printk("Looping....\n");
         proc->next = proc; //loop
     }
 
@@ -86,31 +86,31 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, pdi
     proc->regs.esi = 0;
     proc->regs.edi = 0;
     proc->regs.eip = proc->thread.instr_ptr;
-    proc->regs.cr3 = (unsigned int)proc->pagedir->entries;
+    proc->regs.cr3 = (unsigned int)proc->pagedir->tables;
     proc->regs.esp = proc->thread.user_stack_ptr;
     proc->regs.eflags = _current_process->regs.eflags;
 
     _processes[num_proc++] = proc;
     _current_process = proc;
 
-    printk("\nUSER proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
-        proc,
-        proc->regs.eip,
-        proc->regs.esp,
-        proc->thread.kernel_stack_ptr,
-        proc->regs.cr3);
+    // printk("\nUSER proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
+    //     proc,
+    //     proc->regs.eip,
+    //     proc->regs.esp,
+    //     proc->thread.kernel_stack_ptr,
+    //     proc->regs.cr3);
 
     tss_set_ring0_stack(0x10, proc->thread.kernel_stack_ptr);
     enter_usermode(proc->thread.instr_ptr, proc->thread.user_stack_ptr);
 }
 
-void process_create_idle(void (*main)(), pdirectory_t* pdir)
+void process_create_idle(void (*main)())
 {
     //Only to be run ONCE!
     if(_current_process == 0)
     {
         process_t* idleproc = (process_t*)kmalloc(sizeof(process_t));
-        idleproc->pagedir = pdir;
+        idleproc->pagedir = vmm2_get_directory();
         idleproc->next = idleproc; //loop
         idleproc->pid = num_proc;
 
@@ -128,19 +128,19 @@ void process_create_idle(void (*main)(), pdirectory_t* pdir)
         idleproc->regs.esi = 0;
         idleproc->regs.edi = 0;
         idleproc->regs.eip = idleproc->thread.instr_ptr;
-        idleproc->regs.cr3 = (unsigned int)idleproc->pagedir->entries;
+        idleproc->regs.cr3 = (unsigned int)idleproc->pagedir->tables;
         idleproc->regs.esp = idleproc->thread.kernel_stack_ptr;
         __asm("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(idleproc->regs.eflags)::"%eax");
 
         _processes[num_proc++] = idleproc;
         _current_process = idleproc;
 
-        printk("IDLE proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
-            idleproc,
-            idleproc->regs.eip,
-            idleproc->regs.esp,
-            idleproc->thread.kernel_stack_ptr,
-            idleproc->regs.cr3);
+        // printk("IDLE proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
+        //     idleproc,
+        //     idleproc->regs.eip,
+        //     idleproc->regs.esp,
+        //     idleproc->thread.kernel_stack_ptr,
+        //     idleproc->regs.cr3);
     }
     else
     {

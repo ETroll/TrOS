@@ -1,5 +1,5 @@
 #include <tros/irq.h>
-#include <tros/kheap.h>
+#include <tros/memory.h>
 #include <tros/driver.h>
 #include <tros/tros.h>
 

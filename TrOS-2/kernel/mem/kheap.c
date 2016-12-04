@@ -3,8 +3,8 @@
 // Disclaimer! Not optimal at all! Uses *too much* memspace, and cpu cycles atm..
 
 #include <tros/tros.h>
-#include <tros/kheap.h>
-#include <tros/vmm.h>
+// #include <tros/memory.h>
+#include <tros/mem/vmm2.h>
 
 #define KERNEL_HEAP_START   0xD0000000
 #define KERNEL_HEAP_END     0xDFFFFFFF
@@ -151,11 +151,9 @@ static struct heap_chunk_t* kheap_extend(unsigned int size)
     {
         amount++;
     }
-    for(int i = 0; i<amount; i++)
-    {
-        vmm_map_create_page(_kheap_next_virtual_addr, VMM_FLAG_KERNEL);
-        _kheap_next_virtual_addr += BLOCK_SIZE;
-    }
+
+    vmm2_map(_kheap_next_virtual_addr, amount, VMM2_PAGE_WRITABLE);
+    _kheap_next_virtual_addr += (amount * BLOCK_SIZE);
 
     struct heap_chunk_t* newchunk = (struct heap_chunk_t*) chunk_start_addr;
     newchunk->size = (amount*BLOCK_SIZE) - 16; //TODO: sizeof(struct heap_chunk_t) instead of 16

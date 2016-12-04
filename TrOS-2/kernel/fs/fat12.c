@@ -4,7 +4,7 @@
 #include <tros/fs/vfs.h>
 #include <tros/fs.h>
 #include <tros/tros.h>
-#include <tros/kheap.h>
+#include <tros/memory.h>
 
 #include <tros/klib/kstring.h>
 
