@@ -41,6 +41,13 @@ void kheap_initialize()
 {
     _kheap_free = 0;
     _kheap_start = 0;
+
+    for (uint32_t i = KERNEL_HEAP_START; i < KERNEL_HEAP_END; i += VMM2_BLOCK_SIZE)
+    {
+        // We are doing this when there are only the kernel directory.
+        // So no need to set a specific directory before "allocating"
+		vmm2_get_pagetable(i, 1);
+	}
 }
 
 void* kmalloc(unsigned int size)

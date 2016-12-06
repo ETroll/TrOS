@@ -102,25 +102,9 @@ void vmm2_map(virtual_addr_t virt, uint32_t blocks, uint32_t flags)
 
 void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags)
 {
-    page_directory_t* dir = _current_dir;
-    uint32_t* page_table = &dir->tables[DIRECTORY_INDEX(virt)];
-
+    uint32_t* page_table = vmm2_get_pagetable(virt, 1);
     //printk("Mapping: %x to %x (%x)\n", phys, virt, page_table);
 
-    // If the page table is 0 then it is unnused,
-    // And a new page table has to be created and
-    // linked into the page directory entry.
-    if(!*page_table)
-    {
-        page_table_t* table = (page_table_t*)pmm_alloc_block();
-        memset(table, 0, sizeof(page_table_t));
-        *page_table = (uint32_t)table;
-        *page_table |= VMM2_PAGE_PRESENT;
-#ifdef _USER_DEBUG
-        *page_table |= VMM2_PAGE_USER;
-#endif
-        // printk("Created new page table for index: %d virt: %x\n", DIRECTORY_INDEX(virt), virt);
-    }
     //Set flags.
     *page_table |= flags;
 
@@ -137,10 +121,32 @@ void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags)
 
 }
 
+uint32_t* vmm2_get_pagetable(virtual_addr_t virt, uint32_t create)
+{
+    page_directory_t* dir = _current_dir;
+    uint32_t* page_table = &dir->tables[DIRECTORY_INDEX(virt)];
+    // If the page table is 0 then it is unnused,
+    // And a new page table has to be created and
+    // linked into the page directory entry.
+    if(!*page_table && create)
+    {
+        page_table_t* table = (page_table_t*)pmm_alloc_block();
+        memset(table, 0, sizeof(page_table_t));
+        *page_table = (uint32_t)table;
+        *page_table |= VMM2_PAGE_PRESENT;
+#ifdef _USER_DEBUG
+        *page_table |= VMM2_PAGE_USER;
+#endif
+        // printk("Created new page table for index: %d virt: %x\n", DIRECTORY_INDEX(virt), virt);
+    }
+    return page_table;
+}
+
 page_directory_t* vmm2_create_pagedir()
 {
     page_directory_t* tmp = (page_directory_t*)pmm_alloc_block();
     memset(tmp, 0, sizeof(page_directory_t));
+    // printk("Creating new pagedir at %x physical\n", tmp);
     return tmp;
 }
 
@@ -188,7 +194,7 @@ page_directory_t* vmm2_clone_directory(page_directory_t* src)
         }
     }
 
-    return _current_dir;
+    return dir;
 }
 
 void vmm2_pagefault_handler(cpu_registers_t* regs)

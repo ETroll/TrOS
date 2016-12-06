@@ -52,6 +52,7 @@ void vmm2_map(virtual_addr_t virt, uint32_t blocks, uint32_t flags);
 vmm2_status_t vmm2_switch_pagedir(page_directory_t* dir);
 
 page_directory_t* vmm2_get_directory();
+uint32_t* vmm2_get_pagetable(virtual_addr_t virt, uint32_t create);
 page_directory_t* vmm2_clone_directory(page_directory_t* src);
 
 #endif
