@@ -109,7 +109,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     syscall_initialize();
     printk("\n\n");
-#ifndef UNDERDEV
+
     process_create_idle(&kernel_idle);
 
     char* argv[] =
@@ -117,7 +117,6 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
         "/fd0/bin/trell"
     };
     exec_elf32(argv[0], 1, argv);
-#endif
 
     while(1)
     {
