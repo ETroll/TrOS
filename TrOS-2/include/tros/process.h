@@ -7,6 +7,9 @@
 #include <stdint.h>
 #include <tros/mem/vmm2.h>
 
+
+#define PROCESS_MEM_START 0x200000
+
 typedef struct
 {
     unsigned int eax;
@@ -37,7 +40,8 @@ typedef struct process
     registers_t regs;
     page_directory_t* pagedir;
     struct process *next;
-    unsigned int pid;
+    uint32_t pid;
+    uint32_t heapend_addr;
 } process_t;
 
 // void process_init();
@@ -49,7 +53,8 @@ void process_switchto(process_t* next);
 void process_create_idle(void (*main)());
 
 // void process_exec_user(unsigned int startAddr);
-void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, page_directory_t* pdir);
+void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir);
 
+process_t* process_get_current();
 
 #endif

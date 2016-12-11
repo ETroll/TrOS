@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <syscall.h>
 
 #define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
@@ -31,11 +33,29 @@ int main()
     // BOCHS_DEBUG;
     stdout = (file_t*)&vga;
     //stdin = (file_t*)&kbd;
-
+    syscall_ioctl(vga, IOCTL_VGA_COLOR, 0xCF);
     syscall_ioctl(vga, IOCTL_VGA_CLEAR_MEM, 0);
 
     printf("Hello!\n");
     printf("Welcome to Trell - Your friendly servant!\n");
+
+    char* buffer = (char*)malloc(5000*sizeof(char));
+    printf("Allocated 5000bytes at %x\n", buffer);
+    memset(buffer, '\0', 5000);
+    printf("Cleared buffer\n");
+
+    void* buffer2 = malloc(101);
+    void* buffer3 = malloc(3000);
+    void* buffer4 = malloc(1235);
+    void* buffer5 = malloc(100000);
+
+    free(buffer3);
+    free(buffer5);
+    free(buffer);
+    free(buffer4);
+    free(buffer2);
+
+    printf("Freed all memory used\n");
 
     /*
     #include <stdio.h>

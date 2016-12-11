@@ -26,6 +26,7 @@ int exec_elf32(char* path, int argc, char** argv)
                 //TODO: Save old pagedir so we can fall back
                 page_directory_t* pagedir = vmm2_clone_directory(vmm2_get_directory());
                 vmm2_switch_pagedir(pagedir);
+                uint32_t highetsAddr = 0;
 
                 printk("We have a valid executable with entry at %x\n", elf_header.e_entry);
                 printk("\nType Offset      VirtAddr    PhysAddr    FileSiz     MemSiz     Align\n");
@@ -38,7 +39,7 @@ int exec_elf32(char* path, int argc, char** argv)
                         elf_header.e_phentsize,
                         (unsigned char *)&pgr_h);
 
-                    printk("%d    %x  %x  %x  %x  %x %x\n",
+                    printk("%d    %x  %x  %x  %x  %x %x ",
                         pgr_h.p_type,
                         pgr_h.p_offset,
                         pgr_h.p_vaddr,
@@ -52,15 +53,23 @@ int exec_elf32(char* path, int argc, char** argv)
                     {
                         unsigned int blocks = pgr_h.p_memsz / VMM2_BLOCK_SIZE;
                         if(pgr_h.p_memsz % VMM2_BLOCK_SIZE > 0) blocks++;
-
+                        printk("- %d blocks\n", blocks);
                         //NOTE: Application is writable. Separate .data and .bss
                         //      from .text
                         vmm2_map(pgr_h.p_vaddr, blocks, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE);
+
+                        if((pgr_h.p_vaddr + (VMM2_BLOCK_SIZE * blocks)) > highetsAddr)
+                        {
+                            highetsAddr = pgr_h.p_vaddr + (VMM2_BLOCK_SIZE * blocks);
+                        }
+
                         if(pgr_h.p_filesz != pgr_h.p_memsz)
                         {
                             memset((void *)(pgr_h.p_vaddr + pgr_h.p_filesz),
                                 '\0',
                                 (pgr_h.p_memsz-pgr_h.p_filesz));
+                            // printk("Zeroed: %x to %x\n", (pgr_h.p_vaddr + pgr_h.p_filesz),
+                            //     (pgr_h.p_vaddr + pgr_h.p_filesz) + (pgr_h.p_memsz-pgr_h.p_filesz));
                         }
                         if(vfs_read(file, pgr_h.p_offset, pgr_h.p_filesz, (unsigned char *)pgr_h.p_vaddr) != pgr_h.p_filesz)
                         {
@@ -74,12 +83,13 @@ int exec_elf32(char* path, int argc, char** argv)
                     }
                 }
                 //All just temp for now
-                uint32_t ustackAddr = 0x400000;
+                uint32_t ustackAddr = 0xBFFFC000; //16k below kernel
                 vmm2_map(ustackAddr, 1, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE); //1 block - 4K stack
                 ustackAddr += (VMM2_BLOCK_SIZE - sizeof(unsigned int));
                 printk("\n\n");
                 process_exec_user(elf_header.e_entry,
                     ustackAddr,
+                    highetsAddr,
                     (unsigned int)kmalloc(16384) + (16384 - sizeof(unsigned int)),
                     pagedir);
             }

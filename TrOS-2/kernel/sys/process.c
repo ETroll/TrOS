@@ -49,11 +49,12 @@ void process_switchto(process_t* next)
 }
 
 //void process_exec_user(void (*main)())
-void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t kstack, page_directory_t* pdir)
+void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir)
 {
     process_t* proc = (process_t*)kmalloc(sizeof(process_t));
     proc->pagedir = pdir;
     proc->pid = num_proc;
+    proc->heapend_addr = heapstart;
 
     if(num_proc > 0)
     {
@@ -113,6 +114,7 @@ void process_create_idle(void (*main)())
         idleproc->pagedir = vmm2_get_directory();
         idleproc->next = idleproc; //loop
         idleproc->pid = num_proc;
+        idleproc->heapend_addr = PROCESS_MEM_START;
 
         idleproc->thread.user_stack_ptr = 0;
         //16 byte stack, starts at location 16-4 = 12
@@ -146,4 +148,9 @@ void process_create_idle(void (*main)())
     {
         //PANIC!
     }
+}
+
+process_t* process_get_current()
+{
+    return _current_process;
 }

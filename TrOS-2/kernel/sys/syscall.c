@@ -1,7 +1,8 @@
 #include <tros/irq.h>
-#include <tros/memory.h>
+#include <tros/mem/vmm2.h>
 #include <tros/driver.h>
 #include <tros/tros.h>
+#include <tros/process.h>
 
 //NOTE: Maybe move each syscall into own file in a folder?
 
@@ -16,22 +17,10 @@ static int sys_debug(unsigned int method)
     return -1;
 }
 
-static int sys_fork()
-{
-    //TODO
-    return -1;
-}
-
-static int sys_yield()
-{
-    //TODO
-    return -1;
-}
-
 static int sys_getpid()
 {
-    //TODO
-    return -1;
+    process_t* process = process_get_current();
+    return process;
 }
 
 static int sys_exit(unsigned int code)
@@ -166,9 +155,21 @@ static int sys_read_hid(unsigned int fd, void *buffer, unsigned int count)
     return -1;
 }
 
-static int sys_tmp_kmalloc(unsigned int size)
+static int sys_increasemem(unsigned int blocks)
 {
-    return (int)kmalloc(size);
+    //returns the start address of the new chunk
+    process_t* process = process_get_current();
+    uint32_t start = process->heapend_addr;
+    vmm2_map(start, blocks,  VMM2_PAGE_USER | VMM2_PAGE_WRITABLE);
+
+    process->heapend_addr += (VMM2_BLOCK_SIZE * blocks);
+
+    return start;
+}
+
+static int sys_decreasemem(unsigned int blocks)
+{
+    return -1;
 }
 
 int syscall_dispatcher(syscall_parameters_t regs)
@@ -215,20 +216,19 @@ void syscall_initialize()
         _syscalls[i] = 0;
     }
 
-    _syscalls[0] = &sys_fork;
-    _syscalls[1] = &sys_yield;
-    _syscalls[2] = &sys_getpid;
-    _syscalls[3] = &sys_exit;
-    _syscalls[4] = &sys_sleep;
-    _syscalls[5] = &sys_open;
-    _syscalls[6] = &sys_close;
-    _syscalls[7] = &sys_seek;
-    _syscalls[8] = &sys_write;
-    _syscalls[9] = &sys_read;
-    _syscalls[10] = &sys_ioctl;
-    _syscalls[11] = &sys_tmp_kmalloc;
-    _syscalls[12] = &sys_debug;
-    _syscalls[13] = &sys_read_hid;
+    _syscalls[0] = &sys_getpid;
+    _syscalls[1] = &sys_exit;
+    _syscalls[2] = &sys_sleep;
+    _syscalls[3] = &sys_open;
+    _syscalls[4] = &sys_close;
+    _syscalls[5] = &sys_seek;
+    _syscalls[6] = &sys_write;
+    _syscalls[7] = &sys_read;
+    _syscalls[8] = &sys_ioctl;
+    _syscalls[9] = &sys_increasemem;
+    _syscalls[10] = &sys_decreasemem;
+    _syscalls[11] = &sys_debug;
+    _syscalls[12] = &sys_read_hid;
 
     //irq_register_handler(0x80, &syscall_dispatcher);
 }

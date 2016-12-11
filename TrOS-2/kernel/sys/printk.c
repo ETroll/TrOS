@@ -8,7 +8,7 @@ void printk(char* str, ...)
     {
         if (*str != '%')
         {
-            vga_putch(*str);
+            //vga_putch(*str);
             serial_putch(*str);
         }
         else
@@ -21,7 +21,7 @@ void printk(char* str, ...)
                 case 's':
                 {
                     const char* str = (const char*)*arguments;
-                    vga_puts(str);
+                    //vga_puts(str);
                     serial_puts(str);
                 }
                 break;
@@ -29,7 +29,7 @@ void printk(char* str, ...)
                 case 'c':
                 {
                     char arg = *arguments;
-                    vga_putch(arg);
+                    //vga_putch(arg);
                     serial_putch(arg);
                 }
                 break;
@@ -44,14 +44,14 @@ void printk(char* str, ...)
 
                     if(arg < 0)
                     {
-                        vga_putch('-');
+                        //vga_putch('-');
                         serial_putch('-');
                         arg *= -1;
                     }
 
                     if(arg == 0)
                     {
-                        vga_putch('0');
+                        //vga_putch('0');
                         serial_putch('0');
                     }
                     else
@@ -63,7 +63,7 @@ void printk(char* str, ...)
                         }
                         for(int i = digit-1; i>=0; i--)
                         {
-                            vga_putch(buffer[i]);
+                            //vga_putch(buffer[i]);
                             serial_putch(buffer[i]);
                         }
                     }
@@ -76,8 +76,8 @@ void printk(char* str, ...)
                     int arg = *arguments;
                     unsigned int nibble;
 
-                    vga_putch('0');
-                    vga_putch('x');
+                    //vga_putch('0');
+                    //vga_putch('x');
                     serial_putch('0');
                     serial_putch('x');
                     for(int i = 28; i >= 0; i-=4)
@@ -91,7 +91,7 @@ void printk(char* str, ...)
                         {
                             nibble += 0x30;
                         }
-                        vga_putch(nibble);
+                        //vga_putch(nibble);
                         serial_putch(nibble);
                     }
                 }

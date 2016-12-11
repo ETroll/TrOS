@@ -49,23 +49,22 @@ int syscall_##fn(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) \
 }
 
 //Processes
-DEFN_SYSCALL0(fork, 0);
-DEFN_SYSCALL0(yield, 1);
-DEFN_SYSCALL0(getpid, 2);
-DEFN_SYSCALL1(exit, 3, unsigned int);
-DEFN_SYSCALL1(sleep, 4, unsigned int);
+DEFN_SYSCALL0(getpid, 0);
+DEFN_SYSCALL1(exit, 1, unsigned int);
+DEFN_SYSCALL1(sleep, 2, unsigned int);
 
 //Devices
-DEFN_SYSCALL1(open, 5, char*);
-DEFN_SYSCALL1(close, 6, unsigned int);
-DEFN_SYSCALL2(seek, 7, unsigned int, unsigned int);
-DEFN_SYSCALL3(write, 8, unsigned int, const void*, unsigned int);
-DEFN_SYSCALL3(read, 9, unsigned int, void*, unsigned int);
-DEFN_SYSCALL3(ioctl, 10, unsigned int, unsigned int, unsigned int);
+DEFN_SYSCALL1(open, 3, char*);
+DEFN_SYSCALL1(close, 4, unsigned int);
+DEFN_SYSCALL2(seek, 5, unsigned int, unsigned int);
+DEFN_SYSCALL3(write, 6, unsigned int, const void*, unsigned int);
+DEFN_SYSCALL3(read, 7, unsigned int, void*, unsigned int);
+DEFN_SYSCALL3(ioctl, 8, unsigned int, unsigned int, unsigned int);
 
-//Memory (TEMP) - Needs sbrk and other so a userland malloc can be created
-DEFN_SYSCALL1(kmalloc, 11, unsigned int);
+//Memory
+DEFN_SYSCALL1(increasemem, 9, unsigned int);
+DEFN_SYSCALL1(decreasemem, 10, unsigned int);
 
 //Other temoporary or debug calls:
-DEFN_SYSCALL1(debug, 12, unsigned int);
-DEFN_SYSCALL3(read_hid, 13, unsigned int, void*, unsigned int);
+DEFN_SYSCALL1(debug, 11, unsigned int);
+DEFN_SYSCALL3(read_hid, 12, unsigned int, void*, unsigned int);
