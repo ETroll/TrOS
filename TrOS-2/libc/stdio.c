@@ -120,7 +120,7 @@ void printf(char* str, ...)
 
 int fputc (int character, file_t* file)
 {
-    return syscall_write(*file, &character,1);
+    return syscall_writedevice(*file, &character,1);
 }
 
 int fputs (const char* str, file_t* file )

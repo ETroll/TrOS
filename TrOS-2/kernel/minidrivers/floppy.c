@@ -168,7 +168,7 @@ int floppy_driver_initialize(unsigned char device)
     if(device < 4)
     {
         __fdd_current_drive = device;
-        printk("** Initalizing generic floppy disk driver - ");
+        printk("** Installing generic floppy disk driver - ");
 
         return driver_register(&drv);
     }

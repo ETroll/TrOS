@@ -10,9 +10,8 @@
 
 typedef enum
 {
-    DRV_CHAR = 0x01,
-    DRV_BLOCK,
-    DRV_HID
+    DRV_GENERIC = 0x01,
+    DRV_BLOCK
 } driver_t;
 
 // typedef struct
@@ -31,23 +30,32 @@ typedef struct
 
 } device_driver_t;
 
-typedef struct
-{
-    int (*read) (int *buffer, unsigned int count);
-    int (*ioctl) (unsigned int num, unsigned int param);
-    int (*open) (void);
-    void (*close) (void);
-} driver_hid_t;
+// typedef struct
+// {
+//     int (*read) (int *buffer, unsigned int count);
+//     int (*ioctl) (unsigned int num, unsigned int param);
+//     int (*open) (void);
+//     void (*close) (void);
+// } driver_hid_t;
+//
+// typedef struct
+// {
+//     int (*read) (char *buffer, unsigned int count);
+//     int (*write) (char *buffer, unsigned int count);
+//     int (*seek) (unsigned int pos);
+//     int (*ioctl) (unsigned int num, unsigned int param);
+//     int (*open) (void);
+//     void (*close) (void);
+// } driver_char_t;
 
 typedef struct
 {
-    int (*read) (char *buffer, unsigned int count);
-    int (*write) (char *buffer, unsigned int count);
-    int (*seek) (unsigned int pos);
+    int (*read) (int* buffer, unsigned int count);
+    int (*write) (int* buffer, unsigned int count);
     int (*ioctl) (unsigned int num, unsigned int param);
     int (*open) (void);
     void (*close) (void);
-} driver_char_t;
+} driver_generic_t;
 
 typedef struct
 {

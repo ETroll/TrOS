@@ -6,41 +6,34 @@
 #define VGA_CURSOR_DREG 0x3D5
 #define VGA_ROWS 25
 #define VGA_COLS 80
-#define VGA_MEM_SIZE (VGA_COLS*2) + (VGA_ROWS*VGA_COLS*2)
+#define VGA_MEM_SIZE VGA_COLS + (VGA_ROWS*VGA_COLS)
 
 #define IOCTL_VGA_COLOR         1
-#define IOCTL_VGA_SCROLL_UP     2
-#define IOCTL_VGA_SCROLL_DOWN   3
-#define IOCTL_VGA_TOGGLE_CURSOR 4
-#define IOCTL_VGA_CLEAR_MEM     5
-#define IOCTL_VGA_SHOULD_SCROLL 6
+#define IOCTL_VGA_CURSER_POS    2
+#define IOCTL_VGA_TOGGLE_CURSOR 3
+#define IOCTL_VGA_CLEAR_MEM     4
 
-static unsigned char __vga_isopen = 0;
-static unsigned char __vga_xpos = 0;
-static unsigned char __vga_ypos = 0;
-static unsigned char __vga_should_autoscroll = 0;
-static unsigned char __vga_show_cursor = 0;
+static unsigned char _vga_isopen = 0;
+static unsigned char _vga_xpos = 0;
+static unsigned char _vga_ypos = 0;
+static unsigned char _vga_show_cursor = 0;
 
-static unsigned char __vga_current_color = 0;
-static unsigned char* __vga_mem = (unsigned char*)0xB8000;
+static unsigned char _vga_current_color = 0;
+static unsigned short* _vga_mem = (unsigned short*)0xB8000;
 
-int vga_drv_read(char* buffer, unsigned int count);
-int vga_drv_write(char* buffer, unsigned int count);
+int vga_drv_read(int* buffer, unsigned int count);
+int vga_drv_write(int* buffer, unsigned int count);
 int vga_drv_ioctl(unsigned int num, unsigned int param);
 int vga_drv_open();
-int vga_drv_seek(unsigned int pos);
 void vga_drv_close();
 
 //Internal functions
 void vga_drv_update_cursor();
-void vga_drv_scrollup(unsigned int amount);
-void vga_drv_scrolldown(unsigned int amount);
 
-static driver_char_t __vga_driver =
+static driver_generic_t _vga_driver =
 {
     .read = vga_drv_read,
     .write = vga_drv_write,
-    .seek = vga_drv_seek,
     .ioctl = vga_drv_ioctl,
     .open = vga_drv_open,
     .close = vga_drv_close
@@ -50,71 +43,52 @@ int vga_driver_initialize()
 {
     device_driver_t drv = {
         .name = "vga",
-        .type = DRV_CHAR,
-        .driver = &__vga_driver
+        .type = DRV_GENERIC,
+        .driver = &_vga_driver
     };
 
-    __vga_isopen = 0;
-    __vga_show_cursor = 1;
-    //Black backround, White text
-    __vga_current_color = 0x0F;
+    _vga_isopen = 0;
+    _vga_show_cursor = 1;
+    _vga_current_color = 0x0F;
 
-    printk("** Initalizing 80x25 VGA driver - ");
+    printk("** Installing 80x25 VGA driver - ");
 	return driver_register(&drv);
 }
 
-
-int vga_drv_read(char* buffer, unsigned int count)
+int vga_drv_read(int* buffer, unsigned int count)
 {
-    //NOTE: Something "Special" about this read is that it does not move
-    //      any pointers at all like a normal read would
     int bytes_read = 0;
-    unsigned int memloc = (__vga_xpos * 2)+(__vga_ypos * VGA_COLS *2);
+    unsigned int memloc = _vga_xpos + (_vga_ypos * VGA_COLS);
 
     for(; bytes_read<count; bytes_read++)
     {
         if(memloc < VGA_MEM_SIZE)
         {
-            buffer[bytes_read] = __vga_mem[memloc];
-            memloc+=2;
+            buffer[bytes_read] = (int)_vga_mem[memloc];
+            memloc++;
         }
-        else
-        {
-            break;
-        }
+        else { break; }
     }
     return bytes_read;
 }
 
-int vga_drv_write(char* buffer, unsigned int count)
+int vga_drv_write(int* buffer, unsigned int count)
 {
     int bytes_written = 0;
     for(; bytes_written<count; bytes_written++)
     {
-        unsigned char data = buffer[bytes_written];
+        int data = buffer[bytes_written];
+        short vgadata = (short)(data & 0xFFFF);
+        unsigned char x = (unsigned char)((data & 0xFF000000) >> 24);
+        unsigned char y = (unsigned char)((data & 0x00FF0000) >> 16);
 
-        if (data == '\n'|| data == '\r' || __vga_xpos > (VGA_COLS-1))
+        //printk("X %d, Y %d, vgadata %x, data %x\n", x,y,(int)vgadata, data);
+        if(x < VGA_COLS && y < VGA_ROWS)
         {
-            __vga_ypos++;
-            __vga_xpos = 0;
-
-            if(__vga_should_autoscroll && __vga_ypos >= VGA_ROWS)
-            {
-                vga_drv_scrollup(1);
-                __vga_ypos = (VGA_ROWS-1);
-            }
+            unsigned int memloc = x + (y * VGA_COLS);
+            _vga_mem[memloc] = vgadata;
         }
-        else
-        {
-            unsigned int memloc = (__vga_xpos * 2)+(__vga_ypos * VGA_COLS *2);
-
-            __vga_mem[memloc] = data;
-            __vga_mem[memloc+1] = __vga_current_color;
-            __vga_xpos++;
-        }
-        vga_drv_update_cursor();
     }
-
     return bytes_written;
 }
 
@@ -123,24 +97,18 @@ int vga_drv_ioctl(unsigned int ioctl_num, unsigned int param)
     switch (ioctl_num)
     {
         case IOCTL_VGA_COLOR:
-            __vga_current_color = (unsigned char)param;
-        break;
-        case IOCTL_VGA_SCROLL_UP:
-            vga_drv_scrollup(param);
-        break;
-        case IOCTL_VGA_SCROLL_DOWN:
-            vga_drv_scrolldown(param);
+            _vga_current_color = (unsigned char)param;
         break;
         case IOCTL_VGA_TOGGLE_CURSOR:
         {
             if(param > 0)
             {
-                __vga_show_cursor = 1;
+                _vga_show_cursor = 1;
                 vga_drv_update_cursor();
             }
             else
             {
-                __vga_show_cursor = 0;
+                _vga_show_cursor = 0;
                 //Just moving the cursor out of screen
                 pio_outb(0x0F, VGA_CURSOR_IREG);
                 pio_outb(0xFF, VGA_CURSOR_DREG);
@@ -149,26 +117,25 @@ int vga_drv_ioctl(unsigned int ioctl_num, unsigned int param)
                 pio_outb(0xFF, VGA_CURSOR_DREG);
             }
         } break;
+        case IOCTL_VGA_CURSER_POS:
+        {
+            unsigned char x = (unsigned char)((param & 0xFF00) >> 8);
+            unsigned char y = (unsigned char)(param & 0xFF);
+
+            if(x < VGA_COLS && y < VGA_ROWS)
+            {
+                _vga_xpos = x;
+                _vga_ypos = y;
+            }
+        } break;
         case IOCTL_VGA_CLEAR_MEM:
         {
-            for (int i=0; i<((VGA_COLS*2)*VGA_ROWS); i+=2)
+            for (int i=0; i<(VGA_COLS*VGA_ROWS); i++)
             {
-                __vga_mem[i] = ' ';
-                __vga_mem[i+1] = __vga_current_color;
+                _vga_mem[i] =  (_vga_current_color << 8) | 0x0020;
             }
-            __vga_xpos = 0;
-            __vga_ypos = 0;
-        } break;
-        case IOCTL_VGA_SHOULD_SCROLL:
-        {
-            if(param > 0)
-            {
-                __vga_should_autoscroll = 1;
-            }
-            else
-            {
-                __vga_should_autoscroll = 0;
-            }
+            _vga_xpos = 0;
+            _vga_ypos = 0;
         } break;
     }
     return TROS_DRIVER_OK;
@@ -176,7 +143,7 @@ int vga_drv_ioctl(unsigned int ioctl_num, unsigned int param)
 
 int vga_drv_open()
 {
-    if(!__vga_isopen)
+    if(!_vga_isopen)
     {
         return TROS_DRIVER_OK;
     }
@@ -186,32 +153,16 @@ int vga_drv_open()
     }
 }
 
-int vga_drv_seek(unsigned int pos)
-{
-    if(pos < (VGA_COLS * VGA_ROWS))
-    {
-        __vga_ypos = pos / VGA_COLS;
-        __vga_xpos = pos % VGA_COLS;
-
-        vga_drv_update_cursor();
-        return TROS_DRIVER_OK;
-    }
-    else
-    {
-        return TROS_DRIVER_ERROR;
-    }
-}
-
 void vga_drv_close()
 {
-    __vga_isopen = 0;
+    _vga_isopen = 0;
 }
 
 void vga_drv_update_cursor()
 {
-    if(__vga_show_cursor)
+    if(_vga_show_cursor)
     {
-        unsigned int mempos = (VGA_COLS * __vga_ypos) + __vga_xpos;
+        unsigned int mempos = (VGA_COLS * _vga_ypos) + _vga_xpos;
         unsigned char mempos_low = mempos & 0xFF;
         unsigned char mempos_high = (mempos >> 8) & 0xFF;
 
@@ -220,41 +171,5 @@ void vga_drv_update_cursor()
 
         pio_outb(0x0E, VGA_CURSOR_IREG);
         pio_outb(mempos_high, VGA_CURSOR_DREG);
-    }
-}
-
-void vga_drv_scrollup(unsigned int amount)
-{
-    for (int i = 0; i < (VGA_ROWS-amount)*(VGA_COLS*2); i+=2)
-    {
-        __vga_mem[i] = __vga_mem[i+(VGA_COLS*2*amount)];
-        __vga_mem[i+1] = __vga_mem[i+(VGA_COLS*2*amount)+1];
-    }
-
-    for (int i = (VGA_ROWS-amount)*(VGA_COLS*2);
-        i < (VGA_COLS*2)*VGA_ROWS;
-        i+=2)
-    {
-        __vga_mem[i] = ' ';
-        __vga_mem[i+1] = __vga_current_color;
-    }
-
-}
-
-void vga_drv_scrolldown(unsigned int amount)
-{
-    for (int i = (VGA_ROWS*VGA_COLS*2);
-         i >= amount*(VGA_COLS*2); i-=2)
-    {
-        __vga_mem[i] = __vga_mem[i-(VGA_COLS*2*amount)];
-        __vga_mem[i+1] = __vga_mem[i-(VGA_COLS*2*amount)+1];
-    }
-
-    for (int i = 0;
-        i < amount*(VGA_COLS*2);
-        i+=2)
-    {
-        __vga_mem[i] = ' ';
-        __vga_mem[i+1] = __vga_current_color;
     }
 }

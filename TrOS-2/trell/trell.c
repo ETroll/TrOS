@@ -1,16 +1,8 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <syscall.h>
+#include "ui.h"
 
 #define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
-
-#define IOCTL_VGA_COLOR         1
-#define IOCTL_VGA_SCROLL_UP     2
-#define IOCTL_VGA_SCROLL_DOWN   3
-#define IOCTL_VGA_TOGGLE_CURSOR 4
-#define IOCTL_VGA_CLEAR_MEM     5
-#define IOCTL_VGA_SHOULD_SCROLL 6
 
 // char *builtin_str[] = {
 //     "cd",
@@ -22,40 +14,23 @@
 //     &lsh_help
 // }; http://forum.osdev.org/viewtopic.php?f=1&t=18333
 
-file_t* stdout = NULL;
-file_t* stdin = NULL;
+file_t* stdout = 0;
+file_t* stdin = 0;
 
 int main()
 {
-    device_t vga = syscall_open("vga");
-    //device_t kbd = syscall_open("kbd");
+    ui_context_t* context = ui_context_create("vga");
+    if(context)
+    {
+        ui_window_t* window = ui_window_create("Test Window 1", 1, 1, 78, 22, context);
+        ui_window_t* window2 = ui_window_create("Test Window 2", 10, 10, 30, 8, context);
+        // ui_window_t* toolbar = ui_window_create(0, 24, 80, 1, context);
+        //ui_window_t* window = ui_window_create(1, 6, 10, 1, context);
+        ui_window_paint(window);
+        ui_window_paint(window2);
+        // ui_window_paint(toolbar);
+    }
 
-    // BOCHS_DEBUG;
-    stdout = (file_t*)&vga;
-    //stdin = (file_t*)&kbd;
-    syscall_ioctl(vga, IOCTL_VGA_COLOR, 0xCF);
-    syscall_ioctl(vga, IOCTL_VGA_CLEAR_MEM, 0);
-
-    printf("Hello!\n");
-    printf("Welcome to Trell - Your friendly servant!\n");
-
-    char* buffer = (char*)malloc(5000*sizeof(char));
-    printf("Allocated 5000bytes at %x\n", buffer);
-    memset(buffer, '\0', 5000);
-    printf("Cleared buffer\n");
-
-    void* buffer2 = malloc(101);
-    void* buffer3 = malloc(3000);
-    void* buffer4 = malloc(1235);
-    void* buffer5 = malloc(100000);
-
-    free(buffer3);
-    free(buffer5);
-    free(buffer);
-    free(buffer4);
-    free(buffer2);
-
-    printf("Freed all memory used\n");
 
     /*
     #include <stdio.h>

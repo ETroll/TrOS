@@ -4,10 +4,7 @@
 #include <tros/tros.h>
 #include <tros/timer.h>
 #include <tros/irq.h>
-// #include <tros/pmm.h>	// REMOVE
-// #include <tros/vmm.h> 	// REMOVE
 #include <tros/fs/vfs.h>
-// #include <tros/memory.h>
 #include <tros/exec.h>
 #include <tros/memory.h>
 #include <tros/hwdetect.h>

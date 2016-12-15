@@ -115,23 +115,24 @@ void kbd_irq_handler(cpu_registers_t* regs);
 
 unsigned int kbd_translate_keycode(enum KEYCODE code);
 
-static driver_hid_t __kbdriver = {
+static driver_generic_t __kbdriver = {
     .read = kbd_read,
     .ioctl = kbd_ioctl,
     .open = kbd_open,
-    .close = kbd_close
+    .close = kbd_close,
+    .write = 0
 };
 
 int kbd_driver_initialize()
 {
     device_driver_t drv = {
         .name = "kbd",
-        .type = DRV_HID,
+        .type = DRV_GENERIC,
         .driver = &__kbdriver
     };
     _is_open = 0;
 
-    printk("** Initalizing generic keyboard driver - ");
+    printk("** Installing generic keyboard driver - ");
 	return driver_register(&drv);
 }
 
