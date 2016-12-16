@@ -1,2 +1,0 @@
-# Test processes
-Here are some test processes that are statically linked into the kernel image for now. Since the kernel has no VFS support or any other means of reaching the process-code it is statically linked like this for now.
