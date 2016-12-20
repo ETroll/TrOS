@@ -2,9 +2,9 @@
 #include <tros/hal/io.h>
 #include <tros/irq.h>
 #include <tros/tros.h>
-#include <tros/klib/ringbuffer.h>
-#include <tros/klib/kstring.h>
+#include <tros/klib/devicebuffer.h>
 #include <tros/sys/keyboard.h>
+#include <tros/process.h>
 
 #define KEY_DEVICE  0x60
 #define KEY_PENDING 0x64
@@ -105,10 +105,9 @@ static int _capslock;
 static char _scancode;
 static char _is_open;
 
-static ringbuffer_t _kb_data;
+static devicebuffer_t* _kb_buffer;;
 
 int kbd_read(int* buffer, unsigned int count);
-int kbd_ioctl(unsigned int num, unsigned int param);
 int kbd_open();
 void kbd_close();
 void kbd_irq_handler(cpu_registers_t* regs);
@@ -117,7 +116,7 @@ unsigned int kbd_translate_keycode(enum KEYCODE code);
 
 static driver_generic_t __kbdriver = {
     .read = kbd_read,
-    .ioctl = kbd_ioctl,
+    .ioctl = 0,
     .open = kbd_open,
     .close = kbd_close,
     .write = 0
@@ -145,7 +144,7 @@ int kbd_open()
     _capslock = 0;
     _is_open = 1;
 
-    rb_init(&_kb_data);
+    _kb_buffer = devicebuffer_create();
     if(irq_register_handler(33, &kbd_irq_handler))
     {
         return 1;
@@ -160,25 +159,12 @@ void kbd_close()
 {
     _is_open = 0;
     irq_remove_handler(33);
+    devicebuffer_free(_kb_buffer);
 }
 
 int kbd_read(int* buffer, unsigned int count)
 {
-    //TODO: Make this a *blocking* IO call
-    unsigned int read = 0;
-	while(read < count)
-	{
-		if(rb_len(&_kb_data) > 0)
-		{
-			rb_pop(&_kb_data, &buffer[read++]);
-		}
-	}
-	return read;
-}
-
-int kbd_ioctl(unsigned int num, unsigned int param)
-{
-    return 0;
+    return devicebuffer_read(_kb_buffer, buffer, count);
 }
 
 void kbd_irq_handler(cpu_registers_t* regs)
@@ -247,7 +233,8 @@ void kbd_irq_handler(cpu_registers_t* regs)
             }
             key = kbd_translate_keycode(key);
 
-            rb_push(&_kb_data, key);
+            devicebuffer_write(_kb_buffer, key);
+
         }
     }
     irq_eoi(1);

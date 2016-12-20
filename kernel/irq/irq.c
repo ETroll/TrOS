@@ -89,14 +89,14 @@ void irq_default_handler(cpu_registers_t regs)
 	else
 	{
         unsigned int real_irqno = irq_no-32;
-        if(real_irqno < 16)
-        {
-            printk("Unhandled hardware IRQ: %d (%s)\n", real_irqno, irq_hardware_names[real_irqno]);
-        }
-        else
-        {
-            printk("Unhandled software IRQ: %d (%d)\n", real_irqno, irq_no);
-        }
+        // if(real_irqno < 16)
+        // {
+        //     printk("Unhandled hardware IRQ: %d (%s)\n", real_irqno, irq_hardware_names[real_irqno]);
+        // }
+        // else
+        // {
+        //     printk("Unhandled software IRQ: %d (%d)\n", real_irqno, irq_no);
+        // }
 		pic_eoi(real_irqno);
 	}
 }

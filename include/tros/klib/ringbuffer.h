@@ -11,7 +11,7 @@ typedef struct
     unsigned int start;
     unsigned int end;
     int data[RB_BUF_SIZE];
-}ringbuffer_t;
+} ringbuffer_t;
 
 
 void rb_init(ringbuffer_t* rb);

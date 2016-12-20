@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <syscall.h>
 #include "ui.h"
 
 #define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
@@ -26,9 +27,28 @@ int main()
         ui_window_t* window2 = ui_window_create("Test Window 2", 10, 10, 30, 8, context);
         // ui_window_t* toolbar = ui_window_create(0, 24, 80, 1, context);
         //ui_window_t* window = ui_window_create(1, 6, 10, 1, context);
-        ui_window_paint(window);
-        ui_window_paint(window2);
+
+
         // ui_window_paint(toolbar);
+
+
+        int32_t kbd = syscall_opendevice("kbd");
+        uint32_t count = 0;
+        while(1)
+        {
+            int key = 0;
+            syscall_readdevice(kbd, &key, 1);
+
+            if(count == 0)
+            {
+                ui_window_paint(window);
+                count++;
+            }
+            else
+            {
+                ui_window_paint(window2);
+            }
+        }
     }
 
 

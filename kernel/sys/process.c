@@ -13,16 +13,45 @@ static unsigned int num_proc = 0;
 
 extern void enter_usermode(unsigned int location, unsigned int userstack);
 
+//TODO: Rename to process_rescedule or something
 void process_preempt()
 {
     if(_current_process != 0 && num_proc > 1)
     {
-        // printk("\nprocess_preempt - Current proc: %x CR3: %x\n", _current_process, _current_process->regs.cr3);
-        // for(int i = 0; i < num_proc; i++)
+        process_t* next = 0;
+        for(process_t* itt = _current_process->next;
+            itt != _current_process && next == 0;
+            itt = itt->next)
+        {
+            if(itt->thread.state == PROCESS_IOREADY)
+            {
+                // printk("IO READY!!\n");
+                next = itt;
+                break;
+            }
+        }
+        if(next == 0)
+        {
+            for(process_t* itt = _current_process->next;
+                itt != _current_process && next == 0;
+                itt = itt->next)
+            {
+                if(itt->thread.state == PROCESS_RUNNING)
+                {
+                    next = itt;
+                }
+            }
+        }
+
+        if(next != 0)
+        {
+            // printk("Switching to PID: %d\n", next->pid);
+            process_switchto(next);
+        }
+        // else
         // {
-        //     printk("%x process[%d]->next: %x\n",_processes[i], i, _processes[i]->next);
+        //     printk("Staying at PID: %d\n", _current_process->pid);
         // }
-        process_switchto(_current_process->next);
     }
 }
 
@@ -43,6 +72,7 @@ void process_switchto(process_t* next)
 
     process_t *prev = _current_process;
     _current_process = next;
+    _current_process->thread.state = PROCESS_RUNNING;
 
     process_switch(&prev->regs, &_current_process->regs);
     //printk("DONE!\n");
@@ -78,7 +108,7 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, 
 
     proc->thread.instr_ptr = startAddr;
     proc->thread.priority = 1;
-    proc->thread.state = 0;
+    proc->thread.state = PROCESS_RUNNING;
 
     proc->regs.eax = 0;
     proc->regs.ebx = 0;
@@ -121,7 +151,7 @@ void process_create_idle(void (*main)())
         idleproc->thread.kernel_stack_ptr = (unsigned int)kmalloc(4096) + 4092;
         idleproc->thread.instr_ptr = (unsigned int)main;
         idleproc->thread.priority = 0;
-        idleproc->thread.state = 0;
+        idleproc->thread.state = PROCESS_RUNNING;
 
         idleproc->regs.eax = 0;
         idleproc->regs.ebx = 0;
@@ -153,4 +183,14 @@ void process_create_idle(void (*main)())
 process_t* process_get_current()
 {
     return _current_process;
+}
+
+void process_set_state(process_t* p, process_state_t s)
+{
+    p->thread.state = s;
+    if(s == PROCESS_WAITIO || s == PROCESS_SLEEPING)
+    {
+        printk("PID %d waiting/sleeping\n", p->pid);
+        process_preempt();
+    }
 }

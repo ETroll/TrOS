@@ -85,14 +85,15 @@ static int sys_writedevice(unsigned int fd, const void *buffer, unsigned int cou
 static int sys_readdevice(unsigned int fd, void *buffer, unsigned int count)
 {
     device_driver_t* device = driver_find_device_id(fd);
+    int read = -1;
     if(device != 0)
     {
         if(device->type == DRV_GENERIC)
         {
-            return ((driver_generic_t*)device->driver)->read((int*)buffer, count);
+            read = ((driver_generic_t*)device->driver)->read((int*)buffer, count);
         }
     }
-    return -1;
+    return read;
 }
 
 static int sys_ioctl(unsigned int fd, unsigned int ioctl_num, unsigned int param)

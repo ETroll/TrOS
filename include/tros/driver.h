@@ -14,39 +14,13 @@ typedef enum
     DRV_BLOCK
 } driver_t;
 
-// typedef struct
-// {
-//     int (*open) (void);
-//     void (*close) (void);
-//     int (*ioctl) (unsigned int num, unsigned long param);
-// } dops_t;   //Device operations shared accross all devices
-
 typedef struct
 {
     char name[10]; //TODO: change to char*
     driver_t type;
     void* driver;
     unsigned int id;
-
 } device_driver_t;
-
-// typedef struct
-// {
-//     int (*read) (int *buffer, unsigned int count);
-//     int (*ioctl) (unsigned int num, unsigned int param);
-//     int (*open) (void);
-//     void (*close) (void);
-// } driver_hid_t;
-//
-// typedef struct
-// {
-//     int (*read) (char *buffer, unsigned int count);
-//     int (*write) (char *buffer, unsigned int count);
-//     int (*seek) (unsigned int pos);
-//     int (*ioctl) (unsigned int num, unsigned int param);
-//     int (*open) (void);
-//     void (*close) (void);
-// } driver_char_t;
 
 typedef struct
 {

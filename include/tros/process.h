@@ -10,6 +10,13 @@
 
 #define PROCESS_MEM_START 0x200000
 
+typedef enum {
+    PROCESS_RUNNING = 0x1,
+    PROCESS_WAITIO,
+    PROCESS_IOREADY,
+    PROCESS_SLEEPING
+} process_state_t;
+
 typedef struct
 {
     unsigned int eax;
@@ -31,7 +38,7 @@ typedef struct
     unsigned int kernel_stack_ptr;
     unsigned int instr_ptr;
     int priority;
-    int state;
+    process_state_t state;
 } thread_t;
 
 typedef struct process
@@ -56,5 +63,8 @@ void process_create_idle(void (*main)());
 void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir);
 
 process_t* process_get_current();
+
+//Set the state of the current running process and rescedule if needed
+void process_set_state(process_t* p, process_state_t s);
 
 #endif
