@@ -2,8 +2,9 @@
 #define TRELL_UI_H
 
 #include <stdint.h>
+#include "list.h"
 
-enum ui_cell_color_t {
+typedef enum  {
     UI_BLACK = 0x0,
     UI_BLUE = 0x1,
     UI_GREEN = 0x2,
@@ -20,7 +21,7 @@ enum ui_cell_color_t {
     UI_LIGHT_MAGENTA = 0xD,
     UI_YELLOW = 0xE,
     UI_WHITE = 0xF
-};
+}ui_cell_color_t;
 
 typedef struct {
     char frontcolor:4;
@@ -37,18 +38,42 @@ typedef struct {
 } ui_context_t;
 
 typedef struct {
-    uint8_t x;
-    uint8_t y;
-    uint8_t width;
-    uint8_t height;
+    char selected;
+    char* text;
+} ui_menuitem_t;
+
+typedef struct {
+    char active;
+    char* text;
+    list_t* items;
+} ui_menu_t;
+
+typedef struct {
     ui_context_t* context;
     char* title;
+    ui_cell_color_t fillColor;
+    ui_menu_t* menu;
 } ui_window_t;
 
-ui_context_t* ui_context_create(char* devicename);
-ui_window_t* ui_window_create(char* title, uint8_t x, uint8_t y, uint8_t width,
-    uint8_t height, ui_context_t* context);
-void ui_window_paint(ui_window_t* window);
+typedef struct {
+    ui_context_t* context;
+    ui_menu_t* windows;
+    ui_menu_t* syslog;
+} ui_menubar_t;
 
+typedef struct {
+    ui_context_t* context;
+    list_t* windows;
+    ui_window_t* activeWindow;
+    ui_menubar_t* menubar;
+    ui_cell_color_t fillColor;
+} ui_desktop_t;
+
+ui_context_t* ui_context_create(char* devicename);
+ui_desktop_t* ui_desktop_create(ui_context_t* context);
+ui_window_t* ui_window_create(char* title, ui_context_t* context);
+
+
+void ui_redraw(ui_desktop_t* desktop);
 
 #endif

@@ -23,31 +23,31 @@ int main()
     ui_context_t* context = ui_context_create("vga");
     if(context)
     {
-        ui_window_t* window = ui_window_create("Test Window 1", 1, 1, 78, 22, context);
-        ui_window_t* window2 = ui_window_create("Test Window 2", 10, 10, 30, 8, context);
-        // ui_window_t* toolbar = ui_window_create(0, 24, 80, 1, context);
-        //ui_window_t* window = ui_window_create(1, 6, 10, 1, context);
+        ui_window_t* window = ui_window_create("Window 1", context);
+        ui_window_t* stdioWindow  = ui_window_create("STD IO", context);
+        ui_desktop_t* desktop = ui_desktop_create(context);
 
+        list_add(desktop->windows, window);
+        list_add(desktop->windows, stdioWindow);
+        desktop->activeWindow = window;
 
-        // ui_window_paint(toolbar);
-
+        ui_redraw(desktop);
 
         int32_t kbd = syscall_opendevice("kbd");
-        uint32_t count = 0;
         while(1)
         {
             int key = 0;
             syscall_readdevice(kbd, &key, 1);
 
-            if(count == 0)
+            if(key == 0x1203 && desktop->activeWindow == window)
             {
-                ui_window_paint(window);
-                count++;
+                desktop->activeWindow = stdioWindow;
             }
             else
             {
-                ui_window_paint(window2);
+                desktop->activeWindow = window;
             }
+            ui_redraw(desktop);
         }
     }
 
