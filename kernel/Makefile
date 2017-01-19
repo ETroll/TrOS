@@ -5,7 +5,7 @@
 # # # # #
 
 # COMPILATION
-TOOLCHAIN = /tool/gcc-i386-none-elf/bin/
+TOOLCHAIN = ../tools/gcc-i386-none-elf/bin/
 GCC = $(TOOLCHAIN)i386-elf-gcc
 COMPILER_ASM = nasm
 
@@ -20,7 +20,7 @@ MAP = kernel.map
 # CONFIGURATION
 FLAGS = -s -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector #-fno-asynchronous-unwind-tables
 LINKER_FLAGS = -ffreestanding -nostdlib -Wl,-Map=$(DIR_OBJECT)$(MAP)
-INCLUDES = /src/include/
+INCLUDES = ../include/
 LINKER_MAP = kernel.ld
 FOLDERS = . klib init hal irq sys mem minidrivers fs
 

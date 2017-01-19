@@ -48,9 +48,7 @@
 [Oo]bj/*
 [Bb]in/*
 [Tt]oolchains/*
-
-#excludes from rule
-![Tt]ools/**/*
+[Tt]ools/*
 
 
 ## Ignore Visual Studio temporary files, build results, and

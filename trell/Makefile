@@ -1,6 +1,6 @@
 
 # COMPILATION
-TOOLCHAIN = /tool/gcc-i386-none-elf/bin/
+TOOLCHAIN = ../tools/gcc-i386-none-elf/bin/
 GCC = $(TOOLCHAIN)i386-elf-gcc
 LD = $(TOOLCHAIN)i386-elf-ld
 
@@ -13,7 +13,7 @@ TARGET = trell
 # CONFIGURATION
 FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
-INCLUDES = /src/include/
+INCLUDES = ../include/
 LINKER_MAP = flatbinary.ld
 FOLDERS = ../libc . builtins
 
