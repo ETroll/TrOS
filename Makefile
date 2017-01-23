@@ -1,21 +1,21 @@
 #TrOS-2 Makefile
 
-MODULES := bootloader/stage1 bootloader/stage2 kernel
+KERNEL := bootloader/bootsector bootloader/loader kernel
 USERLAND := trell
 FOLDERS := build build/tmp build/tmp/bin tools
-SUBCLEAN = $(addsuffix .clean,$(MODULES))
+SUBCLEAN = $(addsuffix .clean,$(KERNEL))
 IMAGE = build/tros.img
 DISKTOOL = build/trfs
 TOOLCHAINDEST = $(shell pwd)/tools/gcc-i386-none-elf
 
 
-.PHONY: $(MODULES) $(USERLAND) $(IMAGE)
+.PHONY: $(KERNEL) $(USERLAND) $(IMAGE)
 
-all: $(FOLDERS) $(MODULES) $(USERLAND) $(IMAGE)
+all: $(FOLDERS) $(KERNEL) $(USERLAND)
 
 rebuild: clean all
 
-$(MODULES):
+$(KERNEL):
 	$(MAKE) -C $@
 	cp -r ./$@/bin/* ./build/tmp
 
@@ -30,20 +30,19 @@ $(SUBCLEAN): %.clean:
 	$(MAKE) -C $* clean
 
 $(IMAGE):
-	rm build/tmp/*.mbr
+	rm -f build/tmp/*.mbr
 	rm -f $@
 	/sbin/mkdosfs -n "TROS" -C $@ 1440
-	dd if=bootloader/stage1/bin/floppy.mbr of=$@ bs=512 count=1 conv=notrunc
+	dd if=bootloader/bootsector/bin/floppy.mbr of=$@ bs=512 count=1 conv=notrunc
 	mcopy -i $@ ./build/tmp/* ::
+	@echo "\n\n\n------------- Created Image -------------\n\n\n"
 
 run: all qemu
-qemu:
-	export DISPLAY=:0
+qemu: $(IMAGE)
 	qemu-system-i386 -fda $(IMAGE) -serial stdio -m 256 -d cpu_reset
 
 debug: all bochs
-bochs:
-	export DISPLAY=:0
+bochs: $(IMAGE)
 	tools/bochs/bochs -q -f bochsrc.bxrc
 
 toolchain: $(FOLDERS)

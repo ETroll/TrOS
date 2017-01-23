@@ -40,7 +40,7 @@ static const char* irq_names[32] = {
 	"Reserved",
 	"Reserved"
 };
-
+/*
 static const char* irq_hardware_names[16] = {
     "System timer",
     "Keyboard",
@@ -59,6 +59,8 @@ static const char* irq_hardware_names[16] = {
     "Primary IDE channel",
     "Secondary IDE channel"
 };
+
+*/
 
 void irq_initialize(void)
 {

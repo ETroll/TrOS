@@ -24,7 +24,7 @@ int main()
     if(context)
     {
         ui_window_t* window = ui_window_create("Window 1", context);
-        ui_window_t* stdioWindow  = ui_window_create("STD IO", context);
+        ui_window_t* stdioWindow  = ui_window_create("System log", context);
         ui_desktop_t* desktop = ui_desktop_create(context);
 
         list_add(desktop->windows, window);
