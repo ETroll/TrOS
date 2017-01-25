@@ -7,8 +7,14 @@
 #ifndef NULL
 #define NULL	0
 #endif
-#define TRUE    1
-#define FALSE   0
+
+#ifndef FALSE
+#define FALSE	0
+#endif
+
+#ifndef TRUE
+#define TRUE	1
+#endif
 
 typedef int file_t;
 typedef int device_t;

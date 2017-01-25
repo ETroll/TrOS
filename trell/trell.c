@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <syscall.h>
-#include "ui.h"
+#include "ui/ui.h"
+#include "builtins/syslog.h"
 
 #define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
 
@@ -23,12 +24,12 @@ int main()
     ui_context_t* context = ui_context_create("vga");
     if(context)
     {
-        ui_window_t* window = ui_window_create("Window 1", context);
-        ui_window_t* stdioWindow  = ui_window_create("System log", context);
+        ui_window_t* window = ui_window_create("Window 1");
+        ui_window_t* syslog = syslog_create();
         ui_desktop_t* desktop = ui_desktop_create(context);
 
         list_add(desktop->windows, window);
-        list_add(desktop->windows, stdioWindow);
+        list_add(desktop->windows, syslog);
         desktop->activeWindow = window;
 
         ui_redraw(desktop);
@@ -39,13 +40,23 @@ int main()
             int key = 0;
             syscall_readdevice(kbd, &key, 1);
 
-            if(key == 0x1203 && desktop->activeWindow == window)
+            if(key > 0x1200 && key < 0x1209)
             {
-                desktop->activeWindow = stdioWindow;
+                if(key == 0x1203 && desktop->activeWindow != syslog)
+                {
+                    desktop->activeWindow = syslog;
+                }
+                else
+                {
+                    desktop->activeWindow = window;
+                }
             }
             else
             {
-                desktop->activeWindow = window;
+                if(desktop->activeWindow->inputhandler != NULL)
+                {
+                    desktop->activeWindow->inputhandler(key);
+                }
             }
             ui_redraw(desktop);
         }

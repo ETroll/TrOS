@@ -15,6 +15,10 @@ all: $(FOLDERS) $(KERNEL) $(USERLAND)
 
 rebuild: clean all
 
+user: $(USERLAND)
+
+kernel: $(KERNEL)
+
 $(KERNEL):
 	$(MAKE) -C $@
 	cp -r ./$@/bin/* ./build/tmp

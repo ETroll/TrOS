@@ -38,6 +38,15 @@ typedef struct {
 } ui_context_t;
 
 typedef struct {
+    void (*inputhandler)(int keystroke);
+    void (*paint)(void* self);
+    char visible;
+    list_t* items;
+    ui_cell_color_t fillColor;
+    void* item;
+} ui_item_t;
+
+typedef struct {
     char selected;
     char* text;
 } ui_menuitem_t;
@@ -49,14 +58,14 @@ typedef struct {
 } ui_menu_t;
 
 typedef struct {
-    ui_context_t* context;
     char* title;
-    ui_cell_color_t fillColor;
     ui_menu_t* menu;
+    list_t* items;
+    ui_cell_color_t fillColor;
+    void (*inputhandler)(int keystroke);
 } ui_window_t;
 
 typedef struct {
-    ui_context_t* context;
     ui_menu_t* windows;
     ui_menu_t* syslog;
 } ui_menubar_t;
@@ -71,7 +80,7 @@ typedef struct {
 
 ui_context_t* ui_context_create(char* devicename);
 ui_desktop_t* ui_desktop_create(ui_context_t* context);
-ui_window_t* ui_window_create(char* title, ui_context_t* context);
+ui_window_t* ui_window_create(char* title);
 
 
 void ui_redraw(ui_desktop_t* desktop);
