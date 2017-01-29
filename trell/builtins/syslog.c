@@ -10,7 +10,7 @@ ui_window_t* syslog_create()
 {
     window  = ui_window_create("System log");
     window->inputhandler = syslog_inputhandler;
-
+    
     return window;
 }
 

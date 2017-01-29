@@ -38,12 +38,21 @@ typedef struct {
 } ui_context_t;
 
 typedef struct {
-    void (*inputhandler)(int keystroke);
-    void (*paint)(void* self);
+    uint8_t x;
+    uint8_t y;
+    uint8_t width;
+    uint8_t height;
+} ui_pos_t;
+
+typedef struct {
+    void (*message)(int code, int value);
+    void (*paint)(ui_context_t* ctx, void* self);
+    void (*dispose)(void* self);
     char visible;
     list_t* items;
     ui_cell_color_t fillColor;
-    void* item;
+    ui_pos_t pos;
+    // void* item;
 } ui_item_t;
 
 typedef struct {
@@ -84,5 +93,7 @@ ui_window_t* ui_window_create(char* title);
 
 
 void ui_redraw(ui_desktop_t* desktop);
+
+ui_item_t* ui_textbox_create(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 
 #endif

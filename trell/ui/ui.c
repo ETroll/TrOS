@@ -260,7 +260,7 @@ void ui_window_paint(ui_window_t* window, ui_context_t* ctx)
             {
                 if(((ui_item_t*)item->data)->visible)
                 {
-                    ((ui_item_t*)item->data)->paint(item->data);
+                    ((ui_item_t*)item->data)->paint(ctx, item->data);
                 }
             }
         }
@@ -329,7 +329,7 @@ void ui_context_flush(ui_context_t* context)
             {
                 char combinedColor = COLOR(cell->frontcolor, cell->backcolor);
                 int data = x << 24 | y << 16 | (combinedColor << 8)
-                             | (cell->data & 0xFF);
+                            | (cell->data & 0xFF);
                 syscall_writedevice(context->device, &data, 1);
                 cell->dirty = FALSE;
             }
