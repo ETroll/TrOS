@@ -2,7 +2,7 @@
 #include <string.h>
 #include <syscall.h>
 #include "ui/ui.h"
-#include "builtins/syslog.h"
+#include "windows/syslog.h"
 
 #define BOCHS_DEBUG __asm__("xchgw %bx, %bx");
 
@@ -39,10 +39,13 @@ int main()
         {
             int key = 0;
             syscall_readdevice(kbd, &key, 1);
+            ui_cell_t* cell = &context->buffer[4];
+            cell->dirty = TRUE;
 
             if(key > 0x1200 && key < 0x1209)
             {
-                if(key == 0x1203 && desktop->activeWindow != syslog)
+                cell->data = 'X';
+                if(key == 0x1203)
                 {
                     desktop->activeWindow = syslog;
                 }
@@ -53,9 +56,10 @@ int main()
             }
             else
             {
-                if(desktop->activeWindow->inputhandler != NULL)
+                cell->data = 'O';
+                if(desktop->activeWindow->handlemessage != NULL)
                 {
-                    desktop->activeWindow->inputhandler(key);
+                    desktop->activeWindow->handlemessage(UI_KEYSTROKE, key);
                 }
             }
             ui_redraw(desktop);

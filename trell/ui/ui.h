@@ -21,7 +21,11 @@ typedef enum  {
     UI_LIGHT_MAGENTA = 0xD,
     UI_YELLOW = 0xE,
     UI_WHITE = 0xF
-}ui_cell_color_t;
+} ui_cell_color_t;
+
+typedef enum {
+    UI_KEYSTROKE
+} ui_message_t;
 
 typedef struct {
     char frontcolor:4;
@@ -45,7 +49,7 @@ typedef struct {
 } ui_pos_t;
 
 typedef struct {
-    void (*message)(int code, int value);
+    void (*handlemessage)(ui_message_t code, int val);
     void (*paint)(ui_context_t* ctx, void* self);
     void (*dispose)(void* self);
     char visible;
@@ -71,7 +75,8 @@ typedef struct {
     ui_menu_t* menu;
     list_t* items;
     ui_cell_color_t fillColor;
-    void (*inputhandler)(int keystroke);
+    ui_pos_t pos;
+    void (*handlemessage)(ui_message_t code, int val);
 } ui_window_t;
 
 typedef struct {
@@ -91,9 +96,6 @@ ui_context_t* ui_context_create(char* devicename);
 ui_desktop_t* ui_desktop_create(ui_context_t* context);
 ui_window_t* ui_window_create(char* title);
 
-
 void ui_redraw(ui_desktop_t* desktop);
-
-ui_item_t* ui_textbox_create(uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 
 #endif

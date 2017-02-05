@@ -85,6 +85,13 @@ ui_window_t* ui_window_create(char* title)
         window->title = NULL;
         window->fillColor = UI_LIGHT_GRAY;
         window->menu = ui_menu_create(title);
+        window->items = list_create();
+        window->handlemessage = NULL;
+
+        window->pos.x = 0;
+        window->pos.y = 0;
+        window->pos.width = FRAME_COLS;
+        window->pos.height = FRAME_ROWS-1;
 
         if(title)
         {
@@ -328,7 +335,7 @@ void ui_context_flush(ui_context_t* context)
             if(cell->dirty)
             {
                 char combinedColor = COLOR(cell->frontcolor, cell->backcolor);
-                int data = x << 24 | y << 16 | (combinedColor << 8)
+                int data = x << 24 | (y & 0xFF) << 16 | ((combinedColor & 0xFF) << 8)
                             | (cell->data & 0xFF);
                 syscall_writedevice(context->device, &data, 1);
                 cell->dirty = FALSE;

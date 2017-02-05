@@ -78,15 +78,19 @@ int vga_drv_write(int* buffer, unsigned int count)
     for(; bytes_written<count; bytes_written++)
     {
         int data = buffer[bytes_written];
-        short vgadata = (short)(data & 0xFFFF);
+        int vgadata = (data & 0xFFFF);
         unsigned char x = (unsigned char)((data & 0xFF000000) >> 24);
         unsigned char y = (unsigned char)((data & 0x00FF0000) >> 16);
 
-        //printk("X %d, Y %d, vgadata %x, data %x\n", x,y,(int)vgadata, data);
+        if(x > VGA_COLS || y > VGA_ROWS)
+        {
+            printk("VGA ERROR: X %d, Y %d, vgadata %x, data %x\n", x, y, vgadata, data);
+        }
+
         if(x < VGA_COLS && y < VGA_ROWS)
         {
             unsigned int memloc = x + (y * VGA_COLS);
-            _vga_mem[memloc] = vgadata;
+            _vga_mem[memloc] = (short)vgadata;
         }
     }
     return bytes_written;
