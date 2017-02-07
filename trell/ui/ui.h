@@ -56,7 +56,7 @@ typedef struct {
     list_t* items;
     ui_cell_color_t fillColor;
     ui_pos_t pos;
-    // void* item;
+    void* content;
 } ui_item_t;
 
 typedef struct {
