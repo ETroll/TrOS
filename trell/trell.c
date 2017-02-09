@@ -39,12 +39,8 @@ int main()
         {
             int key = 0;
             syscall_readdevice(kbd, &key, 1);
-            ui_cell_t* cell = &context->buffer[4];
-            cell->dirty = TRUE;
-
             if(key > 0x1200 && key < 0x1209)
             {
-                cell->data = 'X';
                 if(key == 0x1203)
                 {
                     desktop->activeWindow = syslog;
@@ -56,7 +52,6 @@ int main()
             }
             else
             {
-                cell->data = 'O';
                 if(desktop->activeWindow->handlemessage != NULL)
                 {
                     desktop->activeWindow->handlemessage(UI_KEYSTROKE, key);

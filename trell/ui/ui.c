@@ -245,7 +245,7 @@ void ui_window_paint(ui_window_t* window, ui_context_t* ctx)
 
             for(uint32_t x = startOffset, c = 0; x < (startOffset+len); x++)
             {
-                ui_cell_t* cell = &ctx->buffer[0 * ctx->width + x];
+                ui_cell_t* cell = &ctx->buffer[x];
                 if(x == startOffset)
                 {
                     cell->data = 0xB5;

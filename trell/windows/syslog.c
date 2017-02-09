@@ -21,6 +21,7 @@ ui_window_t* syslog_create()
     list_add(window->items, tb);
 
     ui_textbox_appendline(tb, "Created a textbox!");
+    ui_textbox_appendline(tb, "Created a Some other!");
     return window;
 }
 
@@ -30,7 +31,7 @@ void syslog_inputhandler(ui_message_t code, int val)
 {
     if(code == UI_KEYSTROKE && tb != NULL)
     {
-        char key = (char)val;
+        char key = (char)(val & 0xFF);
         ui_textbox_append(tb, &key);
     }
 }
