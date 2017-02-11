@@ -20,18 +20,28 @@ ui_window_t* syslog_create()
         window->pos.height - 1);
     list_add(window->items, tb);
 
-    ui_textbox_appendline(tb, "Created a textbox!");
-    ui_textbox_appendline(tb, "Created a Some other!");
+    // ui_textbox_appendline(tb, "Created a textbox!");
+    // ui_textbox_appendline(tb, "Created a Some other!");
     return window;
 }
 
+void syslog_log(uint32_t pid, syslog_severity_t sev, char* data)
+{
+    //TODO: Implement and use sprintf
+    ui_textbox_append(tb, "[");
+    ui_textbox_appendchar(tb, (char)(pid & 0xFF) + 0x30);
+    ui_textbox_append(tb, "-");
+    ui_textbox_append(tb, (char*)&sev);
+    ui_textbox_append(tb, "] ");
+    ui_textbox_appendline(tb, data);
+}
 
 
 void syslog_inputhandler(ui_message_t code, int val)
 {
     if(code == UI_KEYSTROKE && tb != NULL)
     {
-        char key = (char)(val & 0xFF);
-        ui_textbox_append(tb, &key);
+        //TODO: Just navigation line arrows and pgup/down home/end
+        ui_textbox_appendchar(tb, (char)(val & 0xFF));
     }
 }

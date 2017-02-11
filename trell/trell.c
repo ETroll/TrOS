@@ -16,8 +16,8 @@
 //     &lsh_help
 // }; http://forum.osdev.org/viewtopic.php?f=1&t=18333
 
-file_t* stdout = 0;
-file_t* stdin = 0;
+file_t* stdout = NULL;
+file_t* stdin = NULL;
 
 int main()
 {
@@ -35,6 +35,7 @@ int main()
         ui_redraw(desktop);
 
         int32_t kbd = syscall_opendevice("kbd");
+        syslog_log(1, SYSLOG_INFO, "Keyboard opened");
         while(1)
         {
             int key = 0;

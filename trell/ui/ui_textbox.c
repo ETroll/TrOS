@@ -11,7 +11,6 @@ typedef struct {
     uint8_t lineoffset; //(For scrolling)
 } ui_textbox_t;
 
-// static void handlemessage(ui_message_t code, int val);
 static void paint(ui_context_t* ctx, void* self);
 static void ui_textbox_dispose(void* self);
 
@@ -75,12 +74,28 @@ void ui_textbox_dispose(void* self)
     }
 }
 
+void ui_textbox_appendchar(ui_item_t* tb, char c)
+{
+    ui_textbox_t* cont = (ui_textbox_t*)tb->content;
+    if(c == '\n')
+    {
+        int lineno = cont->bufferpos / cont->linewidth;
+        cont->bufferpos = cont->linewidth * (lineno +1);
+    }
+    else
+    {
+        if(c != 0x00)
+        {
+            cont->buffer[cont->bufferpos++] = c;
+        }
+    }
+}
+
 void ui_textbox_append(ui_item_t* tb, char* text)
 {
     //TODO: Create pos marker and append.
     //      Increase buffer 4K at a time.
     //      Not just a width*height like now.
-
     if(tb->content)
     {
         ui_textbox_t* cont = (ui_textbox_t*)tb->content;
@@ -90,17 +105,7 @@ void ui_textbox_append(ui_item_t* tb, char* text)
             while(text[size] &&
                 (cont->bufferpos < cont->buffersize))
             {
-                if(text[size] == '\n')
-                {
-                    int lineno = cont->bufferpos / cont->linewidth;
-                    cont->bufferpos = cont->linewidth * (lineno +1);
-                }
-                else
-                {
-                    cont->buffer[cont->bufferpos] = text[size];
-                    cont->bufferpos++;
-                }
-                size++;
+                ui_textbox_appendchar(tb, text[size++]);
             }
             cont->buffer[cont->bufferpos] = '\0';
         }
@@ -110,7 +115,7 @@ void ui_textbox_append(ui_item_t* tb, char* text)
 void ui_textbox_appendline(ui_item_t* tb, char* text)
 {
     ui_textbox_append(tb, text);
-    ui_textbox_append(tb, "\n");
+    ui_textbox_appendchar(tb, '\n');
 }
 
 void ui_textbox_clear(ui_item_t* tb)
@@ -124,11 +129,6 @@ void ui_textbox_clear(ui_item_t* tb)
         }
     }
 }
-
-// void handlemessage(ui_message_t code, int val)
-// {
-//
-// }
 
 void paint(ui_context_t* ctx, void* self)
 {

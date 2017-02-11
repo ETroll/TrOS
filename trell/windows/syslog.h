@@ -3,7 +3,13 @@
 
 #include "../ui/ui.h"
 
-ui_window_t* syslog_create();
+typedef enum {
+    SYSLOG_INFO = 'I',
+    SYSLOG_WARNING = 'W',
+    SYSLOG_ERROR = 'E'
+} syslog_severity_t;
 
+ui_window_t* syslog_create();
+void syslog_log(uint32_t pid, syslog_severity_t sev, char* data);
 
 #endif
