@@ -36,12 +36,12 @@ int main()
 
         int32_t kbd = syscall_opendevice("kbd");
         // char* test = "En test";
-        // syslog_log(3, SYSLOG_INFO, "Keyboard opened %d %c", 1, 'C');
+        // syslog_log(3, SYSLOG_INFO, "Keyboard opened %s %c", "test", 'C');
         while(1)
         {
             int key = 0;
             syscall_readdevice(kbd, &key, 1);
-            syslog_log(1, SYSLOG_INFO, "Key: %x", 45);
+            syslog_log(1, SYSLOG_INFO, "Key: %x", key);
             if(key > 0x1200 && key < 0x1209)
             {
                 if(key == 0x1203)

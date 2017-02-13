@@ -4,8 +4,8 @@
 
 typedef int* va_list;
 
-#define va_start(ap, v) ((void) (ap = (va_list) &v + sizeof(v)))
+#define va_start(ap, v) (ap = (va_list) &v)
 #define va_end(ap) ((void) (ap = 0))
-#define va_arg(ap) (*(ap)++)
+#define va_arg(ap) (*++(ap))
 
 #endif
