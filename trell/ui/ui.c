@@ -23,9 +23,9 @@ static void ui_context_flush(ui_context_t* context);
 static ui_menubar_t* ui_menubar_create();
 
 static ui_menu_t* ui_menu_create(char* text);
-static void ui_menu_add_item(ui_menu_t* menu, char* text);
-static void ui_menu_remove_item(ui_menuitem_t*);
-static void ui_menu_dispose(ui_menu_t*);
+// static void ui_menu_add_item(ui_menu_t* menu, char* text);
+// static void ui_menu_remove_item(ui_menuitem_t*);
+// static void ui_menu_dispose(ui_menu_t*);
 
 
 ui_context_t* ui_context_create(char* devicename)
@@ -120,35 +120,35 @@ ui_menu_t* ui_menu_create(char* text)
     return menu;
 }
 
-void ui_menu_dispose(ui_menu_t* menu)
-{
-    if(menu)
-    {
-        if(menu->text)
-        {
-            free(menu->text);
-        }
-        if(menu->items->size > 0)
-        {
-            foreach(i, menu->items)
-            {
-                ui_menu_remove_item(i->data);
-            }
-            list_free(menu->items);
-        }
-        free(menu);
-    }
-}
+// void ui_menu_dispose(ui_menu_t* menu)
+// {
+//     if(menu)
+//     {
+//         if(menu->text)
+//         {
+//             free(menu->text);
+//         }
+//         if(menu->items->size > 0)
+//         {
+//             foreach(i, menu->items)
+//             {
+//                 ui_menu_remove_item(i->data);
+//             }
+//             list_free(menu->items);
+//         }
+//         free(menu);
+//     }
+// }
 
-void ui_menu_add_item(ui_menu_t* menu, char* text)
-{
+// void ui_menu_add_item(ui_menu_t* menu, char* text)
+// {
+//
+// }
 
-}
-
-void ui_menu_remove_item(ui_menuitem_t* item)
-{
-    //free up item! (See ui_menu_dispose usage)
-}
+// void ui_menu_remove_item(ui_menuitem_t* item)
+// {
+//     //free up item! (See ui_menu_dispose usage)
+// }
 
 void ui_redraw(ui_desktop_t* desktop)
 {

@@ -10,6 +10,6 @@ typedef enum {
 } syslog_severity_t;
 
 ui_window_t* syslog_create();
-void syslog_log(uint32_t pid, syslog_severity_t sev, char* data);
+void syslog_log(uint32_t pid, syslog_severity_t sev, char* data, ...);
 
 #endif

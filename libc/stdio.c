@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <syscall.h>
 
+//&str, putcp, format, va);
+static void stdio_format(void* out, int (*putc) (char, void*), char* str, va_list va);
+
 //very primitive atoi implementation, no real edge-cases accounted for
 int atoi(const char* str)
 {
@@ -23,34 +26,33 @@ int atoi(const char* str)
     return sign*res;
 }
 
-void printf(char* str, ...)
+void stdio_format(void* out, int (*putc) (char, void*), char* str, va_list va)
 {
-    register int* arguments = (int *)(&str);
-
     while (*str)
     {
         if (*str != '%')
         {
-            fputc(*str, stdout);
+            putc(*str, out);
         }
         else
         {
             str++;
-            arguments++;
-
             switch(*str)
             {
                 case 's':
                 {
-                    const char* str = (const char*)*arguments;
-                    fputs(str, stdout);
+                    const char* tmpStr = (const char*)va_arg(va);
+                    while(*tmpStr)
+                    {
+                        putc(*tmpStr, out);
+                    }
                 }
                 break;
 
                 case 'c':
                 {
-                    char arg = *arguments;
-                    fputc(arg, stdout);
+                    char arg = va_arg(va);
+                    putc(arg, out);
                 }
                 break;
 
@@ -58,19 +60,19 @@ void printf(char* str, ...)
                 case 'd':
                 {
                     //MINI itoa (Maybe break it out?)
-                    int arg = *arguments;
+                    int arg = va_arg(va);
                     char buffer[10];
                     int digit = 0;
 
                     if(arg < 0)
                     {
-                        fputc('-', stdout);
+                        putc('-', out);
                         arg *= -1;
                     }
 
                     if(arg == 0)
                     {
-                        fputc('0', stdout);
+                        putc('0', out);
                     }
                     else
                     {
@@ -81,7 +83,7 @@ void printf(char* str, ...)
                         }
                         for(int i = digit-1; i>=0; i--)
                         {
-                            fputc(buffer[i], stdout);
+                            putc(buffer[i], out);
                         }
                     }
                 }
@@ -90,11 +92,11 @@ void printf(char* str, ...)
                 case 'x':
                 case 'X':
                 {
-                    int arg = *arguments;
+                    int arg = va_arg(va);
                     unsigned int nibble;
 
-                    fputc('0', stdout);
-                    fputc('x', stdout);
+                    putc('0', out);
+                    putc('x', out);
                     for(int i = 28; i >= 0; i-=4)
                     {
                         nibble = (arg >> i) & 0xF;
@@ -106,7 +108,7 @@ void printf(char* str, ...)
                         {
                             nibble += 0x30;
                         }
-                        fputc(nibble, stdout);
+                        putc(nibble, out);
                     }
                 }
                 /* no break */
@@ -118,12 +120,45 @@ void printf(char* str, ...)
     }
 }
 
-int fputc (int character, file_t* file)
+void printf(char* str, ...)
 {
-    return syscall_writedevice(*file, &character,1);
+    va_list va;
+    va_start(va, str);
+    vprintf(str, va);
+    va_end(va);
 }
 
-int fputs (const char* str, file_t* file )
+void vprintf(char* str, va_list va)
+{
+    stdio_format(stdout, fputc, str, va);
+}
+
+static int putcp(char c, void* p)
+{
+    *(*((char**)p))++ = c;
+    return 0;
+}
+
+void sprintf(char* str, char* format, ...)
+{
+    va_list va;
+    va_start(va, format);
+    vsprintf(str, format, va);
+    va_end(va);
+}
+
+void vsprintf(char* str, char* format, va_list va)
+{
+    stdio_format(&str, putcp, format, va);
+    putcp('\0', &str);
+}
+
+int fputc (char character, void* file)
+{
+    return syscall_writedevice(*(int*)file, &character,1);
+}
+
+int fputs (const char* str, void* file )
 {
     unsigned int size = 0;
     while(*str)

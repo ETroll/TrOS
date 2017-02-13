@@ -4,6 +4,8 @@
 #ifndef INCLUDE_STDIO_H
 #define INCLUDE_STDIO_H
 
+#include <stdarg.h>
+
 #ifndef NULL
 #define NULL	0
 #endif
@@ -24,11 +26,14 @@ extern file_t* stdin;
 
 int atoi(const char* str);
 
-void printf(char* str, ...);
-int fputc (int character, file_t* file);
-int fputs (const char* str, file_t* file );
+int fputc(char c, void* file);
+int fputs(const char* str, void* file);
 
 void printf(char* str, ...);
+void vprintf(char* str, va_list va);
+
+void sprintf(char* str, char* format, ...);
+void vsprintf(char* str, char* format, va_list va);
 
 // file_t *fopen(const char *filename, const char *mode);
 // void fclose(file_t file);
