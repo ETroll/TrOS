@@ -34,7 +34,7 @@ void syslog_log(uint32_t pid, syslog_severity_t sev, char* data, ...)
     va_end(argptr);
 
     char prefix[20];
-    sprintf(prefix, "%c[%d] ", (char)sev, pid);
+    sprintf(prefix, "[%d] ", pid);
 
     ui_textbox_append(tb, prefix);
     ui_textbox_appendline(tb, message);

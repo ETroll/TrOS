@@ -45,6 +45,7 @@ void stdio_format(void* out, int (*putc) (char, void*), char* str, va_list va)
                     while(*tmpStr)
                     {
                         putc(*tmpStr, out);
+                        tmpStr++;
                     }
                 }
                 break;

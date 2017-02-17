@@ -36,7 +36,7 @@ int main()
 
         int32_t kbd = syscall_opendevice("kbd");
         // char* test = "En test";
-        // syslog_log(3, SYSLOG_INFO, "Keyboard opened %s %c", "test", 'C');
+        syslog_log(3, SYSLOG_INFO, "Text: %s", "test");
         while(1)
         {
             int key = 0;
