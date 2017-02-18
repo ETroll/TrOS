@@ -25,6 +25,7 @@ OBJECTS_GCC := $(patsubst %.c, $(DIR_OBJECT)%.o, $(SRC_GCC))
 OBJECTS_ALL += $(OBJECTS_GCC)
 
 all: $(TARGET)
+	$(TOOLCHAIN)i386-elf-strip --strip-unneeded $(DIR_BUILD)$(TARGET)
 
 $(TARGET): $(DIR_BUILD) $(OBJECTS_GCC)
 	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(addprefix $(DIR_OBJECT), $(notdir $(OBJECTS_ALL))) -o $(DIR_BUILD)/$(TARGET)

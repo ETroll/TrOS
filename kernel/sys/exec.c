@@ -71,9 +71,10 @@ int exec_elf32(char* path, int argc, char** argv)
                             // printk("Zeroed: %x to %x\n", (pgr_h.p_vaddr + pgr_h.p_filesz),
                             //     (pgr_h.p_vaddr + pgr_h.p_filesz) + (pgr_h.p_memsz-pgr_h.p_filesz));
                         }
-                        if(vfs_read(file, pgr_h.p_offset, pgr_h.p_filesz, (unsigned char *)pgr_h.p_vaddr) != pgr_h.p_filesz)
+                        int tmpread = 0;
+                        if((tmpread = vfs_read(file, pgr_h.p_offset, pgr_h.p_filesz, (unsigned char *)pgr_h.p_vaddr)) != pgr_h.p_filesz)
                         {
-                            printk("Error reading segment\n");
+                            printk("Error reading segment. Expected %d got %d\n", pgr_h.p_filesz, tmpread);
                         }
                     }
                     else

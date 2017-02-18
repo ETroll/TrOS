@@ -120,6 +120,15 @@ ui_menu_t* ui_menu_create(char* text)
     return menu;
 }
 
+void ui_desktop_set_activewindow(ui_desktop_t* desktop,  ui_window_t* window)
+{
+    if(desktop->activeWindow != NULL)
+    {
+        desktop->activeWindow->handlemessage(UI_WINDOW_LEAVE, 0);
+    }
+    desktop->activeWindow = window;
+    desktop->activeWindow->handlemessage(UI_WINDOW_ENTER, 0);
+}
 // void ui_menu_dispose(ui_menu_t* menu)
 // {
 //     if(menu)

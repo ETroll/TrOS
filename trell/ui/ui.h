@@ -24,7 +24,9 @@ typedef enum  {
 } ui_cell_color_t;
 
 typedef enum {
-    UI_KEYSTROKE
+    UI_KEYSTROKE,
+    UI_WINDOW_ENTER,
+    UI_WINDOW_LEAVE
 } ui_message_t;
 
 typedef struct {
@@ -97,5 +99,6 @@ ui_desktop_t* ui_desktop_create(ui_context_t* context);
 ui_window_t* ui_window_create(char* title);
 
 void ui_redraw(ui_desktop_t* desktop);
+void ui_desktop_set_activewindow(ui_desktop_t* desktop,  ui_window_t* window);
 
 #endif
