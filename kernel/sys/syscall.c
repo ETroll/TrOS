@@ -20,7 +20,7 @@ static int sys_debug(unsigned int method)
 static int sys_getpid()
 {
     process_t* process = process_get_current();
-    return (int)process;
+    return process->pid;
 }
 
 static int sys_opendevice(char* name)
@@ -69,7 +69,7 @@ static int sys_closedevice(unsigned int fd)
     return -1;
 }
 
-static int sys_writedevice(unsigned int fd, const void *buffer, unsigned int count)
+static int sys_writedevice(unsigned int fd, const void* buffer, unsigned int count)
 {
     device_driver_t* device = driver_find_device_id(fd);
     if(device != 0)
@@ -82,7 +82,7 @@ static int sys_writedevice(unsigned int fd, const void *buffer, unsigned int cou
     return -1;
 }
 
-static int sys_readdevice(unsigned int fd, void *buffer, unsigned int count)
+static int sys_readdevice(unsigned int fd, void* buffer, unsigned int count)
 {
     device_driver_t* device = driver_find_device_id(fd);
     int read = -1;

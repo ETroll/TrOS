@@ -19,7 +19,7 @@ void devicebuffer_free(devicebuffer_t* db)
 
 int devicebuffer_read(devicebuffer_t* db, int* buffer, uint32_t count)
 {
-    int read = -1;
+    int read = 0;
     if(db->listener == 0)
     {
         db->listener = process_get_current();
@@ -28,7 +28,6 @@ int devicebuffer_read(devicebuffer_t* db, int* buffer, uint32_t count)
             if(rb_len(db->ringbuffer) > 0)
             {
                 rb_pop(db->ringbuffer, &buffer[read++]);
-                printk("Read: %x\n", buffer[read-1]);
             }
             else
             {
