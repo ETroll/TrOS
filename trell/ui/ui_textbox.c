@@ -11,7 +11,7 @@ typedef struct {
     uint8_t lineoffset; //(For scrolling)
 } ui_textbox_t;
 
-static void paint(ui_context_t* ctx, void* self);
+static void ui_textbox_paint(ui_context_t* ctx, void* self);
 static void ui_textbox_dispose(void* self);
 
 ui_item_t* ui_textbox_create(uint8_t x, uint8_t y, uint8_t width, uint8_t height)
@@ -28,7 +28,7 @@ ui_item_t* ui_textbox_create(uint8_t x, uint8_t y, uint8_t width, uint8_t height
             tb->buffer = (char*)malloc(tb->buffersize);
             tb->bufferpos = 0;
             item->handlemessage = NULL;
-            item->paint = paint;
+            item->paint = ui_textbox_paint;
             item->dispose = ui_textbox_dispose;
             item->visible = TRUE;
             item->fillColor = UI_LIGHT_GRAY;
@@ -49,18 +49,6 @@ void ui_textbox_dispose(void* self)
     if(self)
     {
         ui_item_t* item = (ui_item_t*)self;
-        if(item->items && item->items->size > 0)
-        {
-            foreach(i, item->items)
-            {
-                ui_item_t* child = (ui_item_t*)i->data;
-                if(child->dispose != NULL)
-                {
-                    child->dispose(child);
-                }
-            }
-            list_free(item->items);
-        }
         if(item->content)
         {
             ui_textbox_t* tb = (ui_textbox_t*)item->content;
@@ -70,7 +58,7 @@ void ui_textbox_dispose(void* self)
             }
             free(item->content);
         }
-        free(item);
+        ui_item_dispose(item);
     }
 }
 
@@ -130,7 +118,7 @@ void ui_textbox_clear(ui_item_t* tb)
     }
 }
 
-void paint(ui_context_t* ctx, void* self)
+void ui_textbox_paint(ui_context_t* ctx, void* self)
 {
     if(self && ctx)
     {

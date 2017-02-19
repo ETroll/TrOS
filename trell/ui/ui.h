@@ -100,5 +100,6 @@ ui_window_t* ui_window_create(char* title);
 
 void ui_redraw(ui_desktop_t* desktop);
 void ui_desktop_set_activewindow(ui_desktop_t* desktop,  ui_window_t* window);
+void ui_item_dispose(ui_item_t* item);
 
 #endif
