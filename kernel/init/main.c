@@ -111,7 +111,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 
     char* argv[] =
     {
-        "/fd0/bin/trell"
+        "/fd0/trell"
     };
     exec_elf32(argv[0], 1, argv);
 

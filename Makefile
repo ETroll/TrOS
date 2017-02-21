@@ -11,9 +11,11 @@ TOOLCHAINDEST = $(shell pwd)/tools/gcc-i386-none-elf
 
 .PHONY: $(KERNEL) $(USERLAND) $(IMAGE)
 
-all: $(FOLDERS) $(KERNEL) $(USERLAND)
+all: kernel $(USERLAND)
 
 rebuild: clean all
+
+kernel: $(FOLDERS) $(KERNEL)
 
 user: $(USERLAND)
 
@@ -25,7 +27,7 @@ $(KERNEL):
 
 $(USERLAND):
 	$(MAKE) -C $@
-	cp -r ./$@/bin/* ./build/tmp/bin
+	cp -r ./$@/bin/* ./build/tmp
 
 clean: $(SUBCLEAN)
 	rm -rf build/
@@ -36,7 +38,7 @@ $(SUBCLEAN): %.clean:
 $(IMAGE):
 	rm -f build/tmp/*.mbr
 	rm -f $@
-	/sbin/mkdosfs -n "TROS" -C $@ 1440
+	/sbin/mkdosfs -F 12 -n "TROS" -C $@ 1440
 	dd if=bootloader/bootsector/bin/floppy.mbr of=$@ bs=512 count=1 conv=notrunc
 	mcopy -i $@ ./build/tmp/* ::
 	@echo "\n\n\n------------- Created Image -------------\n\n\n"
