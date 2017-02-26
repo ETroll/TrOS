@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syscall.h>
+#include <keycodes.h>
 #include "ui/ui.h"
 #include "windows/syslog.h"
 #include "windows/showcase.h"
@@ -38,15 +39,15 @@ int main()
 
         int32_t kbd = syscall_opendevice("kbd");
         // char* test = "En test";
-        syslog_log(3, SYSLOG_INFO, "Text: %s", "test");
+        // syslog_log(3, SYSLOG_INFO, "Text: %s", "test");
         while(1)
         {
             int key = 0;
             syscall_readdevice(kbd, &key, 1);
-            syslog_log(1, SYSLOG_INFO, "Key: %x", key);
-            if(key > 0x1200 && key < 0x1209)
+            // syslog_log(1, SYSLOG_INFO, "Key: %x", key);
+            if(key >= KEY_F1 && key < KEY_F9)
             {
-                if(key == 0x1203)
+                if(key == KEY_F3)
                 {
                     ui_desktop_set_activewindow(desktop, syslog);
                 }
@@ -59,7 +60,7 @@ int main()
             {
                 if(desktop->activeWindow->handlemessage != NULL)
                 {
-                    desktop->activeWindow->handlemessage(UI_KEYSTROKE, key);
+                    desktop->activeWindow->handlemessage(UI_KEYSTROKE, key, desktop->activeWindow);
                 }
             }
             ui_redraw(desktop);

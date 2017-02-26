@@ -3,7 +3,7 @@
 #include <tros/irq.h>
 #include <tros/tros.h>
 #include <tros/klib/devicebuffer.h>
-#include <tros/sys/keyboard.h>
+#include <keycodes.h>
 #include <tros/process.h>
 
 #define KEY_DEVICE  0x60

@@ -124,10 +124,10 @@ void ui_desktop_set_activewindow(ui_desktop_t* desktop,  ui_window_t* window)
 {
     if(desktop->activeWindow != NULL)
     {
-        desktop->activeWindow->handlemessage(UI_WINDOW_LEAVE, 0);
+        desktop->activeWindow->handlemessage(UI_WINDOW_LEAVE, 0, desktop->activeWindow);
     }
     desktop->activeWindow = window;
-    desktop->activeWindow->handlemessage(UI_WINDOW_ENTER, 0);
+    desktop->activeWindow->handlemessage(UI_WINDOW_ENTER, 0, desktop->activeWindow);
 }
 // void ui_menu_dispose(ui_menu_t* menu)
 // {

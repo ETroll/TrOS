@@ -51,7 +51,7 @@ typedef struct {
 } ui_pos_t;
 
 typedef struct {
-    void (*handlemessage)(ui_message_t code, int val);
+    void (*handlemessage)(ui_message_t code, int val, void* self);
     void (*paint)(ui_context_t* ctx, void* self);
     void (*dispose)(void* self);
     char visible;
@@ -78,7 +78,7 @@ typedef struct {
     list_t* items;
     ui_cell_color_t fillColor;
     ui_pos_t pos;
-    void (*handlemessage)(ui_message_t code, int val);
+    void (*handlemessage)(ui_message_t code, int val, void* self);
 } ui_window_t;
 
 typedef struct {

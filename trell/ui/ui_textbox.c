@@ -27,6 +27,7 @@ ui_item_t* ui_textbox_create(uint8_t x, uint8_t y, uint8_t width, uint8_t height
             tb->lineoffset = 0;
             tb->buffer = (char*)malloc(tb->buffersize);
             tb->bufferpos = 0;
+
             item->handlemessage = NULL;
             item->paint = ui_textbox_paint;
             item->dispose = ui_textbox_dispose;

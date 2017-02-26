@@ -8,7 +8,7 @@
 static ui_window_t* window = NULL;
 static ui_item_t* tb = NULL;
 
-void syslog_inputhandler(ui_message_t code, int val);
+void syslog_inputhandler(ui_message_t code, int val, void* self);
 
 ui_window_t* syslog_create()
 {
@@ -41,7 +41,7 @@ void syslog_log(uint32_t pid, syslog_severity_t sev, char* data, ...)
 }
 
 
-void syslog_inputhandler(ui_message_t code, int val)
+void syslog_inputhandler(ui_message_t code, int val, void* self)
 {
     // if(code == UI_KEYSTROKE && tb != NULL)
     // {
