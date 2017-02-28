@@ -86,6 +86,7 @@ ui_window_t* ui_window_create(char* title)
         window->fillColor = UI_LIGHT_GRAY;
         window->menu = ui_menu_create(title);
         window->items = list_create();
+        window->activeItem = NULL;
         window->handlemessage = NULL;
 
         window->pos.x = 0;
@@ -355,9 +356,9 @@ void ui_context_flush(ui_context_t* context)
 
 void ui_item_dispose(ui_item_t* item)
 {
-    if(item->items && item->items->size > 0)
+    if(item->subitems && item->subitems->size > 0)
     {
-        foreach(i, item->items)
+        foreach(i, item->subitems)
         {
             ui_item_t* child = (ui_item_t*)i->data;
             if(child->dispose != NULL)
@@ -365,7 +366,7 @@ void ui_item_dispose(ui_item_t* item)
                 child->dispose(child);
             }
         }
-        list_free(item->items);
+        list_free(item->subitems);
     }
     free(item);
 }

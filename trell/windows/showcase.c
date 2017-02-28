@@ -35,11 +35,48 @@ void showcase_inputhandler(ui_message_t code, int val, void* self)
             switch (val) {
                 case KEY_TAB:
                 {
+                    list_node_t* prevItem = window->activeItem;
+                    if(window->activeItem == NULL)
+                    {
+                        window->activeItem = window->items->head;
+                    }
+                    else
+                    {
+                        window->activeItem = window->activeItem->next;
+                    }
 
+                    if(prevItem != NULL)
+                    {
+                        ui_item_t* itm = (ui_item_t*)prevItem->data;
+                        if(itm->handlemessage)
+                        {
+                            itm->handlemessage(UI_ITEM_LOSTFOCUS, 0, itm);
+                        }
+                    }
+
+                    if(window->activeItem != NULL)
+                    {
+                        ui_item_t* itm = (ui_item_t*)window->activeItem->data;
+                        if(itm->handlemessage)
+                        {
+                            itm->handlemessage(UI_ITEM_GOTFOCUS, 0, itm);
+                        }
+                    }
                 } break;
+                default:
+                {
+                    if(window->activeItem != NULL)
+                    {
+                        ui_item_t* itm = (ui_item_t*)window->activeItem->data;
+                        if(itm->handlemessage)
+                        {
+                            itm->handlemessage(UI_KEYSTROKE, val, itm);
+                        }
+                    }
+                }break;
             }
         }
-        //TODO: Create a generic "fallback" fir UI_Window that handle
+        //TODO: Create a generic "fallback" for UI_Window that handle
         //      basic UI navigation so each custon window does not need
         //      to think bout this
     }

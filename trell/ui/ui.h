@@ -26,7 +26,9 @@ typedef enum  {
 typedef enum {
     UI_KEYSTROKE,
     UI_WINDOW_ENTER,
-    UI_WINDOW_LEAVE
+    UI_WINDOW_LEAVE,
+    UI_ITEM_GOTFOCUS,
+    UI_ITEM_LOSTFOCUS
 } ui_message_t;
 
 typedef struct {
@@ -55,7 +57,7 @@ typedef struct {
     void (*paint)(ui_context_t* ctx, void* self);
     void (*dispose)(void* self);
     char visible;
-    list_t* items;
+    list_t* subitems;
     ui_cell_color_t fillColor;
     ui_pos_t pos;
     void* content;
@@ -76,6 +78,7 @@ typedef struct {
     char* title;
     ui_menu_t* menu;
     list_t* items;
+    list_node_t* activeItem;
     ui_cell_color_t fillColor;
     ui_pos_t pos;
     void (*handlemessage)(ui_message_t code, int val, void* self);

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <keycodes.h>
 #include "ui.h"
 #include "ui_button.h"
 #include "../windows/syslog.h"
@@ -35,7 +36,7 @@ ui_item_t* ui_button_create(uint8_t x, uint8_t y, uint8_t width, char* text, voi
             item->pos.y = y;
             item->pos.width = width;
             item->pos.height = 1;
-            item->items = NULL;
+            item->subitems = NULL;
             item->content = (void*)btn;
         }
     }
@@ -96,5 +97,22 @@ void ui_button_dispose(void* self)
 
 void ui_button_input(ui_message_t code, int val, void* self)
 {
-    syslog_log(1, SYSLOG_INFO, "UI Button: %x got code %d with value %d", self, code, val);
+    ui_item_t* item = (ui_item_t*)self;
+    switch (code) {
+        case UI_ITEM_GOTFOCUS:
+            item->fillColor = UI_DARK_GRAY;
+        break;
+        case UI_ITEM_LOSTFOCUS:
+            item->fillColor = UI_LIGHT_GRAY;
+        break;
+        case UI_KEYSTROKE:
+        {
+            if(val == KEY_SPACE || val == KEY_RETURN)
+            {
+                syslog_log(1, SYSLOG_INFO, "Button %x got click", self);
+            }
+        }break;
+        default:
+        break;
+    }
 }

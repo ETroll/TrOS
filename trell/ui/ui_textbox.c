@@ -37,7 +37,7 @@ ui_item_t* ui_textbox_create(uint8_t x, uint8_t y, uint8_t width, uint8_t height
             item->pos.y = y;
             item->pos.width = width;
             item->pos.height = height;
-            item->items = NULL;//list_create();
+            item->subitems = NULL;//list_create();
             item->content = (void*)tb;
             ui_textbox_clear(item);
         }
