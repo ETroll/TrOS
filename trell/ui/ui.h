@@ -99,7 +99,9 @@ typedef struct {
 
 ui_context_t* ui_context_create(char* devicename);
 ui_desktop_t* ui_desktop_create(ui_context_t* context);
+
 ui_window_t* ui_window_create(char* title);
+void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* self);
 
 void ui_redraw(ui_desktop_t* desktop);
 void ui_desktop_set_activewindow(ui_desktop_t* desktop,  ui_window_t* window);

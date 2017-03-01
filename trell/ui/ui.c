@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <keycodes.h>
 
 #include "ui.h"
 
@@ -130,6 +131,58 @@ void ui_desktop_set_activewindow(ui_desktop_t* desktop,  ui_window_t* window)
     desktop->activeWindow = window;
     desktop->activeWindow->handlemessage(UI_WINDOW_ENTER, 0, desktop->activeWindow);
 }
+
+void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* window)
+{
+    if(code == UI_KEYSTROKE)
+    {
+        switch (val) {
+            case KEY_TAB:
+            {
+                list_node_t* prevItem = window->activeItem;
+                if(window->activeItem == NULL)
+                {
+                    window->activeItem = window->items->head;
+                }
+                else
+                {
+                    window->activeItem = window->activeItem->next;
+                }
+
+                if(prevItem != NULL)
+                {
+                    ui_item_t* itm = (ui_item_t*)prevItem->data;
+                    if(itm->handlemessage)
+                    {
+                        itm->handlemessage(UI_ITEM_LOSTFOCUS, 0, itm);
+                    }
+                }
+
+                if(window->activeItem != NULL)
+                {
+                    ui_item_t* itm = (ui_item_t*)window->activeItem->data;
+                    if(itm->handlemessage)
+                    {
+                        itm->handlemessage(UI_ITEM_GOTFOCUS, 0, itm);
+                    }
+                }
+            } break;
+            default:
+            {
+                if(window->activeItem != NULL)
+                {
+                    ui_item_t* itm = (ui_item_t*)window->activeItem->data;
+                    if(itm->handlemessage)
+                    {
+                        itm->handlemessage(UI_KEYSTROKE, val, itm);
+                    }
+                }
+            }break;
+        }
+    }
+}
+
+
 // void ui_menu_dispose(ui_menu_t* menu)
 // {
 //     if(menu)

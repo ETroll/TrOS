@@ -109,7 +109,14 @@ void ui_button_input(ui_message_t code, int val, void* self)
         {
             if(val == KEY_SPACE || val == KEY_RETURN)
             {
-                syslog_log(1, SYSLOG_INFO, "Button %x got click", self);
+                if(item->content)
+                {
+                    ui_button_t* btn = (ui_button_t*)item->content;
+                    if(btn->onclick)
+                    {
+                        btn->onclick();
+                    }
+                }
             }
         }break;
         default:
