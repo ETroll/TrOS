@@ -348,43 +348,38 @@ void ui_menubar_paint(ui_desktop_t* desktop)
         cell->dirty = TRUE;
     }
 
-    uint32_t itemsize = 11;
+    uint32_t itemsize = 14;
+    uint32_t index = 0;
 
-    for(int i = 0; i< 3; i++)
+    foreach(item, desktop->windows)
     {
-        char name[11] = "F";
-        name[1] = (i+1)+0x30;
-        name[2] = ' ';
-
-        switch (i)
+        ui_window_t* window = (ui_window_t*)item->data;
+        if(window)
         {
-            case 0:
+            char name[14] = "F";
+            name[1] = (index+1)+0x30;
+            name[2] = ' ';
+
+            if(window->title)
             {
-                if(desktop->activeWindow)
-                {
-                    strncpy(name+3, desktop->activeWindow->title, 7);
-                }
-                else
-                {
-                    strncpy(name+3, "-------", 7);
-                }
-            } break;
-            case 1:
-                strncpy(name+3, "Windows", 7);
-                break;
-            case 2:
-                strncpy(name+3, "Syslog", 7);
-                break;
-        }
+                strncpy(name+3, window->title, 10);
+            }
+            else
+            {
+                strncpy(name+3, "----------", 10);
+            }
 
-        uint32_t counter = 0;
-        for(int x = (i*itemsize); x < (i*itemsize)+(itemsize-1); x++)
-        {
-            ui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
-            cell->backcolor = UI_GREEN;
-            cell->frontcolor = UI_BLACK;
-            cell->dirty = TRUE;
-            cell->data = name[counter++];
+            uint32_t counter = 0;
+            ui_cell_color_t backcolor = window == desktop->activeWindow ? UI_LIGHT_GREEN : UI_GREEN;
+            for(int x = (index*itemsize); x < (index*itemsize)+(itemsize-1); x++)
+            {
+                ui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
+                cell->backcolor = backcolor;
+                cell->frontcolor = UI_BLACK;
+                cell->dirty = TRUE;
+                cell->data = name[counter++];
+            }
+            index++;
         }
     }
 }

@@ -3,6 +3,7 @@
 #include <syscall.h>
 #include <keycodes.h>
 #include "ui/ui.h"
+#include "ui/list.h"
 #include "windows/syslog.h"
 #include "windows/showcase.h"
 
@@ -26,34 +27,34 @@ int main()
     ui_context_t* context = ui_context_create("vga");
     if(context)
     {
-        ui_window_t* window = showcase_create();
+        ui_window_t* showcase = showcase_create();
         ui_window_t* syslog = syslog_create();
         ui_desktop_t* desktop = ui_desktop_create(context);
 
-        list_add(desktop->windows, window);
+        list_add(desktop->windows, showcase);
         list_add(desktop->windows, syslog);
 
-        ui_desktop_set_activewindow(desktop, window);
-
+        ui_desktop_set_activewindow(desktop, showcase);
         ui_redraw(desktop);
 
         int32_t kbd = syscall_opendevice("kbd");
-        // char* test = "En test";
-        // syslog_log(3, SYSLOG_INFO, "Text: %s", "test");
+
         while(1)
         {
             int key = 0;
             syscall_readdevice(kbd, &key, 1);
-            // syslog_log(1, SYSLOG_INFO, "Key: %x", key);
+
             if(key >= KEY_F1 && key < KEY_F9)
             {
-                if(key == KEY_F3)
+                uint32_t index = key - KEY_F1;
+                ui_window_t* win = (ui_window_t*)list_get_at(desktop->windows, index);
+                if(win != NULL)
                 {
-                    ui_desktop_set_activewindow(desktop, syslog);
+                    ui_desktop_set_activewindow(desktop, win);
                 }
                 else
                 {
-                    ui_desktop_set_activewindow(desktop, window);
+                    syslog_log(1, SYSLOG_INFO, "No window found at index %d", index);
                 }
             }
             else
