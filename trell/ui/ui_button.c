@@ -31,7 +31,9 @@ ui_item_t* ui_button_create(uint8_t x, uint8_t y, uint8_t width, char* text, voi
             item->paint = ui_button_paint;
             item->dispose = ui_button_dispose;
             item->visible = TRUE;
-            item->fillColor = UI_LIGHT_GRAY;
+            item->selectable = TRUE;
+            item->backcolor = UI_LIGHT_GRAY;
+            item->frontcolor = UI_BLACK;
             item->pos.x = x;
             item->pos.y = y;
             item->pos.width = width;
@@ -52,14 +54,13 @@ void ui_button_paint(ui_context_t* ctx, void* self)
         {
             ui_button_t* btn = (ui_button_t*)item->content;
 
-
             for(uint32_t x = item->pos.x, strpos = 0;
                 x < (item->pos.x + item->pos.width);
                 x++)
             {
                 ui_cell_t* cell = &ctx->buffer[(item->pos.y * ctx->width) + x];
-                cell->backcolor = item->fillColor;
-                cell->frontcolor = UI_BLACK;
+                cell->backcolor = item->backcolor;
+                cell->frontcolor = item->frontcolor;
                 cell->dirty = TRUE;
 
                 if(x == item->pos.x)
@@ -91,6 +92,15 @@ void ui_button_dispose(void* self)
     if(self)
     {
         ui_item_t* item = (ui_item_t*)self;
+        if(item->content)
+        {
+            ui_button_t* btn = (ui_button_t*)item->content;
+            if(btn->text)
+            {
+                free(btn->text);
+            }
+            free(item->content);
+        }
         ui_item_dispose(item);
     }
 }
@@ -100,10 +110,10 @@ void ui_button_input(ui_message_t code, int val, void* self)
     ui_item_t* item = (ui_item_t*)self;
     switch (code) {
         case UI_ITEM_GOTFOCUS:
-            item->fillColor = UI_DARK_GRAY;
+            item->backcolor = UI_DARK_GRAY;
         break;
         case UI_ITEM_LOSTFOCUS:
-            item->fillColor = UI_LIGHT_GRAY;
+            item->backcolor = UI_LIGHT_GRAY;
         break;
         case UI_KEYSTROKE:
         {

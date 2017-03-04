@@ -57,8 +57,10 @@ typedef struct {
     void (*paint)(ui_context_t* ctx, void* self);
     void (*dispose)(void* self);
     char visible;
+    char selectable;
     list_t* subitems;
-    ui_cell_color_t fillColor;
+    ui_cell_color_t backcolor;
+    ui_cell_color_t frontcolor;
     ui_pos_t pos;
     void* content;
 } ui_item_t;
@@ -79,7 +81,8 @@ typedef struct {
     ui_menu_t* menu;
     list_t* items;
     list_node_t* activeItem;
-    ui_cell_color_t fillColor;
+    ui_cell_color_t backcolor;
+    ui_cell_color_t frontcolor;
     ui_pos_t pos;
     void (*handlemessage)(ui_message_t code, int val, void* self);
 } ui_window_t;

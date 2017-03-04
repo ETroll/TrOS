@@ -84,7 +84,8 @@ ui_window_t* ui_window_create(char* title)
     if(window)
     {
         window->title = NULL;
-        window->fillColor = UI_LIGHT_GRAY;
+        window->backcolor = UI_LIGHT_GRAY;
+        window->frontcolor = UI_BLACK;
         window->menu = ui_menu_create(title);
         window->items = list_create();
         window->activeItem = NULL;
@@ -263,8 +264,8 @@ void ui_window_paint(ui_window_t* window, ui_context_t* ctx)
             for(uint32_t x = 0; x < max_x; x++)
             {
                 ui_cell_t* cell = &ctx->buffer[y * ctx->width + x];
-                cell->backcolor = UI_LIGHT_GRAY;
-                cell->frontcolor = UI_BLACK;
+                cell->backcolor = window->backcolor;
+                cell->frontcolor = window->frontcolor;
                 cell->dirty = TRUE;
 
                 if(y == 0 || y == (max_y-1))

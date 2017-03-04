@@ -32,7 +32,9 @@ ui_item_t* ui_textbox_create(uint8_t x, uint8_t y, uint8_t width, uint8_t height
             item->paint = ui_textbox_paint;
             item->dispose = ui_textbox_dispose;
             item->visible = TRUE;
-            item->fillColor = UI_LIGHT_GRAY;
+            item->selectable = FALSE;
+            item->backcolor = UI_LIGHT_GRAY;
+            item->frontcolor = UI_BLACK;
             item->pos.x = x;
             item->pos.y = y;
             item->pos.width = width;
@@ -132,8 +134,8 @@ void ui_textbox_paint(ui_context_t* ctx, void* self)
                 for(uint32_t x = item->pos.x; x < cont->linewidth; x++)
                 {
                     ui_cell_t* cell = &ctx->buffer[(y * ctx->width) + x];
-                    cell->backcolor = item->fillColor;
-                    cell->frontcolor = UI_BLACK;
+                    cell->backcolor = item->backcolor;
+                    cell->frontcolor = item->frontcolor;;
                     cell->dirty = TRUE;
 
                     char data = cont->buffer[(((y-item->pos.y)+cont->lineoffset)*cont->linewidth) + (x-item->pos.x)];
@@ -145,8 +147,8 @@ void ui_textbox_paint(ui_context_t* ctx, void* self)
             for(uint32_t y = item->pos.y; y < item->pos.height; y++)
             {
                 ui_cell_t* cell = &ctx->buffer[(y * ctx->width) + item->pos.width];
-                cell->backcolor = item->fillColor;
-                cell->frontcolor = UI_BLACK;
+                cell->backcolor = item->backcolor;
+                cell->frontcolor = item->frontcolor;;
                 cell->dirty = TRUE;
 
                 if(y == item->pos.y)

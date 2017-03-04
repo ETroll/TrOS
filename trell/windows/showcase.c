@@ -6,13 +6,17 @@
 #include "syslog.h"
 #include "../ui/ui_textbox.h"
 #include "../ui/ui_button.h"
+#include "../ui/ui_label.h"
 
 static ui_window_t* window = NULL;
+static ui_item_t* label = NULL;
 
 static void showcase_inputhandler(ui_message_t code, int val, void* self);
 
 static void btn_ok_clicked();
 static void btn_cancel_clicked();
+
+
 
 ui_window_t* showcase_create()
 {
@@ -21,8 +25,8 @@ ui_window_t* showcase_create()
 
     ui_item_t* btn = ui_button_create(40, 10, 12, "    OK", btn_ok_clicked);
     ui_item_t* btn2 = ui_button_create(54, 10, 12, "  CANCEL", btn_cancel_clicked);
-
     ui_item_t* tb = ui_textbox_create(2, 2, 36, 22);
+    label = ui_label_create(40, 8, 24, "This is a label!");
 
     ui_textbox_appendline(tb, "Lorem ipsum dolor sit amet, consectetur \
 adipiscing elit, sed do eiusmod tempor incididunt ut labore et \
@@ -31,6 +35,7 @@ ullamco laboris nisi ut aliquip ex ea commodo consequat.");
     list_add(window->items, btn);
     list_add(window->items, btn2);
     list_add(window->items, tb);
+    list_add(window->items, label);
 
     return window;
 }
@@ -46,9 +51,11 @@ void showcase_inputhandler(ui_message_t code, int val, void* self)
 void btn_ok_clicked()
 {
     syslog_log(1, SYSLOG_INFO, "OK Clicked");
+    ui_label_set_text(label, "You pressed OK!");
 }
 
 void btn_cancel_clicked()
 {
     syslog_log(1, SYSLOG_INFO, "Cancel Clicked");
+    ui_label_set_text(label, "You pressed CANCEL!");
 }
