@@ -1,4 +1,4 @@
-#include <tros/hal/VGA.h>
+// #include <tros/hal/VGA.h>
 #include <tros/hal/serial.h>
 
 void printk(char* str, ...)
