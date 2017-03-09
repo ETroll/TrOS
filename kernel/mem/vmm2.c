@@ -185,12 +185,12 @@ page_directory_t* vmm2_clone_directory(page_directory_t* src)
                 //Link
                 dir->tables[i] = _kernel_dir->tables[i];
             }
-            else
-            {
+            // else
+            // {
                 //Copy ?
                 // Should the process get access to parent process
                 // memory?
-            }
+            // }
         }
     }
 

@@ -1,6 +1,7 @@
 #include <tros/mem/mmap.h>
 #include <tros/mem/pmm.h>
 #include <tros/tros.h>
+#include <tros/atomics.h>
 
 #define PMM_BLOCKS_PER_BYTE 8
 #define PMM_BLOCK_SIZE      4096
@@ -9,6 +10,7 @@
 static unsigned int __pmm_memory_size = 0;
 static unsigned int __pmm_used_blocks = 0;
 static unsigned int __pmm_max_blocks = 0;
+static spinlock_t _pmmlock = {0};
 
 char* pmm_memory_types[] = {
     "Available",
@@ -87,22 +89,26 @@ void pmm_deinit_region(physical_addr_t addr, unsigned int size)
     int num_blocks = size / PMM_BLOCK_SIZE;
     unsigned int end_block = start_block + num_blocks;
 
+    spinlock_lock(_pmmlock);
     for (int i = start_block; i<=end_block; i++)
     {
         mmap_set_used(i);
         __pmm_used_blocks++;
     }
+    spinlock_unlock(_pmmlock);
 }
 
 void pmm_deinit_block(physical_addr_t addr)
 {
     if(addr % PMM_BLOCK_SIZE == 0)
     {
+        spinlock_lock(_pmmlock);
         if(!mmap_test_block(addr))
         {
             mmap_set_used(addr);
             __pmm_used_blocks++;
         }
+        spinlock_unlock(_pmmlock);
     }
     else
     {
@@ -112,6 +118,7 @@ void pmm_deinit_block(physical_addr_t addr)
 
 void* pmm_alloc_block()
 {
+    spinlock_lock(_pmmlock);
     if(pmm_get_free_block_count() <= 0)
     {
         return 0;	//out of memory
@@ -126,8 +133,7 @@ void* pmm_alloc_block()
     mmap_set_used(block);
     unsigned int addr = block * PMM_BLOCK_SIZE;
     __pmm_used_blocks++;
-
-	//printk("Allocating block %d (%x)\n", block, addr);
+    spinlock_unlock(_pmmlock);
 
     return (void*)addr;
 }
@@ -137,12 +143,15 @@ void pmm_free_block(void* blockptr)
     unsigned int addr = (unsigned int)blockptr;
 	int block = addr / PMM_BLOCK_SIZE;
 
+    spinlock_lock(_pmmlock);
 	mmap_set_notused(block);
 	__pmm_used_blocks--;
+    spinlock_unlock(_pmmlock);
 }
 
 void* pmm_alloc_blocks(unsigned int size)
 {
+    spinlock_lock(_pmmlock);
     if(pmm_get_free_block_count() <= 0)
     {
         return 0;	//out of memory
@@ -160,8 +169,7 @@ void* pmm_alloc_blocks(unsigned int size)
     }
     unsigned int block_addr = start_block * PMM_BLOCK_SIZE;
     __pmm_used_blocks+=size;
-
-	//printk("Allocating %d blocks %d (%x)\n", size, start_block, block_addr);
+    spinlock_unlock(_pmmlock);
 
     return (void*)block_addr;
 }
@@ -171,11 +179,13 @@ void pmm_free_blocks(void* blockptr, unsigned int size)
     unsigned int addr = (unsigned int)blockptr;
 	int start_block = addr / PMM_BLOCK_SIZE;
 
+    spinlock_lock(_pmmlock);
     for (int i = 0;  i < size; i++)
     {
         mmap_set_used(start_block+i);
     }
     __pmm_used_blocks-=size;
+    spinlock_unlock(_pmmlock);
 }
 
 unsigned int pmm_get_memory_size()
