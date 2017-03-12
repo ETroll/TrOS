@@ -25,7 +25,6 @@ void process_preempt()
         {
             if(itt->thread.state == PROCESS_IOREADY)
             {
-                // printk("IO READY!!\n");
                 next = itt;
                 break;
             }
@@ -45,29 +44,13 @@ void process_preempt()
 
         if(next != 0)
         {
-            // printk("Switching to PID: %d\n", next->pid);
             process_switchto(next);
         }
-        // else
-        // {
-        //     printk("Staying at PID: %d\n", _current_process->pid);
-        // }
     }
 }
 
 void process_switchto(process_t* next)
 {
-    // printk("Swtiching to process: %x\n\n", next);
-    // printk("SWCH TO EIP: %x CR3: %x ESP: %x kESP: %x pid: %d\n",
-    //     next->regs.eip,
-    //     next->regs.cr3,
-    //     next->regs.esp,
-    //     next->thread.kernel_stack_ptr,
-    //     next->pid);
-    // printk("     EFLAGS: %x\n",
-    //     next->regs.eflags);
-
-    //NOTE: Hm.. not good? Do we need to keep this "fresh"?
     tss_set_ring0_stack(0x10, next->thread.kernel_stack_ptr);
 
     process_t *prev = _current_process;
@@ -75,31 +58,25 @@ void process_switchto(process_t* next)
     _current_process->thread.state = PROCESS_RUNNING;
 
     process_switch(&prev->regs, &_current_process->regs);
-    //printk("DONE!\n");
 }
 
-//void process_exec_user(void (*main)())
 void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir)
 {
     process_t* proc = (process_t*)kmalloc(sizeof(process_t));
     proc->pagedir = pdir;
     proc->pid = num_proc;
+    proc->parent = process_get_current();
+    proc->mailbox = mailbox_create();
     proc->heapend_addr = heapstart;
 
     if(num_proc > 0)
     {
         process_t* prev = _processes[num_proc-1];
-        // printk("Next proc %x\n", _processes[0]);
-        // printk("Prev proc %x\n", prev);
         proc->next = _processes[0];
         prev->next = proc;
-
-
-        // printk("Test %x\n", _processes[0]->next);
     }
     else
     {
-        // printk("Looping....\n");
         proc->next = proc; //loop
     }
 
@@ -124,13 +101,6 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, 
     _processes[num_proc++] = proc;
     _current_process = proc;
 
-    // printk("\nUSER proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
-    //     proc,
-    //     proc->regs.eip,
-    //     proc->regs.esp,
-    //     proc->thread.kernel_stack_ptr,
-    //     proc->regs.cr3);
-
     tss_set_ring0_stack(0x10, proc->thread.kernel_stack_ptr);
     enter_usermode(proc->thread.instr_ptr, proc->thread.user_stack_ptr);
 }
@@ -144,10 +114,12 @@ void process_create_idle(void (*main)())
         idleproc->pagedir = vmm2_get_directory();
         idleproc->next = idleproc; //loop
         idleproc->pid = num_proc;
+        idleproc->parent = 0;
+        idleproc->mailbox = 0;
         idleproc->heapend_addr = PROCESS_MEM_START;
 
         idleproc->thread.user_stack_ptr = 0;
-        //16 byte stack, starts at location 16-4 = 12
+        //16 kbyte stack, starts at location 16-4 = 12
         idleproc->thread.kernel_stack_ptr = (unsigned int)kmalloc(4096) + 4092;
         idleproc->thread.instr_ptr = (unsigned int)main;
         idleproc->thread.priority = 0;
@@ -167,22 +139,22 @@ void process_create_idle(void (*main)())
         _processes[num_proc++] = idleproc;
         _current_process = idleproc;
 
-        // printk("IDLE proc %x - EIP %x ESP: %x kESP: %x CR3: %x\n\n",
-        //     idleproc,
-        //     idleproc->regs.eip,
-        //     idleproc->regs.esp,
-        //     idleproc->thread.kernel_stack_ptr,
-        //     idleproc->regs.cr3);
     }
     else
     {
-        //PANIC!
+        kernel_panic("Tried to start the IDLE PROCESS twice!", 0);
     }
 }
 
 process_t* process_get_current()
 {
     return _current_process;
+}
+
+process_t* process_get_pid(uint32_t pid)
+{
+    //TODO process_get_pid
+    return 0;
 }
 
 void process_set_state(process_t* p, process_state_t s)

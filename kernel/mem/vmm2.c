@@ -2,7 +2,7 @@
 #include <tros/mem/pmm.h>
 #include <tros/irq.h>
 #include <tros/tros.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 
 // #define _USER_DEBUG 1 //Just a debug for now with flags
 

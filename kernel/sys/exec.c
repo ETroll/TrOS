@@ -3,7 +3,7 @@
 #include <tros/tros.h>
 #include <tros/memory.h>
 #include <tros/mem/vmm2.h>
-#include <string.h>
+#include <tros/klib/kstring.h>
 #include <tros/fs/vfs.h>
 #include <tros/sys/elf32.h>
 

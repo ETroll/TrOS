@@ -44,7 +44,7 @@ typedef struct
 //Set up the driver system
 void driver_initialize();
 int driver_register(device_driver_t* driver);
-device_driver_t* driver_find_device(char* name);
+device_driver_t* driver_find_device(const char* name);
 device_driver_t* driver_find_device_id(unsigned int id);
 
 #endif

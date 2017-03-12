@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 #include <tros/mem/vmm2.h>
-
+#include <tros/mailbox.h>
 
 #define PROCESS_MEM_START 0x200000
 
@@ -46,23 +46,23 @@ typedef struct process
     thread_t thread;
     registers_t regs;
     page_directory_t* pagedir;
+    struct process *parent;
     struct process *next;
+    mailbox_t* mailbox;
     uint32_t pid;
     uint32_t heapend_addr;
 } process_t;
 
-// void process_init();
 extern void process_switch(registers_t* old, registers_t* new);
-// void process_create(process_t* task, void(*main)(), unsigned int flags, unsigned int* pagedir);
 
 void process_preempt();
 void process_switchto(process_t* next);
 void process_create_idle(void (*main)());
 
-// void process_exec_user(unsigned int startAddr);
 void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir);
 
 process_t* process_get_current();
+process_t* process_get_pid(uint32_t pid);
 
 //Set the state of the current running process and rescedule if needed
 void process_set_state(process_t* p, process_state_t s);

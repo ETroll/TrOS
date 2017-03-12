@@ -37,7 +37,7 @@ int driver_register(device_driver_t* device)
     return _drivers->size;
 }
 
-device_driver_t* driver_find_device(char* name)
+device_driver_t* driver_find_device(const char* name)
 {
     list_node_t* node = _drivers->head;
     device_driver_t* driver = 0;
