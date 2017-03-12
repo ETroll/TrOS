@@ -2,7 +2,7 @@
 
 KERNEL := bootloader/bootsector bootloader/loader kernel
 USERLAND := trell
-FOLDERS := build build/tmp build/tmp/bin tools
+FOLDERS := build build/tmp build/tmp/apps build/tmp/services tools
 SUBCLEAN = $(addsuffix .clean,$(KERNEL))
 IMAGE = build/tros.img
 DISKTOOL = build/trfs

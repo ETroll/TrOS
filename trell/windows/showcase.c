@@ -58,7 +58,7 @@ void btn_execute_clicked()
 {
     char* argv[] =
     {
-        "/fd0/bin/tusse",
+        "/fd0/apps/tusse",
         "test"
     };
     syslog_log(1, SYSLOG_INFO, "Trying to execute file: %s", argv[0]);

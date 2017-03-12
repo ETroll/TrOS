@@ -26,8 +26,11 @@ static int sys_getpid()
 
 static int sys_get_parent_pid()
 {
-    //TODO sys_get_parent_pid
-    // process_t* process = process_get_current();
+    process_t* process = process_get_current();
+    if(process->parent)
+    {
+        return process->parent->pid;
+    }
     return 0;
 }
 
@@ -153,19 +156,19 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
 
 static int sys_readmessage(const void* data, uint32_t size)
 {
-    //TODO sys_readmessage
+    //WIP sys_readmessage
     return -1;
 }
 
 static int sys_execute(const char* path)
 {
-    //TODO sys_execute: Execute a process at path
+    //WIP sys_execute: Execute a process at path
     return -1;
 }
 
 static int sys_exit(uint32_t status)
 {
-    //TODO: Exit and clean up the process
+    //WIP: Exit and clean up the process
     // - Clean up all memory used.
     // - Remove from scheduler
     return -1;
