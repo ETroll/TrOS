@@ -153,8 +153,18 @@ process_t* process_get_current()
 
 process_t* process_get_pid(uint32_t pid)
 {
-    //WIP process_get_pid
-    return 0;
+    process_t* proc = 0;
+    for(process_t* itt = _current_process->next;
+        itt != _current_process && proc == 0;
+        itt = itt->next)
+    {
+        if(itt->pid == pid)
+        {
+            proc = itt;
+            break;
+        }
+    }
+    return proc;
 }
 
 void process_set_state(process_t* p, process_state_t s)
