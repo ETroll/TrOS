@@ -139,3 +139,53 @@ char toupper(char c)
     }
     return c;
 }
+
+static char* strtok_r(char* s, const char* delim, char** last)
+{
+    char* stok;
+    if (s == 0 && (s = *last) == 0)
+    {
+        return 0;
+    }
+    if(delim == 0)
+    {
+        return 0;
+    }
+
+    int c = *s++;
+    int sc = 0;
+    const char* spanp;
+    for (spanp = delim; (sc = *spanp++) != 0; c = *s++)
+    {
+        if (c != sc)
+        {
+            break;
+        }
+    }
+    if(c == 0)
+    {
+        *last = 0;
+        return 0;
+    }
+    stok = s - 1;
+    for (;;)
+    {
+        c = *s++;
+        spanp = delim;
+        do
+        {
+            if ((sc = *spanp++) == c)
+            {
+                s[-1] = '\0';
+                *last = s;
+                return (stok);
+            }
+        } while (sc != 0);
+    }
+}
+
+char* strtok(char *s, const char *delim)
+{
+    static char *saveptr;
+    return strtok_r(s, delim, &saveptr);
+}

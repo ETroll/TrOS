@@ -3,6 +3,7 @@
 #include <tros/driver.h>
 #include <tros/tros.h>
 #include <tros/process.h>
+#include <tros/exec.h>
 #include <stdint.h>
 
 //NOTE: Maybe move each syscall into own file in a folder?
@@ -13,9 +14,9 @@ static void* _syscalls[MAX_SYSCALL];
 
 static int sys_debug(unsigned int method)
 {
-    //TODO: Syscall for basic debug functionality
-    //      different parameters selects different dumps from the kernel
-    return -1;
+    uint32_t pid = process_get_current()->pid;
+    printk("DEBUG(%d): Data %x\n", pid, method);
+    return method;
 }
 
 static int sys_getpid()
@@ -142,16 +143,16 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
     process_t* reciever = process_get_pid(pid);
     process_t* sender = process_get_current();
 
-    mailbox_message_t* message = mailbox_message_create(sender->pid, data, size, flags);
-    if(message)
+    if(reciever && sender)
     {
-        mailbox_push(reciever->mailbox, message);
-        return size;
+        mailbox_message_t* message = mailbox_message_create(sender->pid, data, size, flags);
+        if(message)
+        {
+            mailbox_push(reciever->mailbox, message);
+            return size;
+        }
     }
-    else
-    {
-        return -1;
-    }
+    return -1;
 }
 
 static int sys_readmessage(const void* data, uint32_t size)
@@ -159,11 +160,24 @@ static int sys_readmessage(const void* data, uint32_t size)
     //WIP sys_readmessage
     return -1;
 }
-
-static int sys_execute(const char* path)
+// int execve(const char *filename, char *const argv[],
+//                   char *const envp[]);
+static int sys_execute(const char* file, const char** argv)
 {
     //WIP sys_execute: Execute a process at path
-    return -1;
+    //    args = "/fd0/apps/tusse hello world"
+    // printk("Trying to execute %s\n", args);
+    // const char s[1] = " ";
+    uint32_t pid = process_get_current()->pid;
+
+    printk("EXEC(%d): Trying to execute: %s\n", pid, file);
+    int i = 0;
+    for(; argv[i] != 0 && i<10;i++)
+    {
+        printk("EXEC(%d): Argument %d - %s\n", pid, i, argv[i]);
+    }
+
+    return exec_elf32((char*)file, i, (char**)argv);
 }
 
 static int sys_exit(uint32_t status)
@@ -171,7 +185,9 @@ static int sys_exit(uint32_t status)
     //WIP: Exit and clean up the process
     // - Clean up all memory used.
     // - Remove from scheduler
-    return -1;
+    uint32_t pid = process_get_current()->pid;
+    printk("EXIT(%d): Exiting with code: %d\n", pid, status);
+    return status;
 }
 
 int syscall_dispatcher(syscall_parameters_t regs)
@@ -220,12 +236,12 @@ void syscall_initialize()
     _syscalls[3] = &sys_writedevice;
     _syscalls[4] = &sys_readdevice;
     _syscalls[5] = &sys_ioctl;
-    _syscalls[6] = &sys_sendmessage;        //new
-    _syscalls[7] = &sys_readmessage;        //new
-    _syscalls[8] = &sys_get_parent_pid;     //new
+    _syscalls[6] = &sys_sendmessage;        //new / unmapped
+    _syscalls[7] = &sys_readmessage;        //new / unmapped
+    _syscalls[8] = &sys_get_parent_pid;
     _syscalls[9] = &sys_increasemem;
     _syscalls[10] = &sys_decreasemem;
     _syscalls[11] = &sys_debug;
-    _syscalls[12] = &sys_execute;           //new
-    _syscalls[13] = &sys_exit;              //new
+    _syscalls[12] = &sys_execute;
+    _syscalls[13] = &sys_exit;
 }

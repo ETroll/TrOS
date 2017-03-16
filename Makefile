@@ -1,7 +1,7 @@
 #TrOS-2 Makefile
 
 KERNEL := bootloader/bootsector bootloader/loader kernel
-USERLAND := trell
+USERLAND := trell applications/tusse
 FOLDERS := build build/tmp build/tmp/apps build/tmp/services tools
 SUBCLEAN = $(addsuffix .clean,$(KERNEL))
 IMAGE = build/tros.img
@@ -11,7 +11,7 @@ TOOLCHAINDEST = $(shell pwd)/tools/gcc-i386-none-elf
 
 .PHONY: $(KERNEL) $(USERLAND) $(IMAGE)
 
-all: kernel $(USERLAND)
+all: kernel user
 
 rebuild: clean all
 

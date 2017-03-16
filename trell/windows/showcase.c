@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <syscall.h>
 #include "showcase.h"
 #include "syslog.h"
 #include "../ui/ui_textbox.h"
@@ -58,10 +59,13 @@ void btn_execute_clicked()
 {
     char* argv[] =
     {
-        "/fd0/apps/tusse",
-        "test"
+        "/fd0/tusse",
+        "test",
+        NULL
     };
     syslog_log(1, SYSLOG_INFO, "Trying to execute file: %s", argv[0]);
+    int retval = syscall_execute(argv[0], argv);
+    syslog_log(1, SYSLOG_INFO, "syscall_execute returned %d", retval);
 }
 
 void btn_newwin_clicked()

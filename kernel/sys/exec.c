@@ -10,7 +10,9 @@
 //NOTE: Thos method jumps right in to the new code in Userland
 int exec_elf32(char* path, int argc, char** argv)
 {
+    printk("Trying to find file %s\n", path);
     fs_node_t* file = kopen(path);
+    printk("File: %x\n", file);
     if(file != 0)
     {
         Elf32_Header_t elf_header;

@@ -20,4 +20,6 @@ int isspace(char c);
 int isdigit(char c);
 char toupper(char c);
 
+char* strtok(char *s, const char *delim);
+
 #endif
