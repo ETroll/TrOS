@@ -11,13 +11,14 @@ static process_t* _current_process = 0;
 static process_t* _processes[10]; //just 10 while testing..
 static unsigned int num_proc = 0;
 
-extern void enter_usermode(unsigned int location, unsigned int userstack);
+extern void enter_usermode(registers_t* reg, unsigned int location, unsigned int userstack);
 
 //TODO: Rename to process_rescedule or something
 void process_preempt()
 {
     if(_current_process != 0 && num_proc > 1)
     {
+        // printk("X");
         process_t* next = 0;
         for(process_t* itt = _current_process->next;
             itt != _current_process && next == 0;
@@ -29,6 +30,7 @@ void process_preempt()
                 break;
             }
         }
+        // printk("X");
         if(next == 0)
         {
             for(process_t* itt = _current_process->next;
@@ -37,6 +39,7 @@ void process_preempt()
             {
                 if(itt->thread.state == PROCESS_RUNNING)
                 {
+                    // printk("X");
                     next = itt;
                 }
             }
@@ -44,6 +47,7 @@ void process_preempt()
 
         if(next != 0)
         {
+            // printk("Y");
             process_switchto(next);
         }
     }
@@ -56,18 +60,38 @@ void process_switchto(process_t* next)
     process_t *prev = _current_process;
     _current_process = next;
     _current_process->thread.state = PROCESS_RUNNING;
-
-    process_switch(&prev->regs, &_current_process->regs);
+    if(_current_process->started)
+    {
+        printk(" Switching to PID %d\n", _current_process->pid);
+        printk("              EIP %x\n", _current_process->regs.eip);
+        printk("              ESP %x\n", _current_process->regs.esp);
+        process_switch(&prev->regs, &_current_process->regs);
+    }
+    else
+    {
+        printk(" Saving state for PID: %d\n", prev->pid);
+        printk("                  EIP: %x\n", prev->regs.eip);
+        printk("                  ESP: %x\n", prev->regs.esp);
+        // process_savestate(&prev->regs);
+        printk(" Starting PID %d for the first time\n", _current_process->pid);
+        _current_process->started = 1;
+        // tss_set_ring0_stack(0x10, next->thread.kernel_stack_ptr);
+        enter_usermode(&prev->regs,
+            _current_process->thread.instr_ptr,
+            _current_process->thread.user_stack_ptr);
+    }
 }
 
-void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir)
+uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir)
 {
     process_t* proc = (process_t*)kmalloc(sizeof(process_t));
+    printk("Process PID %d at %x\n", num_proc, proc);
     proc->pagedir = pdir;
     proc->pid = num_proc;
     proc->parent = process_get_current();
     proc->mailbox = mailbox_create();
     proc->heapend_addr = heapstart;
+    proc->started = 0;
 
     if(num_proc > 0)
     {
@@ -99,10 +123,7 @@ void process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, 
     proc->regs.eflags = _current_process->regs.eflags;
 
     _processes[num_proc++] = proc;
-    _current_process = proc;
-
-    tss_set_ring0_stack(0x10, proc->thread.kernel_stack_ptr);
-    enter_usermode(proc->thread.instr_ptr, proc->thread.user_stack_ptr);
+    return proc->pid;
 }
 
 void process_create_idle(void (*main)())
@@ -111,10 +132,12 @@ void process_create_idle(void (*main)())
     if(_current_process == 0)
     {
         process_t* idleproc = (process_t*)kmalloc(sizeof(process_t));
+        printk("Process PID %d at %x (%x)\n", num_proc, idleproc, main);
         idleproc->pagedir = vmm2_get_directory();
         idleproc->next = idleproc; //loop
         idleproc->pid = num_proc;
         idleproc->parent = 0;
+        idleproc->started = 1;
         idleproc->mailbox = 0;
         idleproc->heapend_addr = PROCESS_MEM_START;
 
@@ -138,7 +161,10 @@ void process_create_idle(void (*main)())
 
         _processes[num_proc++] = idleproc;
         _current_process = idleproc;
+        // process_switchto(_current_process);
 
+        process_start_idle(idleproc->thread.instr_ptr, idleproc->thread.kernel_stack_ptr);
+        printk("You should never see me!\n");
     }
     else
     {
@@ -175,4 +201,9 @@ void process_set_state(process_t* p, process_state_t s)
         printk("PID %d waiting/sleeping\n", p->pid);
         process_preempt();
     }
+}
+
+void process_dispose(process_t* p)
+{
+    process_set_state(p, PROCESS_SLEEPING);
 }

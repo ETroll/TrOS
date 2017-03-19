@@ -1,17 +1,46 @@
 ; sheduling.asm
 ; Platform dependent helper functions for sheduling and multitasking
 ;
-;                                   +8                      +12
-; void enter_usermode(unsigned int location, unsigned int userstack);
+;                                +8                +12                 +16
+; void enter_usermode(registers_t* reg, unsigned int location, unsigned int userstack);
 
 global enter_usermode
 enter_usermode:
     push ebp
     mov ebp,esp
 
-    mov esp, [ebp+12] ; First thing!: Set the new stack to be used from here on now
+    ; Save the old registers so that the calling process can return properly.
+    pusha
+    pushf
+    mov eax, cr3
+    push eax
 
-    ;cli
+    mov eax, [ebp+8]
+    mov [eax+4], ebx
+    mov [eax+8], ecx
+    mov [eax+12], edx
+    mov [eax+16], esi
+    mov [eax+20], edi
+
+    mov ebx, [esp+36] ;EAX
+    mov ecx, [ebp+4] ;EIP
+    mov edx, [esp+20] ;ESP
+
+    mov esi, [esp+16] ;EBP
+    mov edi, [esp+4];EFLAGS
+
+    mov [eax], ebx
+    mov [eax+24], edx
+    mov [eax+28], esi
+    mov [eax+32], ecx
+    mov [eax+36], edi
+
+    pop ebx ;CR3
+    mov [eax+40], ebx
+    ; Ok, registers are saved. Now on to the important bits
+
+    mov esp, [ebp+16] ; Set the new stack for the new application to be used
+                      ; from here on now
     mov ax, 0x23 ; User mode data selector is 0x20 (GDT entry 3). Also sets RPL to 3 (so 0x23)
     mov ds, ax
     mov es, ax
@@ -31,7 +60,7 @@ enter_usermode:
     push 0x1b       ; CS, user mode code selector is 0x18. With RPL 3 this is 0x1b
 
     ; Lets push our new entry point to be used when it "returns" when performing the iret
-    push dword [ebp+8] ;note 32 bit address size "hardcoded"
+    push dword [ebp+12] ;note 32 bit address size "hardcoded"
     iret
 
     mov esp, ebp
@@ -119,3 +148,11 @@ process_switch:
     pop eax
 
     ret ;This ends all!
+
+global process_start_idle
+process_start_idle:
+    mov eax, [esp+4]
+    mov ebx, [esp+8]
+    mov esp, ebx
+    push eax
+    ret

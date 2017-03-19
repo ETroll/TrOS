@@ -172,17 +172,19 @@ static int sys_execute(const char* file, const char** argv)
         printk("EXEC(%d): Argument %d - %s\n", pid, i, argv[i]);
     }
 
-    return exec_elf32((char*)file, i, (char**)argv);
+    int retval = exec_elf32((char*)file, i, (char**)argv);
+    printk("EXEC(%d): Complete with PID %d\n", pid, retval);
+    return retval;
 }
 
-static int sys_exit(uint32_t status)
+static void sys_exit(uint32_t status)
 {
     //WIP: Exit and clean up the process
     // - Clean up all memory used.
     // - Remove from scheduler
     uint32_t pid = process_get_current()->pid;
     printk("EXIT(%d): Exiting with code: %d\n", pid, status);
-    return status;
+    process_dispose(process_get_current());
 }
 
 int syscall_dispatcher(syscall_parameters_t regs)

@@ -12,6 +12,7 @@ int exec_elf32(char* path, int argc, char** argv)
 {
     // printk("Trying to find file %s\n", path);
     fs_node_t* file = kopen(path);
+    uint32_t newpid = 0;
     // printk("File: %x\n", file);
     if(file != 0)
     {
@@ -91,14 +92,13 @@ int exec_elf32(char* path, int argc, char** argv)
                 // ustackAddr += (VMM2_BLOCK_SIZE - (sizeof(unsigned int)*2));
                 ustackAddr += (VMM2_BLOCK_SIZE - sizeof(unsigned int));
                 printk("\n");
-                vfs_close(file);
 
                 printk("Executing process with:\n");
                 printk("  Entry: %x\n", elf_header.e_entry);
                 printk("  Stack: %x\n", ustackAddr);
                 printk("  Heapstart: %x\n\n\n", highetsAddr);
 
-                process_exec_user(elf_header.e_entry,
+                newpid = process_exec_user(elf_header.e_entry,
                     ustackAddr,
                     highetsAddr,
                     (unsigned int)kmalloc(16384) + (16384 - sizeof(unsigned int)),
@@ -107,19 +107,18 @@ int exec_elf32(char* path, int argc, char** argv)
             else
             {
                 printk("File %s is not an executable!\n", path);
-                vfs_close(file);
             }
         }
         else
         {
             printk("Failure reading file %s\n", path);
-            vfs_close(file);
         }
+        vfs_close(file);
     }
     else
     {
         printk("Could not find file: %s\n", path);
     }
-
-    return 0;
+    printk("Completely executed file %s\n", path);
+    return newpid;
 }

@@ -79,11 +79,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 {
     kernel_early();
     kernel_memory_initialize(stack_top, multiboot);
-
-
     kernel_drivers();
     kernel_filesystems();
-
     /*
         fd0/
             initrd
@@ -98,22 +95,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
         cd0/
         dvd0/
     */
-
-    if(!vfs_mount("fd0", "fat12"))
-    {
-        kernel_panic("Error mounting root folder. Halting!", 0);
-    }
-
     syscall_initialize();
-    printk("\n\n");
-
     process_create_idle(&kernel_idle);
-
-    char* argv[] =
-    {
-        "/fd0/trell"
-    };
-    exec_elf32(argv[0], 1, argv);
 
     while(1)
     {
@@ -124,6 +107,19 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 // This is the "idle process"
 void kernel_idle()
 {
+    printk("Starting INIT process!\n");
+    if(!vfs_mount("fd0", "fat12"))
+    {
+        kernel_panic("Error mounting root folder. Halting!", 0);
+    }
+
+    char* argv[] =
+    {
+        "/fd0/trell"
+    };
+    uint32_t pid = exec_elf32(argv[0], 1, argv);
+    printk("Started Trell at PID: %d\n", pid);
+
     while(1)
     {
         __asm("sti");
