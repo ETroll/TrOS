@@ -160,14 +160,9 @@ static int sys_readmessage(const void* data, uint32_t size)
     //WIP sys_readmessage
     return -1;
 }
-// int execve(const char *filename, char *const argv[],
-//                   char *const envp[]);
+
 static int sys_execute(const char* file, const char** argv)
 {
-    //WIP sys_execute: Execute a process at path
-    //    args = "/fd0/apps/tusse hello world"
-    // printk("Trying to execute %s\n", args);
-    // const char s[1] = " ";
     uint32_t pid = process_get_current()->pid;
 
     printk("EXEC(%d): Trying to execute: %s\n", pid, file);

@@ -184,7 +184,7 @@ int floppy_open()
 
     if(irq_register_handler(FLOPPY_IRQ + IRQ_BASE, &fdd_irq_handler))
     {
-        //printk("Floppy OPEN\n");
+        // printk("Floppy OPEN\n");
         dma_reset();
         dma_channel_mask(FLOPPY_DMA_CHANNEL);
         dma_flipflop_reset(1);
@@ -197,6 +197,7 @@ int floppy_open()
         dma_unmask();
 
         fdd_reset();
+        // printk("Floppy OPEN OK\n");
         return 1;
     }
     else
@@ -207,7 +208,7 @@ int floppy_open()
 
 void floppy_close()
 {
-    //printk("Floppy CLOSE\n");
+    // printk("Floppy CLOSE\n");
     irq_remove_handler(FLOPPY_IRQ + IRQ_BASE);
 }
 
@@ -322,6 +323,7 @@ static void fdd_wait_irq()
 {
     //TODO: Maybe implement SIGNALS to replace this shit?
     //printk("-");
+    __asm("sti;");
     while(__fdd_irq_fired == 0)
     {
         //printk(".");
@@ -444,7 +446,6 @@ static void fdd_reset()
     pio_outb(0, FDD_IO_DOR);
     pio_outb(FDD_DOR_MASK_RESET | FDD_DOR_MASK_DMA, FDD_IO_DOR);
     fdd_wait_irq();
-
 
     for(int i=0; i<4; i++)
     {

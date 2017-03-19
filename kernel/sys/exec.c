@@ -10,9 +10,9 @@
 //NOTE: Thos method jumps right in to the new code in Userland
 int exec_elf32(char* path, int argc, char** argv)
 {
-    printk("Trying to find file %s\n", path);
+    // printk("Trying to find file %s\n", path);
     fs_node_t* file = kopen(path);
-    printk("File: %x\n", file);
+    // printk("File: %x\n", file);
     if(file != 0)
     {
         Elf32_Header_t elf_header;
@@ -26,11 +26,11 @@ int exec_elf32(char* path, int argc, char** argv)
             && sizeof(Elf32_ProgramHeader_t) == elf_header.e_phentsize) //will fail if 64bit
             {
                 //TODO: Save old pagedir so we can fall back
-                page_directory_t* pagedir = vmm2_clone_directory(vmm2_get_directory());
+                page_directory_t* pagedir = vmm2_create_directory();
                 vmm2_switch_pagedir(pagedir);
                 uint32_t highetsAddr = 0;
 
-                printk("We have a valid executable with entry at %x\n", elf_header.e_entry);
+                printk("\nWe have a valid executable with entry at %x\n", elf_header.e_entry);
                 printk("\nType Offset      VirtAddr    PhysAddr    FileSiz     MemSiz     Align\n");
 
                 for(int i = 0; i<elf_header.e_phnum; i++)
@@ -88,8 +88,16 @@ int exec_elf32(char* path, int argc, char** argv)
                 //All just temp for now
                 uint32_t ustackAddr = 0xBFFFC000; //16k below kernel
                 vmm2_map(ustackAddr, 1, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE); //1 block - 4K stack
+                // ustackAddr += (VMM2_BLOCK_SIZE - (sizeof(unsigned int)*2));
                 ustackAddr += (VMM2_BLOCK_SIZE - sizeof(unsigned int));
-                printk("\n\n");
+                printk("\n");
+                vfs_close(file);
+
+                printk("Executing process with:\n");
+                printk("  Entry: %x\n", elf_header.e_entry);
+                printk("  Stack: %x\n", ustackAddr);
+                printk("  Heapstart: %x\n\n\n", highetsAddr);
+
                 process_exec_user(elf_header.e_entry,
                     ustackAddr,
                     highetsAddr,
@@ -99,14 +107,14 @@ int exec_elf32(char* path, int argc, char** argv)
             else
             {
                 printk("File %s is not an executable!\n", path);
+                vfs_close(file);
             }
         }
         else
         {
             printk("Failure reading file %s\n", path);
+            vfs_close(file);
         }
-        //NOTE: THis will leak... hm..
-        vfs_close(file);
     }
     else
     {

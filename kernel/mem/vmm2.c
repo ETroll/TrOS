@@ -197,6 +197,19 @@ page_directory_t* vmm2_clone_directory(page_directory_t* src)
     return dir;
 }
 
+page_directory_t* vmm2_create_directory()
+{
+    page_directory_t* dir = vmm2_create_pagedir();
+    for(int i = 0; i<1024; i++)
+    {
+        if(_kernel_dir->tables[i] != 0)
+        {
+            dir->tables[i] = _kernel_dir->tables[i];
+        }
+    }
+    return dir;
+}
+
 void vmm2_pagefault_handler(cpu_registers_t* regs)
 {
     uint32_t faulting_address;

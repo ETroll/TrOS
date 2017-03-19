@@ -29,7 +29,6 @@ idt_load:
 %macro IRQ_NOERRCODE 1
     global isr%1
     isr%1:
-        cli
         push byte 0
         push byte %1
         jmp irq_common
@@ -38,7 +37,6 @@ idt_load:
 %macro IRQ_ERRCODE 1
    global isr%1
     isr%1:
-        cli
         push byte %1
         jmp irq_common
 %endmacro
@@ -46,7 +44,6 @@ idt_load:
 %macro IRQ 2
   global irq%1
   irq%1:
-    cli
     push byte %1
     push byte %2
     jmp irq_common
@@ -55,7 +52,6 @@ idt_load:
 ;rename: isr_fallback
 global irq_fallback
 irq_fallback:
-    cli
     push byte 0
     push byte 0x0F
 
@@ -80,7 +76,6 @@ irq_common:
 
     popa
     add esp, 8              ; Cleans up the pushed error code and pushed IRQ number
-    ;sti
     iret                    ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
 
 
@@ -136,7 +131,6 @@ IRQ 15, 47
 
 global syscall_isr
 syscall_isr:
-    cli
     ;xchg bx, bx
 
     push ebp
@@ -174,5 +168,4 @@ syscall_isr:
     pop ebp
 
     ;xchg bx, bx
-    sti
     iretd
