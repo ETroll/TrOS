@@ -135,17 +135,19 @@ syscall_isr:
 
     push ebp
     mov ebp, esp
-    sub esp, 8
+    sub esp, 4
 
-    mov [ebp-4], ds
+    push ds
+    push es
+    push fs
+    push gs
 
-    mov [ebp-8], dword 0x10
-    mov ds, [ebp-8]
-    mov es, [ebp-8]
-    mov fs, [ebp-8]
-    mov gs, [ebp-8]
+    mov [ebp-4], dword 0x10
+    mov ds, [ebp-4]
+    mov es, [ebp-4]
+    mov fs, [ebp-4]
+    mov gs, [ebp-4]
     add esp, 4 ;clean up variable used to store 0x10
-
 
     push eax
     push ebx
@@ -153,16 +155,17 @@ syscall_isr:
     push edx
     push esi
     push edi
-
     call syscall_dispatcher
-
     add esp, 24 ;syscall params
 
     pop ebx
-    mov ds, bx
-    mov es, bx
-    mov fs, bx
     mov gs, bx
+    pop ebx
+    mov fs, bx
+    pop ebx
+    mov es, bx
+    pop ebx
+    mov ds, bx
 
     mov esp, ebp
     pop ebp

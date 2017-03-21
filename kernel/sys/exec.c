@@ -96,7 +96,7 @@ int exec_elf32(char* path, int argc, char** argv)
                 printk("Executing process with:\n");
                 printk("  Entry: %x\n", elf_header.e_entry);
                 printk("  Stack: %x\n", ustackAddr);
-                printk("  Heapstart: %x\n\n\n", highetsAddr);
+                printk("  Heapstart: %x\n\n", highetsAddr);
 
                 newpid = process_exec_user(elf_header.e_entry,
                     ustackAddr,

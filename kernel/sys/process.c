@@ -49,6 +49,7 @@ void process_preempt()
         {
             // printk("Y");
             process_switchto(next);
+            // printk("Que?\n");
         }
     }
 }
@@ -79,6 +80,7 @@ void process_switchto(process_t* next)
         enter_usermode(&prev->regs,
             _current_process->thread.instr_ptr,
             _current_process->thread.user_stack_ptr);
+        printk("WOOT WOOT! I Have returned!\n");
     }
 }
 

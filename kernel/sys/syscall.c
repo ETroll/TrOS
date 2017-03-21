@@ -216,6 +216,7 @@ int syscall_dispatcher(syscall_parameters_t regs)
             // regs->eax = retval;
         }
     }
+    // printk("Syscal retval: %d\n", retval);
     // BOCHS_DEBUG;
     return retval;
 }

@@ -47,7 +47,9 @@ run: all qemu
 qemu: $(IMAGE)
 	qemu-system-i386 -fda $(IMAGE) -serial stdio -m 256 -d cpu_reset
 
-debug: all bochs
+debug: $(IMAGE)
+	qemu-system-i386 -fda $(IMAGE) -serial stdio -m 256 -d cpu_reset -s -S
+	
 bochs: $(IMAGE)
 	tools/bochs/bochs -q -f bochsrc.bxrc
 

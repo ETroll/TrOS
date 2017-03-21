@@ -9,7 +9,6 @@ enter_usermode:
     push ebp
     mov ebp,esp
 
-    ; Save the old registers so that the calling process can return properly.
     pusha
     pushf
     mov eax, cr3
@@ -21,23 +20,28 @@ enter_usermode:
     mov [eax+12], edx
     mov [eax+16], esi
     mov [eax+20], edi
-
-    mov ebx, [esp+36] ;EAX
-    mov ecx, [ebp+4] ;EIP
-    mov edx, [esp+20] ;ESP
-
-    mov esi, [esp+16] ;EBP
-    mov edi, [esp+4];EFLAGS
-
+    ; EAX
+    mov ebx, [esp+36]
     mov [eax], ebx
-    mov [eax+24], edx
-    mov [eax+28], esi
-    mov [eax+32], ecx
-    mov [eax+36], edi
-
-    pop ebx ;CR3
+    ; ESP, We want the SP to be pointing at the end of the caller frame
+    mov ebx, ebp
+    add ebx, 8 ; point to last argument passed to enter_usermode
+    mov [eax+24], ebx
+    ; EBP, we want to point to the callers EBP. (The value of current ebp)
+    mov ebx, [ebp]
+    mov [eax+28], ebx
+    ; EIP where we want to "land" when we get back.
+    mov ebx, [ebp+4]
+    mov [eax+32], ebx
+    ; EFLAGS
+    mov ebx, [esp+4]
+    mov [eax+36], ebx
+    ; CR3
+    pop ebx
     mov [eax+40], ebx
-    ; Ok, registers are saved. Now on to the important bits
+
+    ; ----- Done saving state
+    ; Now on to the important bits
 
     mov esp, [ebp+16] ; Set the new stack for the new application to be used
                       ; from here on now
@@ -62,10 +66,6 @@ enter_usermode:
     ; Lets push our new entry point to be used when it "returns" when performing the iret
     push dword [ebp+12] ;note 32 bit address size "hardcoded"
     iret
-
-    mov esp, ebp
-    pop ebp
-    ret
 
 global tss_flush
 tss_flush:

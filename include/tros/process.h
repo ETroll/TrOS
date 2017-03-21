@@ -19,17 +19,17 @@ typedef enum {
 
 typedef struct
 {
-    unsigned int eax;
-    unsigned int ebx;
-    unsigned int ecx;
-    unsigned int edx;
-    unsigned int esi;
-    unsigned int edi;
-    unsigned int esp;
-    unsigned int ebp;
-    unsigned int eip;
-    unsigned int eflags;
-    unsigned int cr3;
+    unsigned int eax; // 0
+    unsigned int ebx; // 4
+    unsigned int ecx; // 8
+    unsigned int edx; // 12
+    unsigned int esi; // 16
+    unsigned int edi; // 20
+    unsigned int esp; // 24
+    unsigned int ebp; // 28
+    unsigned int eip; // 32
+    unsigned int eflags; // 36
+    unsigned int cr3; // 40
 } __attribute__((packed)) registers_t;
 
 typedef struct

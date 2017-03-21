@@ -11,7 +11,6 @@ int main(int argc, char* argv[])
     // {
     //     syscall_debug((unsigned int)argv[i]);
     // }
-    while(1);
     syscall_exit(1);
     return 0;
 }
