@@ -29,7 +29,7 @@ extern void paging_enable(int enable);
 extern void paging_set_CR3(uint32_t phys);
 
 void vmm2_pagefault_handler(cpu_registers_t* regs);
-void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags);
+void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags, page_directory_t* dir);
 
 page_directory_t* vmm2_create_pagedir();
 
@@ -76,7 +76,17 @@ void vmm2_identitymap(uint32_t phys, uint32_t blocks, uint32_t flags)
     vmm2_physicalmap(phys, phys, blocks, flags);
 }
 
+void vmm2_identitymap_todir(uint32_t phys, uint32_t blocks, uint32_t flags, page_directory_t* dir)
+{
+    vmm2_physicalmap_todir(phys, phys, blocks, flags, dir);
+}
+
 void vmm2_physicalmap(uint32_t phys, virtual_addr_t virt, uint32_t blocks, uint32_t flags)
+{
+    vmm2_physicalmap_todir(phys, virt, blocks, flags, _current_dir);
+}
+
+void vmm2_physicalmap_todir(uint32_t phys, virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_directory_t* dir)
 {
     unsigned int endAddr = phys + (VMM2_BLOCK_SIZE * blocks);
     //TODO: Check if virt addr is mapped before;
@@ -85,24 +95,29 @@ void vmm2_physicalmap(uint32_t phys, virtual_addr_t virt, uint32_t blocks, uint3
         phys_addr+=VMM2_BLOCK_SIZE, virt_addr+=VMM2_BLOCK_SIZE)
     {
         pmm_deinit_block(phys_addr);
-        vmm2_map_block(phys_addr, virt_addr, flags);
+        vmm2_map_block(phys_addr, virt_addr, flags, dir);
     }
 }
 
 void vmm2_map(virtual_addr_t virt, uint32_t blocks, uint32_t flags)
+{
+    vmm2_map_todir(virt, blocks, flags, _current_dir);
+}
+
+void vmm2_map_todir(virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_directory_t* dir)
 {
     unsigned int endAddr = virt + (VMM2_BLOCK_SIZE * blocks);
     //TODO: Check if virt addr is mapped before;
     for (uint32_t addr=virt; addr < endAddr; addr+=VMM2_BLOCK_SIZE)
     {
         uint32_t phys_addr = (uint32_t)pmm_alloc_block();
-        vmm2_map_block(phys_addr, addr, flags);
+        vmm2_map_block(phys_addr, addr, flags, dir);
     }
 }
 
-void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags)
+void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags, page_directory_t* dir)
 {
-    uint32_t* page_table = vmm2_get_pagetable(virt, 1);
+    uint32_t* page_table = vmm2_get_pagetable(virt, dir, 1);
     //printk("Mapping: %x to %x (%x)\n", phys, virt, page_table);
 
     //Set flags.
@@ -121,9 +136,8 @@ void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags)
 
 }
 
-uint32_t* vmm2_get_pagetable(virtual_addr_t virt, uint32_t create)
+uint32_t* vmm2_get_pagetable(virtual_addr_t virt, page_directory_t* dir, uint32_t create)
 {
-    page_directory_t* dir = _current_dir;
     uint32_t* page_table = &dir->tables[DIRECTORY_INDEX(virt)];
     // If the page table is 0 then it is unnused,
     // And a new page table has to be created and
@@ -208,6 +222,16 @@ page_directory_t* vmm2_create_directory()
         }
     }
     return dir;
+}
+
+void vmm2_memcpy(void* dest, const void* src, uint32_t count, page_directory_t* destdir)
+{
+
+}
+
+void vmm2_memset(void *dest, char val, uint32_t count, page_directory_t* destdir)
+{
+    
 }
 
 void vmm2_pagefault_handler(cpu_registers_t* regs)

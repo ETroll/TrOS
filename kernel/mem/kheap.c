@@ -50,7 +50,7 @@ void kheap_initialize()
     {
         // We are doing this when there are only the kernel directory.
         // So no need to set a specific directory before "allocating"
-		vmm2_get_pagetable(i, 1);
+		vmm2_get_pagetable(i, vmm2_get_directory(), 1);
 	}
 }
 

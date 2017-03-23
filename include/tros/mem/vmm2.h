@@ -47,12 +47,18 @@ typedef struct
 
 vmm2_status_t vmm2_initialize(uint32_t stack, uint32_t size, uint32_t regionMapLocation);
 void vmm2_identitymap(uint32_t phys, uint32_t blocks, uint32_t flags);
+void vmm2_identitymap_todir(uint32_t phys, uint32_t blocks, uint32_t flags, page_directory_t* dir);
 void vmm2_physicalmap(uint32_t phys, virtual_addr_t virt, uint32_t blocks, uint32_t flags);
+void vmm2_physicalmap_todir(uint32_t phys, virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_directory_t* dir);
 void vmm2_map(virtual_addr_t virt, uint32_t blocks, uint32_t flags);
+void vmm2_map_todir(virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_directory_t* dir);
+
 vmm2_status_t vmm2_switch_pagedir(page_directory_t* dir);
+void vmm2_memcpy(void* dest, const void* src, uint32_t count, page_directory_t* destdir);
+void vmm2_memset(void *dest, char val, uint32_t count, page_directory_t* destdir);
 
 page_directory_t* vmm2_get_directory();
-uint32_t* vmm2_get_pagetable(virtual_addr_t virt, uint32_t create);
+uint32_t* vmm2_get_pagetable(virtual_addr_t virt, page_directory_t* dir, uint32_t create);
 page_directory_t* vmm2_clone_directory(page_directory_t* src);
 page_directory_t* vmm2_create_directory();
 
