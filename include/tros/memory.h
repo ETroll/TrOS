@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 
+#define KERNEL_STACK_SIZE 16384
+
 typedef struct
 {
     uint32_t total;

@@ -172,7 +172,7 @@ static int sys_execute(const char* file, const char** argv)
         printk("EXEC(%d): Argument %d - %s\n", pid, i, argv[i]);
     }
 
-    int retval = exec_elf32((char*)file, i, (char**)argv);
+    int retval = exec_file((char*)file, i, (char**)argv);
     printk("EXEC(%d): Complete with PID %d\n", pid, retval);
     return retval;
 }

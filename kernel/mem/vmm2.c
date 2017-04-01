@@ -185,31 +185,31 @@ page_directory_t* vmm2_get_directory()
 
 // NOTE: For now only kernel directory are linked. Nothing else
 //       is cloned / copied.
-page_directory_t* vmm2_clone_directory(page_directory_t* src)
-{
-    page_directory_t* dir = vmm2_create_pagedir();
-
-    for(int i = 0; i<1024; i++)
-    {
-        //Unnused tables are zeroed out. (A requirement!)
-        if(src->tables[i] != 0)
-        {
-            if(src->tables[i] == _kernel_dir->tables[i])
-            {
-                //Link
-                dir->tables[i] = _kernel_dir->tables[i];
-            }
-            // else
-            // {
-                //Copy ?
-                // Should the process get access to parent process
-                // memory?
-            // }
-        }
-    }
-
-    return dir;
-}
+// page_directory_t* vmm2_clone_directory(page_directory_t* src)
+// {
+//     page_directory_t* dir = vmm2_create_pagedir();
+//
+//     for(int i = 0; i<1024; i++)
+//     {
+//         //Unnused tables are zeroed out. (A requirement!)
+//         if(src->tables[i] != 0)
+//         {
+//             if(src->tables[i] == _kernel_dir->tables[i])
+//             {
+//                 //Link
+//                 dir->tables[i] = _kernel_dir->tables[i];
+//             }
+//             // else
+//             // {
+//                 //Copy ?
+//                 // Should the process get access to parent process
+//                 // memory?
+//             // }
+//         }
+//     }
+//
+//     return dir;
+// }
 
 page_directory_t* vmm2_create_directory()
 {
@@ -222,16 +222,6 @@ page_directory_t* vmm2_create_directory()
         }
     }
     return dir;
-}
-
-void vmm2_memcpy(void* dest, const void* src, uint32_t count, page_directory_t* destdir)
-{
-
-}
-
-void vmm2_memset(void *dest, char val, uint32_t count, page_directory_t* destdir)
-{
-    
 }
 
 void vmm2_pagefault_handler(cpu_registers_t* regs)

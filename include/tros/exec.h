@@ -6,5 +6,6 @@
     Executes a ELF32 file. (Creates a new process and its primary thread)
 */
 int exec_elf32(char* path, int argc, char** argv);
+int exec_file(char* path, int argc, char** argv);
 
 #endif

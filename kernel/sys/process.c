@@ -93,7 +93,7 @@ uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapsta
     proc->parent = process_get_current();
     proc->mailbox = mailbox_create();
     proc->heapend_addr = heapstart;
-    proc->started = 0;
+    proc->started = heapstart > 0 ? 0 : 1;
 
     if(num_proc > 0)
     {
@@ -122,6 +122,50 @@ uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapsta
     proc->regs.eip = proc->thread.instr_ptr;
     proc->regs.cr3 = (unsigned int)proc->pagedir->tables;
     proc->regs.esp = proc->thread.user_stack_ptr;
+    proc->regs.eflags = _current_process->regs.eflags;
+
+    _processes[num_proc++] = proc;
+    return proc->pid;
+}
+
+uint32_t process_exec(uint32_t startAddr, uint32_t ustack, uint32_t kstack, page_directory_t* pdir)
+{
+    process_t* proc = (process_t*)kmalloc(sizeof(process_t));
+    printk("Process PID %d at %x\n", num_proc, proc);
+    proc->pagedir = pdir;
+    proc->pid = num_proc;
+    proc->parent = process_get_current();
+    proc->mailbox = mailbox_create();
+    proc->heapend_addr = 0;
+    proc->started = 1;
+
+    if(num_proc > 0)
+    {
+        process_t* prev = _processes[num_proc-1];
+        proc->next = _processes[0];
+        prev->next = proc;
+    }
+    else
+    {
+        proc->next = proc; //loop
+    }
+
+    proc->thread.user_stack_ptr = ustack;
+    proc->thread.kernel_stack_ptr = kstack;
+
+    proc->thread.instr_ptr = startAddr;
+    proc->thread.priority = 1;
+    proc->thread.state = PROCESS_RUNNING;
+
+    proc->regs.eax = 0;
+    proc->regs.ebx = 0;
+    proc->regs.ecx = 0;
+    proc->regs.edx = 0;
+    proc->regs.esi = 0;
+    proc->regs.edi = 0;
+    proc->regs.eip = proc->thread.instr_ptr;
+    proc->regs.cr3 = (unsigned int)proc->pagedir->tables;
+    proc->regs.esp = proc->thread.kernel_stack_ptr;
     proc->regs.eflags = _current_process->regs.eflags;
 
     _processes[num_proc++] = proc;
