@@ -161,18 +161,18 @@ static int sys_readmessage(const void* data, uint32_t size)
     return -1;
 }
 
-static int sys_execute(const char* file, const char** argv)
+static int sys_execute(const char** arguments)
 {
     uint32_t pid = process_get_current()->pid;
 
-    printk("EXEC(%d): Trying to execute: %s\n", pid, file);
+    printk("EXEC(%d): Trying to execute: %s\n", pid, arguments[0]);
     int i = 0;
-    for(; argv[i] != 0 && i<10;i++)
+    for(; arguments[i] != 0 && i<10;i++)
     {
-        printk("EXEC(%d): Argument %d - %s\n", pid, i, argv[i]);
+        printk("EXEC(%d): Argument %d - %s\n", pid, i, arguments[i]);
     }
-
-    int retval = exec_file((char*)file, i, (char**)argv);
+    //NOTE: Check arguments and set some failover? (If no NULL is given)
+    int retval = process_create(i, (char**)arguments);
     printk("EXEC(%d): Complete with PID %d\n", pid, retval);
     return retval;
 }

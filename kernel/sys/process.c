@@ -2,6 +2,7 @@
 #include <tros/memory.h>
 #include <tros/tros.h>
 #include <tros/hal/tss.h>
+#include <tros/klib/kstring.h>
 
 
 #define PROC_STACK_SIZE 16384 //16K stack?
@@ -10,6 +11,8 @@ static process_t* _current_process = 0;
 
 static process_t* _processes[10]; //just 10 while testing..
 static unsigned int num_proc = 0;
+
+static void process_init();
 
 extern void enter_usermode(registers_t* reg, unsigned int location, unsigned int userstack);
 
@@ -84,6 +87,7 @@ void process_switchto(process_t* next)
     }
 }
 
+//TODO REMOVE
 uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir)
 {
     process_t* proc = (process_t*)kmalloc(sizeof(process_t));
@@ -94,6 +98,8 @@ uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapsta
     proc->mailbox = mailbox_create();
     proc->heapend_addr = heapstart;
     proc->started = heapstart > 0 ? 0 : 1;
+    proc->argc = 0;
+    proc->argv = 0;
 
     if(num_proc > 0)
     {
@@ -128,48 +134,79 @@ uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapsta
     return proc->pid;
 }
 
-uint32_t process_exec(uint32_t startAddr, uint32_t ustack, uint32_t kstack, page_directory_t* pdir)
+uint32_t process_create(int argc, char** argv)
 {
     process_t* proc = (process_t*)kmalloc(sizeof(process_t));
-    printk("Process PID %d at %x\n", num_proc, proc);
-    proc->pagedir = pdir;
-    proc->pid = num_proc;
-    proc->parent = process_get_current();
-    proc->mailbox = mailbox_create();
-    proc->heapend_addr = 0;
-    proc->started = 1;
-
-    if(num_proc > 0)
+    if(proc)
     {
-        process_t* prev = _processes[num_proc-1];
-        proc->next = _processes[0];
-        prev->next = proc;
+        printk("Process PID %d at %x\n", num_proc, proc);
+
+        proc->pagedir = vmm2_create_directory();
+        proc->pid = num_proc;
+        proc->parent = process_get_current();
+        proc->mailbox = mailbox_create();
+        proc->heapend_addr = 0;
+        proc->started = 1; //TODO REmove!
+
+        //Set up "round robin scheduling"
+        if(num_proc > 0)
+        {
+            process_t* prev = _processes[num_proc-1];
+            proc->next = _processes[0];
+            prev->next = proc;
+        }
+        else
+        {
+            proc->next = proc; //loop
+        }
+        _processes[num_proc++] = proc;
+
+        // Create a thread. (TODO: make a thread_create method)
+        // Stack is 1 block - 4K stack (TODO Increase to 16k?)
+        uint32_t ustackAddr = 0xBFFFC000; //16k below kernel
+        vmm2_map_todir(ustackAddr, 1, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE, proc->pagedir);
+        ustackAddr += (VMM2_BLOCK_SIZE - sizeof(unsigned int));
+
+        // Allocate some space to the kernel stack
+        uint32_t kstackAddr = (uint32_t)kmalloc(KERNEL_STACK_SIZE) + (KERNEL_STACK_SIZE - sizeof(uint32_t));
+
+        proc->thread.user_stack_ptr = ustackAddr;
+        proc->thread.kernel_stack_ptr = kstackAddr;
+        proc->thread.instr_ptr = (uint32_t)process_init;
+        proc->thread.priority = 1;
+        proc->thread.state = PROCESS_RUNNING;
+
+        //Initial register values
+        proc->regs.eax = 0;
+        proc->regs.ebx = 0;
+        proc->regs.ecx = 0;
+        proc->regs.edx = 0;
+        proc->regs.esi = 0;
+        proc->regs.edi = 0;
+        proc->regs.eip = proc->thread.instr_ptr;
+        proc->regs.cr3 = (unsigned int)proc->pagedir->tables;
+        proc->regs.esp = proc->thread.kernel_stack_ptr;     //kstack, since we are starting in the kernel
+        proc->regs.eflags = _current_process->regs.eflags;
+
+        //Set up and store initial arguments
+        proc->argc = argc;
+        proc->argv = 0;
+        if(argc > 0)
+        {
+            proc->argv = (char**)kmalloc(sizeof(char*)*argc);
+            for(int i = 0; i<argc; i++)
+            {
+                proc->argv[i] = (char*)kmalloc((sizeof(char) * strlen(argv[i]))+1);
+                strcpy(proc->argv[i], argv[i]);
+            }
+        }
+        return proc->pid;
     }
     else
     {
-        proc->next = proc; //loop
+        return -1;
     }
 
-    proc->thread.user_stack_ptr = ustack;
-    proc->thread.kernel_stack_ptr = kstack;
-
-    proc->thread.instr_ptr = startAddr;
-    proc->thread.priority = 1;
-    proc->thread.state = PROCESS_RUNNING;
-
-    proc->regs.eax = 0;
-    proc->regs.ebx = 0;
-    proc->regs.ecx = 0;
-    proc->regs.edx = 0;
-    proc->regs.esi = 0;
-    proc->regs.edi = 0;
-    proc->regs.eip = proc->thread.instr_ptr;
-    proc->regs.cr3 = (unsigned int)proc->pagedir->tables;
-    proc->regs.esp = proc->thread.kernel_stack_ptr;
-    proc->regs.eflags = _current_process->regs.eflags;
-
-    _processes[num_proc++] = proc;
-    return proc->pid;
 }
 
 void process_create_idle(void (*main)())
@@ -186,6 +223,8 @@ void process_create_idle(void (*main)())
         idleproc->started = 1;
         idleproc->mailbox = 0;
         idleproc->heapend_addr = PROCESS_MEM_START;
+        idleproc->argc = 0;
+        idleproc->argv = 0;
 
         idleproc->thread.user_stack_ptr = 0;
         //16 kbyte stack, starts at location 16-4 = 12
@@ -252,4 +291,30 @@ void process_set_state(process_t* p, process_state_t s)
 void process_dispose(process_t* p)
 {
     process_set_state(p, PROCESS_SLEEPING);
+}
+
+void process_init()
+{
+    //WIP: exec_elf32_user
+    process_t* proc = process_get_current();
+    if(proc->argc > 0)
+    {
+        printk("PID: %d File: %s with %d arguments\n",
+            proc->pid,
+            proc->argv[0],
+            proc->argc);
+
+            
+
+        while(1)
+        {
+            process_dispose(proc);
+            __asm("sti");
+            __asm("hlt;");
+        }
+    }
+    else
+    {
+        process_dispose(proc);
+    }
 }

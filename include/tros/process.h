@@ -51,7 +51,9 @@ typedef struct process
     mailbox_t* mailbox;
     uint32_t pid;
     uint32_t heapend_addr;
-    uint8_t started;
+    uint8_t started;    //TODO REMOVE?
+    char** argv;
+    int argc;
 } process_t;
 
 extern void process_switch(registers_t* old, registers_t* new);
@@ -63,7 +65,7 @@ void process_switchto(process_t* next);
 void process_create_idle(void (*main)());
 
 uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir);
-uint32_t process_exec(uint32_t startAddr, uint32_t ustack, uint32_t kstack, page_directory_t* pdir);
+uint32_t process_create(int argc, char** argv);
 void process_dispose(process_t* p);
 
 process_t* process_get_current();

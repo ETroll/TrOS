@@ -51,7 +51,7 @@ int syscall_##fn(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) \
 //Processes
 DEFN_SYSCALL0(getpid, 0);
 DEFN_SYSCALL0(getparentpid, 8);
-DEFN_SYSCALL2(execute, 12, char*, char**);
+DEFN_SYSCALL1(execute, 12, char**);
 DEFN_SYSCALL1(exit, 13, unsigned int);
 
 //Devices

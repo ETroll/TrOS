@@ -64,7 +64,7 @@ void btn_execute_clicked()
         NULL
     };
     syslog_log(1, SYSLOG_INFO, "Trying to execute file: %s", argv[0]);
-    int retval = syscall_execute(argv[0], argv);
+    int retval = syscall_execute(argv);
     syslog_log(1, SYSLOG_INFO, "syscall_execute returned %d", retval);
 }
 

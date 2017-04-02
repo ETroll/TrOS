@@ -14,7 +14,7 @@
 //Processes
 DECL_SYSCALL0(getpid);
 DECL_SYSCALL0(getparentpid);
-DECL_SYSCALL2(execute, char*, char**);
+DECL_SYSCALL1(execute, char**);
 DECL_SYSCALL1(exit, unsigned int);
 
 //Devices
