@@ -5,7 +5,6 @@
 #include <tros/timer.h>
 #include <tros/irq.h>
 #include <tros/fs/vfs.h>
-#include <tros/exec.h>
 #include <tros/memory.h>
 #include <tros/hwdetect.h>
 #include <tros/sys/multiboot.h>
@@ -117,7 +116,7 @@ void kernel_idle()
     {
         "/fd0/trell"
     };
-    uint32_t pid = exec_elf32(argv[0], 1, argv);
+    uint32_t pid = process_create(1, argv);
     printk("Started Trell at PID: %d\n", pid);
 
     while(1)

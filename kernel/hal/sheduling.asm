@@ -15,6 +15,9 @@ enter_usermode:
     push eax
 
     mov eax, [ebp+8]
+    cmp eax, 0
+    je .usermode
+
     mov [eax+4], ebx
     mov [eax+8], ecx
     mov [eax+12], edx
@@ -42,30 +45,30 @@ enter_usermode:
 
     ; ----- Done saving state
     ; Now on to the important bits
+    .usermode:
+        mov esp, [ebp+16] ; Set the new stack for the new application to be used
+                          ; from here on now
+        mov ax, 0x23 ; User mode data selector is 0x20 (GDT entry 3). Also sets RPL to 3 (so 0x23)
+        mov ds, ax
+        mov es, ax
+        mov fs, ax
+        mov gs, ax
 
-    mov esp, [ebp+16] ; Set the new stack for the new application to be used
-                      ; from here on now
-    mov ax, 0x23 ; User mode data selector is 0x20 (GDT entry 3). Also sets RPL to 3 (so 0x23)
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+        mov eax, esp
 
-    mov eax, esp
+        push 0x23       ; SS, notice it uses same selector as above
+        push eax        ; ESP
+        pushfd          ; EFLAGS (note pushfd is 32bit, pushf is 64bit "safe")
 
-    push 0x23       ; SS, notice it uses same selector as above
-    push eax        ; ESP
-    pushfd          ; EFLAGS (note pushfd is 32bit, pushf is 64bit "safe")
+        ; Lets "fix" some flags
+        pop eax
+        or eax, 0x200   ; enable IF in EFLAGS
+        push eax
+        push 0x1b       ; CS, user mode code selector is 0x18. With RPL 3 this is 0x1b
 
-    ; Lets "fix" some flags
-    pop eax
-    or eax, 0x200   ; enable IF in EFLAGS
-    push eax
-    push 0x1b       ; CS, user mode code selector is 0x18. With RPL 3 this is 0x1b
-
-    ; Lets push our new entry point to be used when it "returns" when performing the iret
-    push dword [ebp+12] ;note 32 bit address size "hardcoded"
-    iret
+        ; Lets push our new entry point to be used when it "returns" when performing the iret
+        push dword [ebp+12] ;note 32 bit address size "hardcoded"
+        iret
 
 global tss_flush
 tss_flush:

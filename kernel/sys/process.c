@@ -3,6 +3,7 @@
 #include <tros/tros.h>
 #include <tros/hal/tss.h>
 #include <tros/klib/kstring.h>
+#include <tros/elf.h>
 
 
 #define PROC_STACK_SIZE 16384 //16K stack?
@@ -64,74 +65,14 @@ void process_switchto(process_t* next)
     process_t *prev = _current_process;
     _current_process = next;
     _current_process->thread.state = PROCESS_RUNNING;
-    if(_current_process->started)
-    {
-        printk(" Switching to PID %d\n", _current_process->pid);
-        printk("              EIP %x\n", _current_process->regs.eip);
-        printk("              ESP %x\n", _current_process->regs.esp);
-        process_switch(&prev->regs, &_current_process->regs);
-    }
-    else
-    {
-        printk(" Saving state for PID: %d\n", prev->pid);
-        printk("                  EIP: %x\n", prev->regs.eip);
-        printk("                  ESP: %x\n", prev->regs.esp);
-        // process_savestate(&prev->regs);
-        printk(" Starting PID %d for the first time\n", _current_process->pid);
-        _current_process->started = 1;
-        // tss_set_ring0_stack(0x10, next->thread.kernel_stack_ptr);
-        enter_usermode(&prev->regs,
-            _current_process->thread.instr_ptr,
-            _current_process->thread.user_stack_ptr);
-        printk("WOOT WOOT! I Have returned!\n");
-    }
-}
 
-//TODO REMOVE
-uint32_t process_exec_user(uint32_t startAddr, uint32_t ustack, uint32_t heapstart, uint32_t kstack, page_directory_t* pdir)
-{
-    process_t* proc = (process_t*)kmalloc(sizeof(process_t));
-    printk("Process PID %d at %x\n", num_proc, proc);
-    proc->pagedir = pdir;
-    proc->pid = num_proc;
-    proc->parent = process_get_current();
-    proc->mailbox = mailbox_create();
-    proc->heapend_addr = heapstart;
-    proc->started = heapstart > 0 ? 0 : 1;
-    proc->argc = 0;
-    proc->argv = 0;
+    printk("Switching to PID %d\n", _current_process->pid);
+    printk("             EIP %x\n", _current_process->regs.eip);
+    printk("             ESP %x\n", _current_process->regs.esp);
+    printk("             CR3 %x\n", _current_process->regs.cr3);
+    vmm2_set_directory(_current_process->pagedir);
+    process_switch(&prev->regs, &_current_process->regs);
 
-    if(num_proc > 0)
-    {
-        process_t* prev = _processes[num_proc-1];
-        proc->next = _processes[0];
-        prev->next = proc;
-    }
-    else
-    {
-        proc->next = proc; //loop
-    }
-
-    proc->thread.user_stack_ptr = ustack;
-    proc->thread.kernel_stack_ptr = kstack;
-
-    proc->thread.instr_ptr = startAddr;
-    proc->thread.priority = 1;
-    proc->thread.state = PROCESS_RUNNING;
-
-    proc->regs.eax = 0;
-    proc->regs.ebx = 0;
-    proc->regs.ecx = 0;
-    proc->regs.edx = 0;
-    proc->regs.esi = 0;
-    proc->regs.edi = 0;
-    proc->regs.eip = proc->thread.instr_ptr;
-    proc->regs.cr3 = (unsigned int)proc->pagedir->tables;
-    proc->regs.esp = proc->thread.user_stack_ptr;
-    proc->regs.eflags = _current_process->regs.eflags;
-
-    _processes[num_proc++] = proc;
-    return proc->pid;
 }
 
 uint32_t process_create(int argc, char** argv)
@@ -142,11 +83,11 @@ uint32_t process_create(int argc, char** argv)
         printk("Process PID %d at %x\n", num_proc, proc);
 
         proc->pagedir = vmm2_create_directory();
+        printk("Creating pagedir %x\n", proc->pagedir);
         proc->pid = num_proc;
         proc->parent = process_get_current();
         proc->mailbox = mailbox_create();
-        proc->heapend_addr = 0;
-        proc->started = 1; //TODO REmove!
+        proc->heapend_addr = PROCESS_MEM_START;
 
         //Set up "round robin scheduling"
         if(num_proc > 0)
@@ -220,7 +161,6 @@ void process_create_idle(void (*main)())
         idleproc->next = idleproc; //loop
         idleproc->pid = num_proc;
         idleproc->parent = 0;
-        idleproc->started = 1;
         idleproc->mailbox = 0;
         idleproc->heapend_addr = PROCESS_MEM_START;
         idleproc->argc = 0;
@@ -295,26 +235,32 @@ void process_dispose(process_t* p)
 
 void process_init()
 {
-    //WIP: exec_elf32_user
     process_t* proc = process_get_current();
+    printk("Process Init procedure called for PID: %d\n", proc->pid);
     if(proc->argc > 0)
     {
-        printk("PID: %d File: %s with %d arguments\n",
-            proc->pid,
+        printk("Executing file: %s with %d arguments CR3 %x\n",
             proc->argv[0],
-            proc->argc);
+            proc->argc,
+            vmm2_get_directory());
 
-            
+        proc->heapend_addr = elf32_load(proc->argv[0], &proc->thread.instr_ptr);
 
-        while(1)
+        if(proc->thread.instr_ptr > 0 && proc->heapend_addr > PROCESS_MEM_START)
         {
-            process_dispose(proc);
-            __asm("sti");
-            __asm("hlt;");
+            //TODO: Preload userland stack with arguments!
+
+            enter_usermode(0,
+                proc->thread.instr_ptr,
+                proc->thread.user_stack_ptr);
+        }
+        else
+        {
+            printk("ERROR! instr_ptr: %x heapend_addr: %x\n",
+                proc->thread.instr_ptr,
+                proc->heapend_addr);
         }
     }
-    else
-    {
-        process_dispose(proc);
-    }
+    //We have somehow failed, lets kill the process
+    process_dispose(proc);
 }

@@ -1,6 +1,8 @@
 #ifndef INCLUDE_TROS_ELF_H
 #define INCLUDE_TROS_ELF_H
 
+#include <stdint.h>
+
 typedef unsigned char Elf32_Flag;
 typedef unsigned short Elf32_Half;
 typedef unsigned int Elf32_Word;
@@ -74,5 +76,7 @@ enum Elf32_ProgramEntryType {
     ELF32_PT_LOPROC,
     ELF32_PT_HIPROC
 };
+
+uint32_t elf32_load(char* path, uint32_t* startAddr);
 
 #endif

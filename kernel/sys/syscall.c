@@ -3,7 +3,6 @@
 #include <tros/driver.h>
 #include <tros/tros.h>
 #include <tros/process.h>
-#include <tros/exec.h>
 #include <stdint.h>
 
 //NOTE: Maybe move each syscall into own file in a folder?

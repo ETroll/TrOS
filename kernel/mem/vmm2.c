@@ -180,7 +180,15 @@ vmm2_status_t vmm2_switch_pagedir(page_directory_t* dir)
 
 page_directory_t* vmm2_get_directory()
 {
+    //TODO. Replace with read from CR3
+    //      Also discontiue use of _current_dir
+    //      so we dont have to track it!
     return _current_dir;
+}
+
+void vmm2_set_directory(page_directory_t* dir)
+{
+    _current_dir = dir;
 }
 
 // NOTE: For now only kernel directory are linked. Nothing else
