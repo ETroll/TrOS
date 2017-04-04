@@ -8,7 +8,7 @@
 #include <tros/mem/vmm2.h>
 #include <tros/mailbox.h>
 
-#define PROCESS_MEM_START 0x200000
+#define PROCESS_MEM_START 0x400000
 
 typedef enum {
     PROCESS_RUNNING = 0x1,

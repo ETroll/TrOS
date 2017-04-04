@@ -37,7 +37,7 @@ OBJECTS_ALL += $(OBJECTS_GCC)
 all: clean $(LIST)
 
 $(LIST) : $(TARGET)
-	$(TOOLCHAIN)i386-elf-objdump -D $(DIR_BUILD)$(TARGET) > $(DIR_OBJECT)/$(LIST)
+	$(TOOLCHAIN)i386-elf-objdump -M intel -D $(DIR_BUILD)$(TARGET) > $(DIR_OBJECT)/$(LIST)
 	$(TOOLCHAIN)i386-elf-strip --strip-unneeded $(DIR_BUILD)$(TARGET)
 
 $(TARGET): $(DIR_BUILD) $(OBJECTS_AS) $(OBJECTS_GCC)

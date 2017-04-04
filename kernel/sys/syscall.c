@@ -11,10 +11,16 @@
 static void* _syscalls[MAX_SYSCALL];
 //static void syscall_dispatcher(cpu_registers_t *regs);
 
+extern uint32_t paging_get_CR3();
+
 static int sys_debug(unsigned int method)
 {
     uint32_t pid = process_get_current()->pid;
     printk("DEBUG(%d): Data %x\n", pid, method);
+    if(method == 0x1)
+    {
+        return paging_get_CR3();
+    }
     return method;
 }
 

@@ -25,6 +25,7 @@ OBJECTS_GCC := $(patsubst %.c, $(DIR_OBJECT)%.o, $(SRC_GCC))
 OBJECTS_ALL += $(OBJECTS_GCC)
 
 all: $(TARGET)
+	$(TOOLCHAIN)i386-elf-objdump -M intel -D $(DIR_BUILD)$(TARGET) > $(DIR_OBJECT)/$(TARGET).list
 	# $(TOOLCHAIN)i386-elf-strip --strip-unneeded $(DIR_BUILD)$(TARGET)
 
 $(TARGET): $(DIR_BUILD) $(OBJECTS_GCC)

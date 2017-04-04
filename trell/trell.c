@@ -39,6 +39,9 @@ int main()
 
         int32_t kbd = syscall_opendevice("kbd");
 
+        int32_t cr3 = syscall_debug(0x1);
+        syslog_log(1, SYSLOG_INFO, "CR3 %x", cr3);
+
         while(1)
         {
             int key = 0;

@@ -66,13 +66,14 @@ void process_switchto(process_t* next)
     _current_process = next;
     _current_process->thread.state = PROCESS_RUNNING;
 
-    printk("Switching to PID %d\n", _current_process->pid);
-    printk("             EIP %x\n", _current_process->regs.eip);
-    printk("             ESP %x\n", _current_process->regs.esp);
-    printk("             CR3 %x\n", _current_process->regs.cr3);
-    vmm2_set_directory(_current_process->pagedir);
-    process_switch(&prev->regs, &_current_process->regs);
+    // printk("Switching to PID %d\n", _current_process->pid);
+    // printk("             EIP %x\n", _current_process->regs.eip);
+    // printk("             ESP %x\n", _current_process->regs.esp);
+    // printk("          Kstack %x (%d bytes used)\n", _current_process->thread.kernel_stack_ptr, _current_process->thread.kernel_stack_ptr-_current_process->regs.esp);
+    // printk("             CR3 %x\n", _current_process->regs.cr3);
+    // printk("             CR3 %x\n", _current_process->pagedir);
 
+    process_switch(&prev->regs, &_current_process->regs);
 }
 
 uint32_t process_create(int argc, char** argv)
@@ -80,10 +81,7 @@ uint32_t process_create(int argc, char** argv)
     process_t* proc = (process_t*)kmalloc(sizeof(process_t));
     if(proc)
     {
-        printk("Process PID %d at %x\n", num_proc, proc);
-
         proc->pagedir = vmm2_create_directory();
-        printk("Creating pagedir %x\n", proc->pagedir);
         proc->pid = num_proc;
         proc->parent = process_get_current();
         proc->mailbox = mailbox_create();
@@ -156,7 +154,7 @@ void process_create_idle(void (*main)())
     if(_current_process == 0)
     {
         process_t* idleproc = (process_t*)kmalloc(sizeof(process_t));
-        printk("Process PID %d at %x (%x)\n", num_proc, idleproc, main);
+        // printk("Process PID %d at %x (%x)\n", num_proc, idleproc, main);
         idleproc->pagedir = vmm2_get_directory();
         idleproc->next = idleproc; //loop
         idleproc->pid = num_proc;
@@ -249,7 +247,6 @@ void process_init()
         if(proc->thread.instr_ptr > 0 && proc->heapend_addr > PROCESS_MEM_START)
         {
             //TODO: Preload userland stack with arguments!
-
             enter_usermode(0,
                 proc->thread.instr_ptr,
                 proc->thread.user_stack_ptr);

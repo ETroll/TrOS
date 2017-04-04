@@ -22,11 +22,12 @@
 #define KERNEL_VIRTUAL  0xC0000000
 
 static page_directory_t* _kernel_dir = 0;
-static page_directory_t* _current_dir = 0;
+// static page_directory_t* _current_dir = 0;
 
 extern int paging_is_enabled();
 extern void paging_enable(int enable);
 extern void paging_set_CR3(uint32_t phys);
+extern page_directory_t* paging_get_CR3();
 
 void vmm2_pagefault_handler(cpu_registers_t* regs);
 void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags, page_directory_t* dir);
@@ -42,21 +43,20 @@ vmm2_status_t vmm2_initialize(uint32_t stack, uint32_t size, uint32_t regionMapL
     //VMM Init!
     // - Set up kernel directory and use it as current
     _kernel_dir = vmm2_create_pagedir();
-    _current_dir = _kernel_dir;
 
     // - Identitymap 0->0x100000
-    vmm2_identitymap(0x00000000, 256, VMM2_PAGE_WRITABLE); //1Mb (256 blocks)
+    vmm2_identitymap_todir(0x00000000, 256, VMM2_PAGE_WRITABLE, _kernel_dir); //1Mb (256 blocks)
 
     // - Map kernel physical to kernel virtual (4Mb)
     // NOTE: All is writable, even .DATA and .BSS
     //       Next bootloader should send us info about these sections!
-    vmm2_physicalmap(KERNEL_PHYSICAL, KERNEL_VIRTUAL, 1024, VMM2_PAGE_WRITABLE);
+    vmm2_physicalmap_todir(KERNEL_PHYSICAL, KERNEL_VIRTUAL, 1024, VMM2_PAGE_WRITABLE, _kernel_dir);
 
     // - Register page fault handler
     irq_register_handler(14, vmm2_pagefault_handler);
 
     // - Swap out the page directory from bootlader!
-    if(vmm2_switch_pagedir(_current_dir))
+    if(vmm2_switch_pagedir(_kernel_dir))
     {
         if(!paging_is_enabled())
         {
@@ -83,7 +83,7 @@ void vmm2_identitymap_todir(uint32_t phys, uint32_t blocks, uint32_t flags, page
 
 void vmm2_physicalmap(uint32_t phys, virtual_addr_t virt, uint32_t blocks, uint32_t flags)
 {
-    vmm2_physicalmap_todir(phys, virt, blocks, flags, _current_dir);
+    vmm2_physicalmap_todir(phys, virt, blocks, flags, paging_get_CR3());
 }
 
 void vmm2_physicalmap_todir(uint32_t phys, virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_directory_t* dir)
@@ -101,7 +101,7 @@ void vmm2_physicalmap_todir(uint32_t phys, virtual_addr_t virt, uint32_t blocks,
 
 void vmm2_map(virtual_addr_t virt, uint32_t blocks, uint32_t flags)
 {
-    vmm2_map_todir(virt, blocks, flags, _current_dir);
+    vmm2_map_todir(virt, blocks, flags, paging_get_CR3());
 }
 
 void vmm2_map_todir(virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_directory_t* dir)
@@ -111,6 +111,7 @@ void vmm2_map_todir(virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_d
     for (uint32_t addr=virt; addr < endAddr; addr+=VMM2_BLOCK_SIZE)
     {
         uint32_t phys_addr = (uint32_t)pmm_alloc_block();
+        // printk("Mapping %x to phys %x\n", addr, phys_addr);
         vmm2_map_block(phys_addr, addr, flags, dir);
     }
 }
@@ -118,7 +119,7 @@ void vmm2_map_todir(virtual_addr_t virt, uint32_t blocks, uint32_t flags, page_d
 void vmm2_map_block(uint32_t phys, virtual_addr_t virt, uint32_t flags, page_directory_t* dir)
 {
     uint32_t* page_table = vmm2_get_pagetable(virt, dir, 1);
-    //printk("Mapping: %x to %x (%x)\n", phys, virt, page_table);
+    // printk("Mapping: %x to %x (%x)\n", phys, virt, page_table);
 
     //Set flags.
     *page_table |= flags;
@@ -151,7 +152,7 @@ uint32_t* vmm2_get_pagetable(virtual_addr_t virt, page_directory_t* dir, uint32_
 #ifdef _USER_DEBUG
         *page_table |= VMM2_PAGE_USER;
 #endif
-        // printk("Created new page table for index: %d virt: %x\n", DIRECTORY_INDEX(virt), virt);
+        // printk("Created new page table (%x) for index: %d virt: %x\n", page_table, DIRECTORY_INDEX(virt), virt);
     }
     return page_table;
 }
@@ -172,7 +173,6 @@ vmm2_status_t vmm2_switch_pagedir(page_directory_t* dir)
     }
     else
     {
-        _current_dir = dir;
         paging_set_CR3((uint32_t)&dir->tables);
         return VMM2_OK;
     }
@@ -180,48 +180,17 @@ vmm2_status_t vmm2_switch_pagedir(page_directory_t* dir)
 
 page_directory_t* vmm2_get_directory()
 {
-    //TODO. Replace with read from CR3
-    //      Also discontiue use of _current_dir
-    //      so we dont have to track it!
-    return _current_dir;
+    return paging_get_CR3();
 }
-
-void vmm2_set_directory(page_directory_t* dir)
-{
-    _current_dir = dir;
-}
-
-// NOTE: For now only kernel directory are linked. Nothing else
-//       is cloned / copied.
-// page_directory_t* vmm2_clone_directory(page_directory_t* src)
-// {
-//     page_directory_t* dir = vmm2_create_pagedir();
-//
-//     for(int i = 0; i<1024; i++)
-//     {
-//         //Unnused tables are zeroed out. (A requirement!)
-//         if(src->tables[i] != 0)
-//         {
-//             if(src->tables[i] == _kernel_dir->tables[i])
-//             {
-//                 //Link
-//                 dir->tables[i] = _kernel_dir->tables[i];
-//             }
-//             // else
-//             // {
-//                 //Copy ?
-//                 // Should the process get access to parent process
-//                 // memory?
-//             // }
-//         }
-//     }
-//
-//     return dir;
-// }
 
 page_directory_t* vmm2_create_directory()
 {
     page_directory_t* dir = vmm2_create_pagedir();
+
+    //NOTE: When linking index 1 (first 4mb) we are linking the identitymap
+    //      used by the kernel. We only need and have1mb identity mapped. The
+    //      other 3mb is "wasted". Consider "re-identity-mapping" the 1mb instead?
+
     for(int i = 0; i<1024; i++)
     {
         if(_kernel_dir->tables[i] != 0)
@@ -229,6 +198,7 @@ page_directory_t* vmm2_create_directory()
             dir->tables[i] = _kernel_dir->tables[i];
         }
     }
+
     return dir;
 }
 
@@ -261,8 +231,8 @@ void vmm2_pagefault_handler(cpu_registers_t* regs)
     }
     printk(") at %x\n", faulting_address);
     printk("------------------------------------------------\n");
-
-    page_entry_t* page_table = (page_entry_t*)&_current_dir->tables[DIRECTORY_INDEX(faulting_address)];
+    page_directory_t* pagedir = paging_get_CR3();
+    page_entry_t* page_table = (page_entry_t*)&pagedir->tables[DIRECTORY_INDEX(faulting_address)];
     printk("TYPE       | INDEX | PRESENT | WRITABLE | USER\n");
     printk("Directory  | %d     | %s     | %s       | %s\n",
         DIRECTORY_INDEX(faulting_address),

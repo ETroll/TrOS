@@ -1,6 +1,8 @@
 #include <tros/tros.h>
 #define FLAGSET(var,pos) ((var >> pos) & 0x01)
 
+extern unsigned int paging_get_CR3();
+
 void kernel_panic(const char* message, cpu_registers_t* regs)
 {
     //TODO: Create a more visible panic message using VGA..
@@ -8,9 +10,10 @@ void kernel_panic(const char* message, cpu_registers_t* regs)
 
     if(regs != 0)
     {
+        unsigned int cr3 = paging_get_CR3();
         printk("Registers:\n");
-        printk("EAX=%x EBX=%x ECX=%x EDX=%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
-        printk("ESP=%x EBP=%x EIP=%x\n", regs->esp, regs->ebp, regs->eip);
+        printk("EAX: %x EBX: %x ECX: %x EDX: %x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
+        printk("ESP: %x EBP: %x EIP: %x CR3: %x\n", regs->esp, regs->ebp, regs->eip, cr3);
         printk("Error code: %x\n", regs->err_code);
         printk("User ESP:   %x\n", regs->useresp);
         printk("#-EFLAGS----%x---------------------------------#\n",  regs->eflags);

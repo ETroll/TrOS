@@ -11,6 +11,9 @@ int main(int argc, char* argv[])
     // {
     //     syscall_debug((unsigned int)argv[i]);
     // }
+    int pid = syscall_getpid();
+    syscall_debug(pid);
+
     syscall_exit(1);
     return 0;
 }
