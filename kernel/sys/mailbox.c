@@ -110,7 +110,7 @@ mailbox_message_t* mailbox_message_create(uint32_t sender, const void* payload,
         message->size = size;
         message->senderpid = sender;
         message->payload = kmalloc(size);
-        memcpy((void*)payload, message->payload, size);
+        memcpy(message->payload, (void*)payload, size);
         message->reciept = flags & 0x01;
         message->next = 0;
     }

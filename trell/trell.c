@@ -45,6 +45,13 @@ int main()
         while(1)
         {
             int key = 0;
+            char buffer[20];
+
+            if(syscall_readmessage(buffer, 20, 0) > 0)
+            {
+                syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
+            }
+
             syscall_readdevice(kbd, &key, 1);
 
             if(key >= KEY_F1 && key < KEY_F9)

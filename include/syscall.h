@@ -28,6 +28,10 @@ DECL_SYSCALL3(ioctl, unsigned int, unsigned int, unsigned int);
 DECL_SYSCALL1(increasemem, unsigned int);
 DECL_SYSCALL1(decreasemem, unsigned int);
 
+//Messagequeues
+DECL_SYSCALL4(sendmessage, unsigned int, const void*, unsigned int, unsigned int);
+DECL_SYSCALL3(readmessage, const void*, unsigned int, unsigned int);
+
 DECL_SYSCALL1(debug, unsigned int);
 
 #endif

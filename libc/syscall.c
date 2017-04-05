@@ -65,5 +65,10 @@ DEFN_SYSCALL3(ioctl, 5, unsigned int, unsigned int, unsigned int);
 DEFN_SYSCALL1(increasemem, 9, unsigned int);
 DEFN_SYSCALL1(decreasemem, 10, unsigned int);
 
+//Messagequeues
+DEFN_SYSCALL4(sendmessage, 6, unsigned int, const void*, unsigned int, unsigned int);
+DEFN_SYSCALL3(readmessage, 7, const void*, unsigned int, unsigned int);
+
+
 //Other temoporary or debug calls:
 DEFN_SYSCALL1(debug, 11, unsigned int);

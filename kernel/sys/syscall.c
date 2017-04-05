@@ -150,6 +150,7 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
 
     if(reciever && sender)
     {
+        printk("sys_sendmessage Payload (%d): %s\n", size, data);
         mailbox_message_t* message = mailbox_message_create(sender->pid, data, size, flags);
         if(message)
         {
@@ -160,9 +161,26 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
     return -1;
 }
 
-static int sys_readmessage(const void* data, uint32_t size)
+static int sys_readmessage(const void* data, uint32_t size, uint32_t flags)
 {
-    //WIP sys_readmessage
+    process_t* proc = process_get_current();
+
+    mailbox_message_t* message = mailbox_pop(proc->mailbox);
+    if(message != 0)
+    {
+        uint32_t sizetoread = size;
+        if(size > message->size)
+        {
+            sizetoread = message->size;
+        }
+
+        printk("sys_readmessage Payload (%d): %s\n",sizetoread, message->payload);
+        memcpy(data, message->payload, sizetoread);
+
+        mailbox_message_dispose(message);
+
+        return sizetoread; //TODO: replace with real read num
+    }
     return -1;
 }
 
