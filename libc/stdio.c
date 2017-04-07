@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <syscall.h>
+#include <trlib/system.h>
 
 //&str, putcp, format, va);
 static void stdio_format(void* out, int (*putc) (char, void*), char* str, va_list va);
@@ -156,7 +156,7 @@ void vsprintf(char* str, char* format, va_list va)
 
 int fputc (char character, void* file)
 {
-    return syscall_writedevice(*(int*)file, &character,1);
+    return device_writedata(*(int*)file, &character,1);
 }
 
 int fputs (const char* str, void* file )

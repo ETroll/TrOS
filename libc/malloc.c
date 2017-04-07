@@ -1,5 +1,6 @@
 
-#include <syscall.h>
+#include <trlib/syscall.h>
+#include <trlib/system.h>
 
 #define BLOCK_SIZE  4096
 #define CHUNK_ID    0xDADABAAD
@@ -94,7 +95,7 @@ void free(void* ptr)
     }
     else
     {
-        //TODO: exit syscall! Trying to free unallocated memory
+        system_exit(-2);
     }
 }
 

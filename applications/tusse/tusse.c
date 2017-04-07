@@ -1,27 +1,28 @@
 #include <stdio.h>
-#include <syscall.h>
 #include <string.h>
+#include <trlib/system.h>
+#include <trlib/mq.h>
 
 file_t* stdout = NULL;
 file_t* stdin = NULL;
 
 int main(int argc, char* argv[])
 {
-    syscall_debug(0xAABBCCDD);
+    system_debug(DEBUG_NOP);
     // for(int i = 0; i<argc; i++)
     // {
-    //     syscall_debug((unsigned int)argv[i]);
+    //     system_debug((unsigned int)argv[i]);
     // }
-    int pid = syscall_getpid();
-    int parent = syscall_getparentpid();
+    int pid = system_pid();
+    int parent = system_parentpid();
 
-    syscall_debug(pid);
-    syscall_debug(parent);
+    system_debug(pid);
+    system_debug(parent);
 
     char* data = "Hello parent!";
 
-    syscall_sendmessage(parent, data, strlen(data), 0);
+    mq_send(parent, data, strlen(data), 0);
 
-    syscall_exit(1);
+    system_exit(1);
     return 0;
 }

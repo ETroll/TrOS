@@ -1,6 +1,9 @@
+
+#include <trlib/device.h>
+#include <trlib/system.h>
+#include <trlib/mq.h>
 #include <stdio.h>
 #include <string.h>
-#include <syscall.h>
 #include <keycodes.h>
 #include "ui/ui.h"
 #include "ui/list.h"
@@ -37,9 +40,9 @@ int main()
         ui_desktop_set_activewindow(desktop, showcase);
         ui_redraw(desktop);
 
-        int32_t kbd = syscall_opendevice("kbd");
+        device_t kbd = device_open("kbd");
 
-        int32_t cr3 = syscall_debug(0x1);
+        int32_t cr3 = system_debug(DEBUG_CR3);
         syslog_log(1, SYSLOG_INFO, "CR3 %x", cr3);
 
         while(1)
@@ -47,12 +50,12 @@ int main()
             int key = 0;
             char buffer[20];
 
-            if(syscall_readmessage(buffer, 20, 0) > 0)
+            if(mq_recv(buffer, 20, MQ_NOFLAGS) > 0)
             {
                 syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
             }
 
-            syscall_readdevice(kbd, &key, 1);
+            device_readdata(kbd, &key, 1);
 
             if(key >= KEY_F1 && key < KEY_F9)
             {

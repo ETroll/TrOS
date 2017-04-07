@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <syscall.h>
+#include <trlib/system.h>
 #include "showcase.h"
 #include "syslog.h"
 #include "../ui/ui_textbox.h"
@@ -64,9 +64,9 @@ void btn_execute_clicked()
         NULL
     };
     syslog_log(1, SYSLOG_INFO, "Trying to execute file: %s", argv[0]);
-    int retval = syscall_execute(argv);
+    int retval = system_execute(argv);
     ui_label_set_text(label, "Executed file!");
-    syslog_log(1, SYSLOG_INFO, "syscall_execute returned %d", retval);
+    syslog_log(1, SYSLOG_INFO, "system_execute returned %d", retval);
 }
 
 void btn_newwin_clicked()

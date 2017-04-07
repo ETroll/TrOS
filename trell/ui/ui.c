@@ -1,4 +1,4 @@
-#include <syscall.h>
+#include <trlib/device.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +32,7 @@ static ui_menu_t* ui_menu_create(char* text);
 ui_context_t* ui_context_create(char* devicename)
 {
     ui_context_t* context = NULL;
-    int32_t vga = syscall_opendevice(devicename);
+    device_t vga = device_open(devicename);
 
     if(vga)
     {
@@ -42,9 +42,9 @@ ui_context_t* ui_context_create(char* devicename)
         context->height = FRAME_ROWS;
         context->buffer = (ui_cell_t*)malloc(sizeof(ui_cell_t) * FRAME_COLS * FRAME_ROWS);
 
-        syscall_ioctl(vga, IOCTL_VGA_TOGGLE_CURSOR, 0);
-        syscall_ioctl(vga, IOCTL_VGA_COLOR, COLOR(UI_WHITE, UI_LIGHT_RED));
-        syscall_ioctl(vga, IOCTL_VGA_CLEAR_MEM, 0);
+        device_command(vga, IOCTL_VGA_TOGGLE_CURSOR, 0);
+        device_command(vga, IOCTL_VGA_COLOR, COLOR(UI_WHITE, UI_LIGHT_RED));
+        device_command(vga, IOCTL_VGA_CLEAR_MEM, 0);
 
 
         for(uint32_t i = 0; i<FRAME_COLS * FRAME_ROWS; i++)
@@ -396,7 +396,7 @@ void ui_context_flush(ui_context_t* context)
                 char combinedColor = COLOR(cell->frontcolor, cell->backcolor);
                 int data = x << 24 | (y & 0xFF) << 16 | ((combinedColor & 0xFF) << 8)
                             | (cell->data & 0xFF);
-                syscall_writedevice(context->device, &data, 1);
+                device_writedata(context->device, &data, 1);
                 cell->dirty = FALSE;
             }
         }

@@ -19,7 +19,6 @@
 #endif
 
 typedef int file_t;
-typedef int device_t;
 
 extern file_t* stdout;
 extern file_t* stdin;

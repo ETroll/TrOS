@@ -1,4 +1,4 @@
-#include <syscall.h>
+#include <trlib/syscall.h>
 
 #define DEFN_SYSCALL0(fn, num) \
 int syscall_##fn() \
