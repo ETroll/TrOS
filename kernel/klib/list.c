@@ -5,94 +5,114 @@
 #include <tros/memory.h>
 
 
-void list_add_front(list_t* list, void* data)
+static list_node_t* list_node_at(list_t* list, unsigned int index);
+
+list_t* list_create()
 {
-    list_node_t* new_node = (list_node_t*)kmalloc(sizeof(list_node_t));
-    new_node->data = data;
-    new_node->next = list->head;
-    list->head = new_node;
-    list->size++;
+    list_t* list = (list_t*)kmalloc(sizeof(list_t));
+    if(list != 0)
+    {
+        list->head = 0;
+        list->size = 0;
+    }
+    return list;
+}
+
+void list_dispose(list_t* list)
+{
+    if(list != 0)
+    {
+        if(list->size > 0)
+        {
+            list_clear(list);
+        }
+        kfree(list);
+    }
 }
 
 void list_add(list_t* list, void* data)
 {
-    list_node_t* new_node = (list_node_t*)kmalloc(sizeof(list_node_t));
-    new_node->data = data;
-    new_node->next = 0;
-
-    if(list->head != 0)
+    list_node_t* node = (list_node_t*)kmalloc(sizeof(list_node_t));
+    if(node)
     {
-        list_node_t* tmp = list->head;
-        while(tmp->next != 0)
+        node->data = data;
+        node->next = 0;
+        node->prev = 0;
+
+        if(list->head == 0)
         {
-            tmp = tmp->next;
-        }
-        tmp->next = new_node;
-    }
-    else
-    {
-        list->head = new_node;
-    }
-    list->size++;
-}
-
-void list_remove_all(list_t* list)
-{
-    if(list->head != 0)
-    {
-        list_node_t* tmp = list->head;
-        while(tmp->next != 0)
-        {
-            list->head = tmp->next;
-            kfree(tmp);
-            tmp = list->head;
-        }
-        kfree(tmp);
-        list->head = 0;
-        list->size = 0;
-    }
-}
-
-void list_node_remove(list_t* list, list_node_t* node)
-{
-    list_node_t* prev = 0;
-    list_node_t* curr = list->head;
-
-    while(curr != 0 && curr != node)
-    {
-        prev = curr;
-        curr = curr->next;
-    }
-
-    if(curr != 0)
-    {
-        if(prev != 0)
-        {
-            prev->next = curr->next;
+            list->head = node;
+            list->tail = node;
         }
         else
         {
-            list->head = curr->next;
+            node->prev = list->tail;
+            list->tail->next = node;
+            list->tail = node;
         }
-        curr->next = 0;
-        list->size--;
-        kfree(curr);
+
+        list->size++;
     }
 }
 
-list_node_t* list_get_at_index(list_t* list, unsigned int index)
+void list_clear(list_t* list)
 {
-    if(index < list->size)
+    foreach(i, list)
     {
-        list_node_t* curr = list->head;
-        for(int i = 0; i<index; i++)
+        kfree(i);
+    }
+}
+
+void list_remove_at(list_t* list, unsigned int index)
+{
+    if(list)
+    {
+        list_node_t* node = list_node_at(list, index);
+        if(node != 0)
         {
-            curr = curr->next;
+            if(node == list->head)
+            {
+                if(node->next == 0)
+                {
+                    list->head = 0;
+                    list->tail = 0;
+                }
+                else
+                {
+                    node->next->prev = 0;
+                    list->head = node->next;
+                }
+            }
+            else if(node == list->tail)
+            {
+                node->prev->next = 0;
+                list->tail = node->prev;
+            }
+            else
+            {
+                node->next->prev = node->prev;
+                node->prev->next = node->next;
+            }
+            kfree(node);
+            list->size--;
         }
-        return curr;
     }
-    else
+}
+
+void* list_get_at(list_t* list, unsigned int index)
+{
+    list_node_t* node = list_node_at(list, index);
+    return node != 0 ? node->data : (void*)0;
+}
+
+list_node_t* list_node_at(list_t* list, unsigned int index)
+{
+    list_node_t* node = 0;
+
+    if(list)
     {
-        return 0;
+        node = list->head;
+        for(uint32_t i = 0; (i < index) && node != 0; i++, node = node->next);
     }
+    return node;
 }

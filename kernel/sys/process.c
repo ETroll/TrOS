@@ -28,7 +28,7 @@ void process_preempt()
             itt != _current_process && next == 0;
             itt = itt->next)
         {
-            if(itt->thread.state == PROCESS_IOREADY)
+            if(itt->thread.state == THREAD_IOREADY)
             {
                 next = itt;
                 break;
@@ -41,7 +41,7 @@ void process_preempt()
                 itt != _current_process && next == 0;
                 itt = itt->next)
             {
-                if(itt->thread.state == PROCESS_RUNNING)
+                if(itt->thread.state == THREAD_RUNNING)
                 {
                     // printk("X");
                     next = itt;
@@ -64,7 +64,7 @@ void process_switchto(process_t* next)
 
     process_t *prev = _current_process;
     _current_process = next;
-    _current_process->thread.state = PROCESS_RUNNING;
+    _current_process->thread.state = THREAD_RUNNING;
 
     // printk("Switching to PID %d\n", _current_process->pid);
     // printk("             EIP %x\n", _current_process->regs.eip);
@@ -86,6 +86,7 @@ uint32_t process_create(int argc, char** argv)
         proc->parent = process_get_current();
         proc->mailbox = mailbox_create();
         proc->heapend_addr = PROCESS_MEM_START;
+        proc->next_tid = 0;
 
         //Set up "round robin scheduling"
         if(num_proc > 0)
@@ -113,7 +114,7 @@ uint32_t process_create(int argc, char** argv)
         proc->thread.kernel_stack_ptr = kstackAddr;
         proc->thread.instr_ptr = (uint32_t)process_init;
         proc->thread.priority = 1;
-        proc->thread.state = PROCESS_RUNNING;
+        proc->thread.state = THREAD_RUNNING;
 
         //Initial register values
         proc->regs.eax = 0;
@@ -163,13 +164,14 @@ void process_create_idle(void (*main)())
         idleproc->heapend_addr = PROCESS_MEM_START;
         idleproc->argc = 0;
         idleproc->argv = 0;
+        idleproc->next_tid = 0;
 
         idleproc->thread.user_stack_ptr = 0;
         //16 kbyte stack, starts at location 16-4 = 12
         idleproc->thread.kernel_stack_ptr = (unsigned int)kmalloc(4096) + 4092;
         idleproc->thread.instr_ptr = (unsigned int)main;
         idleproc->thread.priority = 0;
-        idleproc->thread.state = PROCESS_RUNNING;
+        idleproc->thread.state = THREAD_RUNNING;
 
         idleproc->regs.eax = 0;
         idleproc->regs.ebx = 0;
@@ -216,10 +218,10 @@ process_t* process_get_pid(uint32_t pid)
     return proc;
 }
 
-void process_set_state(process_t* p, process_state_t s)
+void process_set_state(process_t* p, thread_state_t s)
 {
     p->thread.state = s;
-    if(s == PROCESS_WAITIO || s == PROCESS_SLEEPING)
+    if(s == THREAD_WAITIO || s == THREAD_SLEEPING)
     {
         printk("PID %d waiting/sleeping\n", p->pid);
         process_preempt();
@@ -228,7 +230,7 @@ void process_set_state(process_t* p, process_state_t s)
 
 void process_dispose(process_t* p)
 {
-    process_set_state(p, PROCESS_SLEEPING);
+    process_set_state(p, THREAD_SLEEPING);
 }
 
 void process_init()

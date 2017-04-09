@@ -9,9 +9,7 @@ int fs_register(filesystem_t* fs)
 {
     if(_fs_filesystems == 0)
     {
-        _fs_filesystems = (list_t*)kmalloc(sizeof(list_t));
-        _fs_filesystems->head = 0;
-        _fs_filesystems->size = 0;
+        _fs_filesystems = list_create();
     }
 
     filesystem_t* data = (filesystem_t*)kmalloc(sizeof(filesystem_t));

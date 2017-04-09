@@ -258,8 +258,11 @@ static fs_node_t* vfs_find_node(char* path)
             }
             else { printk("Got NO tokens\n");}
 
-            list_remove_all(tokenlist);
-            kfree(tokenlist);
+            foreach(i, tokenlist)
+            {
+                kfree(i->data);
+            }
+            list_dispose(tokenlist);
         }
     }
     //printk("\n");
@@ -295,9 +298,7 @@ list_t* vfs_tokenize_path(char* path)
     unsigned int depth = 0;
     unsigned int path_len = strlen(path);
 
-    list_t* tokens = (list_t*)kmalloc(sizeof(list_t));
-    tokens->head = 0;
-    tokens->size = 0;
+    list_t* tokens = list_create();
 
     while (depth++ < 255)
     {

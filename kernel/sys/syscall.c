@@ -2,6 +2,7 @@
 #include <tros/mem/vmm2.h>
 #include <tros/driver.h>
 #include <tros/tros.h>
+#include <tros/klib/kstring.h>
 #include <tros/process.h>
 #include <stdint.h>
 
@@ -161,7 +162,7 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
     return -1;
 }
 
-static int sys_readmessage(const void* data, uint32_t size, uint32_t flags)
+static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
 {
     process_t* proc = process_get_current();
 
@@ -175,7 +176,7 @@ static int sys_readmessage(const void* data, uint32_t size, uint32_t flags)
         }
 
         printk("sys_readmessage Payload (%d): %s\n",sizetoread, message->payload);
-        memcpy(data, message->payload, sizetoread);
+        memcpy(buffer, message->payload, sizetoread);
 
         mailbox_message_dispose(message);
 
@@ -210,12 +211,33 @@ static void sys_exit(uint32_t status)
     process_dispose(process_get_current());
 }
 
+static int sys_thread_start(void (*func)(), void (*exit)())
+{
+    return -1;
+}
+
+static void sys_thread_cancel(uint32_t tid)
+{
+
+}
+
+static void sys_thread_exit()
+{
+
+}
+
+static void sys_thread_sleep(uint32_t ms)
+{
+
+}
+
 int syscall_dispatcher(syscall_parameters_t regs)
 {
     int retval = 0;
     if (regs.eax < MAX_SYSCALL)
     {
         void *syscall = _syscalls[regs.eax];
+        // printk("SYSCALL %d", regs.eax);
         if(syscall != 0)
         {
             // BOCHS_DEBUG;
@@ -239,7 +261,7 @@ int syscall_dispatcher(syscall_parameters_t regs)
             // regs->eax = retval;
         }
     }
-    // printk("Syscal retval: %d\n", retval);
+    // printk(" retval: %d\n", retval);
     // BOCHS_DEBUG;
     return retval;
 }
@@ -257,12 +279,16 @@ void syscall_initialize()
     _syscalls[3] = &sys_writedevice;
     _syscalls[4] = &sys_readdevice;
     _syscalls[5] = &sys_ioctl;
-    _syscalls[6] = &sys_sendmessage;        //new / unmapped
-    _syscalls[7] = &sys_readmessage;        //new / unmapped
+    _syscalls[6] = &sys_sendmessage;
+    _syscalls[7] = &sys_readmessage;
     _syscalls[8] = &sys_get_parent_pid;
     _syscalls[9] = &sys_increasemem;
     _syscalls[10] = &sys_decreasemem;
     _syscalls[11] = &sys_debug;
     _syscalls[12] = &sys_execute;
     _syscalls[13] = &sys_exit;
+    _syscalls[14] = &sys_thread_start;
+    _syscalls[15] = &sys_thread_cancel;
+    _syscalls[16] = &sys_thread_exit;
+    _syscalls[17] = &sys_thread_sleep;
 }

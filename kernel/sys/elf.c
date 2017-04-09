@@ -8,6 +8,7 @@
 uint32_t elf32_load(char* path, uint32_t* startAddr)
 {
     fs_node_t* file = kopen(path);
+    printk("File: %x", file);
     uint32_t highetsAddr = 0;
     *startAddr = 0;
 

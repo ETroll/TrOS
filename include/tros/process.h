@@ -11,11 +11,11 @@
 #define PROCESS_MEM_START 0x400000
 
 typedef enum {
-    PROCESS_RUNNING = 0x1,
-    PROCESS_WAITIO,
-    PROCESS_IOREADY,
-    PROCESS_SLEEPING
-} process_state_t;
+    THREAD_RUNNING = 0x1,
+    THREAD_WAITIO,
+    THREAD_IOREADY,
+    THREAD_SLEEPING
+} thread_state_t;
 
 typedef struct
 {
@@ -34,11 +34,12 @@ typedef struct
 
 typedef struct
 {
+    uint32_t tid;
     uint32_t user_stack_ptr;
     uint32_t kernel_stack_ptr;
     uint32_t instr_ptr;
     int priority;
-    process_state_t state;
+    thread_state_t state;
 } thread_t;
 
 typedef struct process
@@ -53,6 +54,7 @@ typedef struct process
     uint32_t heapend_addr;
     char** argv;
     int argc;
+    uint32_t next_tid;
 } process_t;
 
 extern void process_switch(registers_t* old, registers_t* new);
@@ -70,6 +72,6 @@ process_t* process_get_current();
 process_t* process_get_pid(uint32_t pid);
 
 //Set the state of the current running process and rescedule if needed
-void process_set_state(process_t* p, process_state_t s);
+void process_set_state(process_t* p, thread_state_t s);
 
 #endif

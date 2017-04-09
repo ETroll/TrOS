@@ -10,9 +10,7 @@ int driver_register(device_driver_t* device)
 {
     if(_drivers == 0)
     {
-        _drivers = (list_t*)kmalloc(sizeof(list_t));
-        _drivers->head = 0;
-        _drivers->size = 0;
+        _drivers = list_create();
     }
 
     list_node_t* node = _drivers->head;
@@ -56,15 +54,6 @@ device_driver_t* driver_find_device(const char* name)
 
 device_driver_t* driver_find_device_id(unsigned int id)
 {
-    list_node_t* node = list_get_at_index(_drivers, id);
-    if(node != 0)
-    {
-        //device_driver_t* device = (device_driver_t*)node->data;
-        //printk("Found: %s(%i) for ID: %i\n", device->name, device->id, id);
-        return (device_driver_t*)node->data;
-    }
-    else
-    {
-        return 0;
-    }
+    device_driver_t* driver = list_get_at(_drivers, id);
+    return driver;
 }
