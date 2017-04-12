@@ -95,7 +95,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
         dvd0/
     */
     syscall_initialize();
-    process_create_idle(&kernel_idle);
+    scheduler_initialize();
+    process_executeKernel(&kernel_idle);
 
     while(1)
     {
@@ -104,7 +105,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
 }
 
 // This is the "idle process"
-void kernel_idle()
+int kernel_idle()
 {
     printk("Starting INIT process!\n");
     if(!vfs_mount("fd0", "fat12"))
@@ -124,4 +125,5 @@ void kernel_idle()
         __asm("sti");
         __asm("hlt;");
     }
+    return 0;
 }

@@ -6,15 +6,18 @@
 
 #include <stdint.h>
 #include <tros/mem/vmm2.h>
+#include <tros/klib/list.h>
 #include <tros/mailbox.h>
 
 #define PROCESS_MEM_START 0x400000
 
-typedef enum {
+typedef enum
+{
     THREAD_RUNNING = 0x1,
     THREAD_WAITIO,
     THREAD_IOREADY,
-    THREAD_SLEEPING
+    THREAD_SLEEPING,
+    THREAD_DISPOSING
 } thread_state_t;
 
 typedef struct
@@ -32,46 +35,62 @@ typedef struct
     uint32_t cr3; // 40
 } __attribute__((packed)) registers_t;
 
-typedef struct
+typedef enum
 {
-    uint32_t tid;
-    uint32_t user_stack_ptr;
-    uint32_t kernel_stack_ptr;
-    uint32_t instr_ptr;
-    int priority;
-    thread_state_t state;
-} thread_t;
+    TFLAG_USER = 0x00,
+    TFLAG_KERNEL = 0x01
+} thread_flag_t;
 
 typedef struct process
 {
-    thread_t thread;
-    registers_t regs;
+    list_t* threads;
+    list_t* children;
     page_directory_t* pagedir;
     struct process *parent;
-    struct process *next;
     mailbox_t* mailbox;
     uint32_t pid;
     uint32_t heapend_addr;
     char** argv;
     int argc;
-    uint32_t next_tid;
 } process_t;
 
-extern void process_switch(registers_t* old, registers_t* new);
-extern void process_start_idle(uint32_t eip, uint32_t kesp);
+typedef struct
+{
+    uint32_t tid;
+    uint32_t userStackPtr;
+    uint32_t kernelStackPtr;
+    uint32_t instrPtr;
+    int priority;
+    thread_state_t state;
+    registers_t regs;
+    process_t* process;
+} thread_t;
 
+//Process
+extern void process_startIdle(uint32_t eip, uint32_t kesp);
 
-void process_preempt();
-void process_switchto(process_t* next);
-void process_create_idle(void (*main)());
+process_t* process_create();
+void process_dispose(process_t* proc);
 
-uint32_t process_create(int argc, char** argv);
-void process_dispose(process_t* p);
+process_t* process_executeUser(int argc, char** argv);
+process_t* process_executeKernel(int (*main)());
 
-process_t* process_get_current();
-process_t* process_get_pid(uint32_t pid);
+process_t* process_getCurrent();
+process_t* process_getFromPid(uint32_t pid);
 
-//Set the state of the current running process and rescedule if needed
-void process_set_state(process_t* p, thread_state_t s);
+//Thread
+thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t flags);
+void thread_dispose(thread_t* thread);
+thread_t* thread_getCurrent();
+thread_t* thread_getFromPid(uint32_t pid);
+void thread_setState(thread_t* p, thread_state_t s);
+
+//Scheduler
+extern void scheduler_switchThread(registers_t* old, registers_t* new);
+void scheduler_reschedule();
+void scheduler_initialize();
+void scheduler_addThread(thread_t* thread);
+void scheduler_removeThread(thread_t* thread);
+
 
 #endif

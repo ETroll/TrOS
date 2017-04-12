@@ -59,5 +59,6 @@ vmm2_status_t vmm2_switch_pagedir(page_directory_t* dir);
 page_directory_t* vmm2_get_directory();
 uint32_t* vmm2_get_pagetable(virtual_addr_t virt, page_directory_t* dir, uint32_t create);
 page_directory_t* vmm2_create_directory();
+void vmm2_dispose_directory(page_directory_t*);
 
 #endif

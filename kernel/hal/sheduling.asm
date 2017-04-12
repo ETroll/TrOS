@@ -4,8 +4,8 @@
 ;                                +8                +12                 +16
 ; void enter_usermode(registers_t* reg, unsigned int location, unsigned int userstack);
 
-global enter_usermode
-enter_usermode:
+global thread_enterUsermode
+thread_enterUsermode:
     push ebp
     mov ebp,esp
 
@@ -85,8 +85,8 @@ tss_flush:
     ret
 
 ; http://wiki.osdev.org/Kernel_Multitasking
-global process_switch
-process_switch:
+global scheduler_switchThread
+scheduler_switchThread:
     pusha
     pushf
     mov eax, cr3 ;Push CR3
@@ -152,8 +152,8 @@ process_switch:
 
     ret ;This ends all!
 
-global process_start_idle
-process_start_idle:
+global process_startIdle
+process_startIdle:
     mov eax, [esp+4]
     mov ebx, [esp+8]
     mov esp, ebx

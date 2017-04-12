@@ -202,6 +202,11 @@ page_directory_t* vmm2_create_directory()
     return dir;
 }
 
+void vmm2_dispose_directory(page_directory_t*)
+{
+    //TODO!! We are leaking now!
+}
+
 void vmm2_pagefault_handler(cpu_registers_t* regs)
 {
     uint32_t faulting_address;
