@@ -49,7 +49,7 @@ typedef struct process
     struct process *parent;
     mailbox_t* mailbox;
     uint32_t pid;
-    uint32_t heapend_addr;
+    uint32_t heapendAddr;
     char** argv;
     int argc;
 } process_t;
@@ -74,7 +74,6 @@ void process_dispose(process_t* proc);
 
 process_t* process_executeUser(int argc, char** argv);
 process_t* process_executeKernel(int (*main)());
-
 process_t* process_getCurrent();
 process_t* process_getFromPid(uint32_t pid);
 
@@ -82,15 +81,16 @@ process_t* process_getFromPid(uint32_t pid);
 thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t flags);
 void thread_dispose(thread_t* thread);
 thread_t* thread_getCurrent();
-thread_t* thread_getFromPid(uint32_t pid);
+thread_t* thread_getFromTid(uint32_t tid);
 void thread_setState(thread_t* p, thread_state_t s);
 
 //Scheduler
-extern void scheduler_switchThread(registers_t* old, registers_t* new);
+extern void scheduler_switchThread(registers_t* prev, registers_t* next);
 void scheduler_reschedule();
 void scheduler_initialize();
 void scheduler_addThread(thread_t* thread);
 void scheduler_removeThread(thread_t* thread);
-
+void scheduler_addProcess(process_t* proc);
+void scheduler_removeProcess(process_t* proc);
 
 #endif

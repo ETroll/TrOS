@@ -14,13 +14,15 @@ The project have a dockerfile that creates a image with the compiler and binutil
 
 The kernel is a very simple and basic kernel for now. The following "features" are implemented
  * Multiboot support
- * Preemptive scheduling
- * Memory management / Virtual Memory Manager
+ * Preemptive scheduling (Simple round-robin scheduling for now)
+ * Memory management
  * VFS
  * Basic drivers
  * Userland / Ring 3
  * ELF32 Execution
- * Basic Shell / UI (Trell)
+ * UI (Trell)
+ - Userland library
+ - IPC (Using messagequeues)
 
 Planned features:
 
