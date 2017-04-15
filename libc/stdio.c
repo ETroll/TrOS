@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <trlib/system.h>
+#include <trlib/device.h>
 
 //&str, putcp, format, va);
 static void stdio_format(void* out, int (*putc) (char, void*), char* str, va_list va);

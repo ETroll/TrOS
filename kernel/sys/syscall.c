@@ -16,7 +16,7 @@ extern uint32_t paging_get_CR3();
 
 static int sys_debug(unsigned int method)
 {
-    uint32_t pid = process_get_current()->pid;
+    uint32_t pid = process_getCurrent()->pid;
     printk("DEBUG(%d): Data %x\n", pid, method);
     if(method == 0x1)
     {
@@ -27,13 +27,13 @@ static int sys_debug(unsigned int method)
 
 static int sys_getpid()
 {
-    process_t* process = process_get_current();
+    process_t* process = process_getCurrent();
     return process->pid;
 }
 
 static int sys_get_parent_pid()
 {
-    process_t* process = process_get_current();
+    process_t* process = process_getCurrent();
     if(process->parent)
     {
         return process->parent->pid;
@@ -130,11 +130,11 @@ static int sys_ioctl(unsigned int fd, unsigned int ioctl_num, unsigned int param
 static int sys_increasemem(unsigned int blocks)
 {
     //returns the start address of the new chunk
-    process_t* process = process_get_current();
-    uint32_t start = process->heapend_addr;
+    process_t* process = process_getCurrent();
+    uint32_t start = process->heapendAddr;
     vmm2_map(start, blocks,  VMM2_PAGE_USER | VMM2_PAGE_WRITABLE);
 
-    process->heapend_addr += (VMM2_BLOCK_SIZE * blocks);
+    process->heapendAddr += (VMM2_BLOCK_SIZE * blocks);
 
     return start;
 }
@@ -146,8 +146,8 @@ static int sys_decreasemem(unsigned int blocks)
 
 static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32_t flags)
 {
-    process_t* reciever = process_get_pid(pid);
-    process_t* sender = process_get_current();
+    process_t* reciever = process_getFromPid(pid);
+    process_t* sender = process_getCurrent();
 
     if(reciever && sender)
     {
@@ -164,7 +164,7 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
 
 static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
 {
-    process_t* proc = process_get_current();
+    process_t* proc = process_getCurrent();
 
     mailbox_message_t* message = mailbox_pop(proc->mailbox);
     if(message != 0)
@@ -187,7 +187,7 @@ static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
 
 static int sys_execute(const char** arguments)
 {
-    uint32_t pid = process_get_current()->pid;
+    uint32_t pid = process_getCurrent()->pid;
 
     printk("EXEC(%d): Trying to execute: %s\n", pid, arguments[0]);
     int i = 0;
@@ -196,9 +196,9 @@ static int sys_execute(const char** arguments)
         printk("EXEC(%d): Argument %d - %s\n", pid, i, arguments[i]);
     }
     //NOTE: Check arguments and set some failover? (If no NULL is given)
-    int retval = process_create(i, (char**)arguments);
-    printk("EXEC(%d): Complete with PID %d\n", pid, retval);
-    return retval;
+    process_t* proc = process_executeUser(i, (char**)arguments);
+    printk("EXEC(%d): Complete with PID %d\n", pid, proc->pid);
+    return proc->pid;
 }
 
 static void sys_exit(uint32_t status)
@@ -206,9 +206,9 @@ static void sys_exit(uint32_t status)
     //WIP: Exit and clean up the process
     // - Clean up all memory used.
     // - Remove from scheduler
-    uint32_t pid = process_get_current()->pid;
+    uint32_t pid = process_getCurrent()->pid;
     printk("EXIT(%d): Exiting with code: %d\n", pid, status);
-    process_dispose(process_get_current());
+    process_dispose(process_getCurrent());
 }
 
 static int sys_thread_start(void (*func)(), void (*exit)())

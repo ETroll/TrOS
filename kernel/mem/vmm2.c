@@ -202,7 +202,7 @@ page_directory_t* vmm2_create_directory()
     return dir;
 }
 
-void vmm2_dispose_directory(page_directory_t*)
+void vmm2_dispose_directory(page_directory_t* pdir)
 {
     //TODO!! We are leaking now!
 }

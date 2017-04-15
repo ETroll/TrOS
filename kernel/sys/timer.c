@@ -16,7 +16,7 @@ static void timer_irq_callback(cpu_registers_t* regs)
     ticks++;
     // printk("# EIP %x\n", regs->eip);
     //BOCHS_DEBUG
-    process_preempt();
+    scheduler_reschedule();
     irq_eoi(0);
 }
 

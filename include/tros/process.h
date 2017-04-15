@@ -90,7 +90,5 @@ void scheduler_reschedule();
 void scheduler_initialize();
 void scheduler_addThread(thread_t* thread);
 void scheduler_removeThread(thread_t* thread);
-void scheduler_addProcess(process_t* proc);
-void scheduler_removeProcess(process_t* proc);
 
 #endif

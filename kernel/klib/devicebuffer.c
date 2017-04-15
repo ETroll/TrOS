@@ -22,7 +22,7 @@ int devicebuffer_read(devicebuffer_t* db, int* buffer, uint32_t count)
     int read = 0;
     if(db->listener == 0)
     {
-        db->listener = process_get_current();
+        db->listener = thread_getCurrent();
         do
         {
             if(rb_len(db->ringbuffer) > 0)
@@ -31,7 +31,8 @@ int devicebuffer_read(devicebuffer_t* db, int* buffer, uint32_t count)
             }
             else
             {
-                process_set_state(db->listener, THREAD_WAITIO);
+                thread_setState(db->listener, THREAD_WAITIO);
+                scheduler_reschedule();
             }
         } while(read < count);
         db->listener = 0;
@@ -46,7 +47,7 @@ void devicebuffer_write(devicebuffer_t* db, int data)
         rb_push(db->ringbuffer, data);
         if(db->listener != 0)
         {
-            process_set_state(db->listener, THREAD_IOREADY);
+            thread_setState(db->listener, THREAD_IOREADY);
         }
     }
 }

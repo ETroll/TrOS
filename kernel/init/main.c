@@ -25,7 +25,7 @@ extern int fat12_fs_initialize();
 extern void syscall_initialize();
 extern void serial_init();
 
-void kernel_idle();
+int kernel_idle();
 
 // #define UNDERDEV 1
 
@@ -117,8 +117,8 @@ int kernel_idle()
     {
         "/fd0/trell"
     };
-    uint32_t pid = process_create(1, argv);
-    printk("Started Trell at PID: %d\n", pid);
+    process_t* proc = process_executeUser(1, argv);
+    printk("Started Trell at PID: %d\n", proc->pid);
 
     while(1)
     {

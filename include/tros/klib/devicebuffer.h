@@ -6,7 +6,7 @@
 
 typedef struct {
     ringbuffer_t* ringbuffer;
-    process_t* listener;
+    thread_t* listener;
 } devicebuffer_t;
 
 devicebuffer_t* devicebuffer_create();

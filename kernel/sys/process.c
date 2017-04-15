@@ -7,7 +7,6 @@
 #include <tros/elf.h>
 
 static thread_t* _current_thread = 0;
-
 static list_t* _threads = 0;
 static list_t* _processes = 0;
 
@@ -90,7 +89,7 @@ void process_dispose(process_t* proc)
             }
             if(proc->argc > 0 && proc->argv)
             {
-                for(int i = 0; i<argc; i++)
+                for(int i = 0; i<proc->argc; i++)
                 {
                     kfree(proc->argv[i]);
                 }
@@ -116,7 +115,7 @@ process_t* process_executeKernel(int (*main)())
         if(proc->pid == 0)
         {
             _current_thread = thread;
-            process_startIdle(thread.instrPtr, thread.kernelStackPtr);
+            process_startIdle(thread->instrPtr, thread->kernelStackPtr);
         }
     }
     return proc;
@@ -172,33 +171,33 @@ process_t* process_getFromPid(uint32_t pid)
 
 void process_initalizeNewProcess()
 {
-    process_t* proc = process_getCurrent();
-    printk("Process Init procedure called for PID: %d\n", proc->pid);
-    if(proc->argc > 0)
+    thread_t* thread = thread_getCurrent();
+    printk("Process Init procedure called for PID: %d\n", thread->process->pid);
+    if(thread->process->argc > 0)
     {
         printk("Executing file: %s with %d arguments CR3 %x\n",
-            proc->argv[0],
-            proc->argc,
+            thread->process->argv[0],
+            thread->process->argc,
             vmm2_get_directory());
 
-        proc->heapendAddr = elf32_load(proc->argv[0], &proc->thread.instrPtr);
+        thread->process->heapendAddr = elf32_load(thread->process->argv[0], &thread->instrPtr);
 
-        if(proc->thread.instrPtr > 0 && proc->heapendAddr > PROCESS_MEM_START)
+        if(thread->instrPtr > 0 && thread->process->heapendAddr > PROCESS_MEM_START)
         {
             //TODO: Preload userland stack with arguments!
             thread_enterUsermode(0,
-                proc->thread.instrPtr,
-                proc->thread.userStackPtr);
+                thread->instrPtr,
+                thread->userStackPtr);
         }
         else
         {
             printk("ERROR! instrPtr: %x heapendAddr: %x\n",
-                proc->thread.instrPtr,
-                proc->heapendAddr);
+                thread->instrPtr,
+                thread->process->heapendAddr);
         }
     }
     //We have somehow failed, lets kill the process
-    process_dispose(proc);
+    process_dispose(thread->process);
 }
 
 thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t flags)
@@ -207,7 +206,6 @@ thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t 
     if(thread)
     {
         uint32_t userStackAddr = 0;
-        uint32_t eflags = 0;
         if(flags & TFLAG_USER)
         {
             //TODO: Increase to 16K
@@ -215,7 +213,7 @@ thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t 
             //      And that is BAD, and will only work for 1 thread
             //      Account for removed/disposed threads!
             userStackAddr = 0xBFFFC000; //16k below kernel
-            vmm2_map_todir(userStackAddr, 1, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE, proc->pagedir);
+            vmm2_map_todir(userStackAddr, 1, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE, parent->pagedir);
             userStackAddr += (VMM2_BLOCK_SIZE - sizeof(unsigned int));
         }
 
@@ -235,12 +233,12 @@ thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t 
         thread->regs.edi = 0;
         thread->regs.eip = instrPointer;
         thread->regs.cr3 = (uint32_t)parent->pagedir->tables;
-        thread->regs.esp = kernelStackPtr;
+        thread->regs.esp = thread->kernelStackPtr;
 
         //TODO: Replace with abstraction for compatability
         __asm("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(thread->regs.eflags)::"%eax");
 
-        list_add(parent->threads, thread)
+        list_add(parent->threads, thread);
     }
     return thread;
 }
@@ -262,7 +260,7 @@ void thread_dispose(thread_t* thread)
             scheduler_removeThread(thread);
             if(thread->kernelStackPtr)
             {
-                kfree(thread->kernelStackPtr);
+                kfree((void*)thread->kernelStackPtr);
             }
             kfree(thread);
         }
@@ -336,22 +334,48 @@ void scheduler_reschedule()
 
 void scheduler_addThread(thread_t* thread)
 {
-
+    if(thread)
+    {
+        uint8_t hasThread = 0;
+        foreach(node, _threads)
+        {
+            if(node->data == thread)
+            {
+                hasThread = 1;
+                break;
+            }
+        }
+        if(!hasThread)
+        {
+            uint8_t hasProcess = 0;
+            foreach(node, _processes)
+            {
+                if(node->data == thread->process)
+                {
+                    hasProcess = 1;
+                    break;
+                }
+            }
+            if(!hasProcess)
+            {
+                list_add(_processes, thread->process);
+            }
+            list_add(_threads, thread);
+        }
+    }
 }
 
 void scheduler_removeThread(thread_t* thread)
 {
+    //TODO: If the threds process does not have any more threads, remove it
+    //      from _processes
+    if(thread)
+    {
+        if(thread->process->threads->size == 1)
+        {
 
-}
-
-void scheduler_addProcess(process_t* proc)
-{
-
-}
-
-void scheduler_removeProcess(process_t* proc)
-{
-
+        }
+    }
 }
 
 
