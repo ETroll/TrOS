@@ -152,8 +152,8 @@ scheduler_switchThread:
 
     ret ;This ends all!
 
-global process_startIdle
-process_startIdle:
+global scheduler_startIdle
+scheduler_startIdle:
     mov eax, [esp+4]
     mov ebx, [esp+8]
     mov esp, ebx

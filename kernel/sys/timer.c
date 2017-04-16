@@ -2,7 +2,7 @@
 #include <tros/irq.h>
 #include <tros/hal/pit.h>
 #include <tros/tros.h>      //debug purposes for now
-#include <tros/process.h>
+#include <tros/sched/scheduler.h>
 
 static unsigned int ticks;
 

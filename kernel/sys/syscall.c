@@ -3,20 +3,19 @@
 #include <tros/driver.h>
 #include <tros/tros.h>
 #include <tros/klib/kstring.h>
-#include <tros/process.h>
+#include <tros/sched/scheduler.h>
 #include <stdint.h>
 
 //NOTE: Maybe move each syscall into own file in a folder?
 
 #define MAX_SYSCALL 25
 static void* _syscalls[MAX_SYSCALL];
-//static void syscall_dispatcher(cpu_registers_t *regs);
 
 extern uint32_t paging_get_CR3();
 
 static int sys_debug(unsigned int method)
 {
-    uint32_t pid = process_getCurrent()->pid;
+    uint32_t pid = scheduler_getCurrentProcess()->pid;
     printk("DEBUG(%d): Data %x\n", pid, method);
     if(method == 0x1)
     {
@@ -27,13 +26,13 @@ static int sys_debug(unsigned int method)
 
 static int sys_getpid()
 {
-    process_t* process = process_getCurrent();
+    process_t* process = scheduler_getCurrentProcess();
     return process->pid;
 }
 
 static int sys_get_parent_pid()
 {
-    process_t* process = process_getCurrent();
+    process_t* process = scheduler_getCurrentProcess();
     if(process->parent)
     {
         return process->parent->pid;
@@ -130,7 +129,7 @@ static int sys_ioctl(unsigned int fd, unsigned int ioctl_num, unsigned int param
 static int sys_increasemem(unsigned int blocks)
 {
     //returns the start address of the new chunk
-    process_t* process = process_getCurrent();
+    process_t* process = scheduler_getCurrentProcess();
     uint32_t start = process->heapendAddr;
     vmm2_map(start, blocks,  VMM2_PAGE_USER | VMM2_PAGE_WRITABLE);
 
@@ -146,8 +145,8 @@ static int sys_decreasemem(unsigned int blocks)
 
 static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32_t flags)
 {
-    process_t* reciever = process_getFromPid(pid);
-    process_t* sender = process_getCurrent();
+    process_t* reciever = scheduler_getCurrentProcessFromPid(pid);
+    process_t* sender = scheduler_getCurrentProcess();
 
     if(reciever && sender)
     {
@@ -164,7 +163,7 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
 
 static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
 {
-    process_t* proc = process_getCurrent();
+    process_t* proc = scheduler_getCurrentProcess();
 
     mailbox_message_t* message = mailbox_pop(proc->mailbox);
     if(message != 0)
@@ -187,7 +186,7 @@ static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
 
 static int sys_execute(const char** arguments)
 {
-    uint32_t pid = process_getCurrent()->pid;
+    uint32_t pid = scheduler_getCurrentProcess()->pid;
 
     printk("EXEC(%d): Trying to execute: %s\n", pid, arguments[0]);
     int i = 0;
@@ -196,7 +195,7 @@ static int sys_execute(const char** arguments)
         printk("EXEC(%d): Argument %d - %s\n", pid, i, arguments[i]);
     }
     //NOTE: Check arguments and set some failover? (If no NULL is given)
-    process_t* proc = process_executeUser(i, (char**)arguments);
+    process_t* proc = scheduler_executeUser(i, (char**)arguments);
     printk("EXEC(%d): Complete with PID %d\n", pid, proc->pid);
     return proc->pid;
 }
@@ -206,9 +205,9 @@ static void sys_exit(uint32_t status)
     //WIP: Exit and clean up the process
     // - Clean up all memory used.
     // - Remove from scheduler
-    uint32_t pid = process_getCurrent()->pid;
+    uint32_t pid = scheduler_getCurrentProcess()->pid;
     printk("EXIT(%d): Exiting with code: %d\n", pid, status);
-    process_dispose(process_getCurrent());
+    scheduler_removeProcess(scheduler_getCurrentProcess());
 }
 
 static int sys_thread_start(void (*func)(), void (*exit)())

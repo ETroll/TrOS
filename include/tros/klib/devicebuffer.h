@@ -1,7 +1,7 @@
 #ifndef INCLUDE_TROS_DEVICEBUFFER_H
 #define INCLUDE_TROS_DEVICEBUFFER_H
 
-#include <tros/process.h>
+#include <tros/sched/scheduler.h>
 #include <tros/klib/ringbuffer.h>
 
 typedef struct {

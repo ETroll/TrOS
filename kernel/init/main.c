@@ -8,8 +8,7 @@
 #include <tros/memory.h>
 #include <tros/hwdetect.h>
 #include <tros/sys/multiboot.h>
-
-#include <tros/process.h>
+#include <tros/sched/scheduler.h>
 
 #include <tros/klib/kstring.h>
 
@@ -96,7 +95,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     */
     syscall_initialize();
     scheduler_initialize();
-    process_executeKernel(&kernel_idle);
+    scheduler_executeKernel(&kernel_idle);
 
     while(1)
     {
@@ -117,8 +116,8 @@ int kernel_idle()
     {
         "/fd0/trell"
     };
-    process_t* proc = process_executeUser(1, argv);
-    printk("Started Trell at PID: %d\n", proc->pid);
+    process_t* proc = scheduler_executeUser(1, argv);
+    printk("Started Trell at PID: %d starting idle loop\n", proc->pid);
 
     while(1)
     {

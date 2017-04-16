@@ -1,8 +1,8 @@
 // llist.h
 // Simple Linked list
 
-#ifndef INCLUDE_DS_LIST_H
-#define INCLUDE_DS_LIST_H
+#ifndef INCLUDE_KLIB_LIST_H
+#define INCLUDE_KLIB_LIST_H
 
 
 typedef struct list_node

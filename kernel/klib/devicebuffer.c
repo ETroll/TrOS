@@ -22,7 +22,7 @@ int devicebuffer_read(devicebuffer_t* db, int* buffer, uint32_t count)
     int read = 0;
     if(db->listener == 0)
     {
-        db->listener = thread_getCurrent();
+        db->listener = scheduler_getCurrentThread();
         do
         {
             if(rb_len(db->ringbuffer) > 0)
