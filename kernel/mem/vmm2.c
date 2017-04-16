@@ -205,6 +205,7 @@ page_directory_t* vmm2_create_directory()
 void vmm2_dispose_directory(page_directory_t* pdir)
 {
     //TODO!! We are leaking now!
+    printk("vmm2_dispose_directory: NOT IMPLEMENTED! LEAKING!\n");
 }
 
 void vmm2_pagefault_handler(cpu_registers_t* regs)

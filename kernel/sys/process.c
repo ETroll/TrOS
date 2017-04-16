@@ -148,7 +148,14 @@ process_t* process_executeUser(int argc, char** argv)
 
 process_t* process_getCurrent()
 {
-    return _current_thread->process;
+    if(_current_thread)
+    {
+        return _current_thread->process;
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 process_t* process_getFromPid(uint32_t pid)
@@ -309,6 +316,7 @@ void scheduler_initialize()
 thread_t* scheduler_findNextThread()
 {
     //TODO: Complete!
+    printk("scheduler_findNextThread: NOT IMPLEMENTED\n");
     return 0;
 }
 
