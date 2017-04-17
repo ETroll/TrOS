@@ -17,6 +17,7 @@ typedef struct process
     mailbox_t* mailbox;
     uint32_t pid;
     uint32_t heapendAddr;
+    char* name;
     char** argv;
     int argc;
 } process_t;

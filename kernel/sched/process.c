@@ -18,8 +18,14 @@ process_t* process_create(process_t* parent)
         proc->mailbox = mailbox_create();
         proc->heapendAddr = PROCESS_MEM_START;
         proc->pid = _nextpid++;
+        proc->name = 0;
         proc->argc = 0;
         proc->argv = 0;
+
+        if(parent)
+        {
+            list_add(parent->children, proc);
+        }
     }
     return proc;
 }

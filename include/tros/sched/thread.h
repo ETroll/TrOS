@@ -30,8 +30,8 @@ typedef struct
 
 typedef enum
 {
-    TFLAG_USER = 0x00,
-    TFLAG_KERNEL = 0x01
+    TFLAG_USER = 0x01,
+    TFLAG_KERNEL = 0x02
 } thread_flag_t;
 
 typedef struct

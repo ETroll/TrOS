@@ -4,7 +4,6 @@
 #include <tros/tros.h>
 #include <tros/klib/devicebuffer.h>
 #include <keycodes.h>
-#include <tros/process.h>
 
 #define KEY_DEVICE  0x60
 #define KEY_PENDING 0x64

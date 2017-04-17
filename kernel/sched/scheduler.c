@@ -5,52 +5,110 @@
 #include <tros/klib/kstring.h>
 #include <tros/elf.h>
 
-static thread_t* _current_thread = 0;
-static list_t* _threads = 0;
-static list_t* _processes = 0;
+typedef struct schedule_node
+{
+    struct schedule_node* next;
+    struct schedule_node* prev;
+    thread_t* thread;
+} schedule_node_t;
+
+typedef struct
+{
+    schedule_node_t* current;
+    schedule_node_t* head;
+    uint32_t size;
+    list_t* threads;
+    list_t* processes;
+} scheduler_roundrobin_t;
+
+static scheduler_roundrobin_t* _scheduler = 0;
 
 
-static thread_t* scheduler_findNextThread();
+static schedule_node_t* scheduler_findNextThread();
 static void scheduler_initalizeNewProcess();
+
 extern void scheduler_switchThread(registers_t* prev, registers_t* next);
 extern void scheduler_startIdle(uint32_t eip, uint32_t kesp);
 extern void thread_enterUsermode(registers_t* reg, unsigned int location, unsigned int userstack);
 
-
 void scheduler_initialize()
 {
-    _threads = list_create();
-    _processes = list_create();
+    _scheduler = (scheduler_roundrobin_t*)kmalloc(sizeof(scheduler_roundrobin_t));
+    if(_scheduler)
+    {
+        _scheduler->current = 0;
+        _scheduler->head = 0;
+        _scheduler->size = 0;
+        _scheduler->threads = list_create();
+        _scheduler->processes = list_create();
+    }
+    else
+    {
+        kernel_panic("Could not set up scheduler!", 0);
+    }
 }
 
-thread_t* scheduler_findNextThread()
+schedule_node_t* scheduler_findNextThread()
 {
-    //TODO: Complete!
-    if(_current_thread != 0 && _threads != 0 && _threads->size > 1)
+    schedule_node_t* next = 0;
+    for(schedule_node_t* itt = _scheduler->current->next;
+        itt != _scheduler->current && next == 0;
+        itt = itt->next)
     {
-        printk("scheduler_findNextThread: NOT IMPLEMENTED\n");
+        if(itt->thread->state == THREAD_IOREADY)
+        {
+            next = itt;
+            break;
+        }
     }
-    return 0;
+    if(next == 0)
+    {
+        for(schedule_node_t* itt = _scheduler->current->next;
+            itt != _scheduler->current && next == 0;
+            itt = itt->next)
+        {
+            if(itt->thread->state == THREAD_RUNNING)
+            {
+                next = itt;
+                break;
+            }
+        }
+        if(next == 0)
+        {
+            //OK! No other thread needs to be run.. default to idle
+            next = _scheduler->head;
+        }
+    }
+    return next;
 }
 
 void scheduler_reschedule()
 {
-    thread_t* next = scheduler_findNextThread();
+    if(_scheduler && _scheduler->size > 1)
+    {
+        schedule_node_t* next = scheduler_findNextThread();
+        if(next)
+        {
+            tss_set_ring0_stack(0x10, next->thread->kernelStackPtr);
 
-    tss_set_ring0_stack(0x10, next->kernelStackPtr);
+            schedule_node_t *prev = _scheduler->current;;
+            next->thread->state = THREAD_RUNNING;
+            _scheduler->current = next;
 
-    thread_t *prev = _current_thread;
-    _current_thread = next;
-    _current_thread->state = THREAD_RUNNING;
+            // printk("Switching to TID %d\n", _scheduler->current->thread->tid);
+            // printk("             EIP %x\n", _scheduler->current->thread->regs.eip);
+            // printk("             ESP %x\n", _scheduler->current->thread->regs.esp);
+            // printk("          Kstack %x (%d bytes used)\n", _scheduler->current->thread->kernelStackPtr, _scheduler->current->thread->kernelStackPtr-_scheduler->current->thread->regs.esp);
+            // printk("             CR3 %x\n", _scheduler->current->thread->regs.cr3);
+            // printk("             CR3 %x\n", _scheduler->current->thread->process->pagedir);
 
-    // printk("Switching to TID %d\n", _current_thread->tid);
-    // printk("             EIP %x\n", _current_thread->regs.eip);
-    // printk("             ESP %x\n", _current_thread->regs.esp);
-    // printk("          Kstack %x (%d bytes used)\n", _current_thread->kernelStackPtr, _current_thread->kernelStackPtr-_current_thread->regs.esp);
-    // printk("             CR3 %x\n", _current_thread->regs.cr3);
-    // printk("             CR3 %x\n", _current_thread->process->pagedir);
-
-    scheduler_switchThread(&prev->regs, &next->regs);
+            scheduler_switchThread(&prev->thread->regs, &next->thread->regs);
+        }
+        else
+        {
+            kernel_panic("No task was found by the scheduler!", 0);
+        }
+    }
 }
 
 void scheduler_addThread(thread_t* thread)
@@ -58,7 +116,7 @@ void scheduler_addThread(thread_t* thread)
     if(thread)
     {
         uint8_t hasThread = 0;
-        foreach(node, _threads)
+        foreach(node, _scheduler->threads)
         {
             if(node->data == thread)
             {
@@ -69,7 +127,7 @@ void scheduler_addThread(thread_t* thread)
         if(!hasThread)
         {
             uint8_t hasProcess = 0;
-            foreach(node, _processes)
+            foreach(node, _scheduler->processes)
             {
                 if(node->data == thread->process)
                 {
@@ -79,9 +137,38 @@ void scheduler_addThread(thread_t* thread)
             }
             if(!hasProcess)
             {
-                list_add(_processes, thread->process);
+                list_add(_scheduler->processes, thread->process);
             }
-            list_add(_threads, thread);
+            list_add(_scheduler->threads, thread);
+
+            schedule_node_t* node = (schedule_node_t*)kmalloc(sizeof(schedule_node_t));
+            node->thread = thread;
+            node->next = 0;
+            node->prev = 0;
+
+            if(_scheduler->current == 0)
+            {
+                if(thread->process->pid == 0)
+                {
+                    node->next = node;
+                    node->prev = node;
+                    _scheduler->current = node;
+                    _scheduler->head = node;
+                    _scheduler->size = 1;
+                }
+                else
+                {
+                    kernel_panic("Fist thread in scheduler is not IDLE thread! Aborting!", 0);
+                }
+            }
+            else
+            {
+                node->next = _scheduler->head;
+                node->prev = _scheduler->head->prev;
+                _scheduler->head->prev->next = node;
+                _scheduler->head->prev = node;
+                _scheduler->size++;
+            }
         }
     }
 }
@@ -96,14 +183,14 @@ void scheduler_removeThread(thread_t* thread)
 
 void scheduler_removeProcess(process_t* proc)
 {
-    if(proc->threads)
+    if(proc->threads && proc->threads->size > 0)
     {
         foreach(node, proc->threads)
         {
             thread_setState((thread_t*)node->data, THREAD_DISPOSING);
         }
     }
-    if(proc->children)
+    if(proc->children && proc->children->size > 0)
     {
         foreach(node, proc->children)
         {
@@ -117,16 +204,11 @@ process_t* scheduler_executeKernel(int (*main)())
     process_t* proc = process_create(scheduler_getCurrentProcess());
     if(proc)
     {
-        if(proc->parent)
-        {
-            list_add(proc->parent->children, proc);
-        }
         thread_t* thread = thread_create(proc, (uint32_t)main, TFLAG_KERNEL);
         scheduler_addThread(thread);
 
         if(proc->pid == 0)
         {
-            _current_thread = thread;
             scheduler_startIdle(thread->instrPtr, thread->kernelStackPtr);
         }
     }
@@ -138,15 +220,12 @@ process_t* scheduler_executeUser(int argc, char** argv)
     process_t* proc = process_create(scheduler_getCurrentProcess());
     if(proc)
     {
-        if(proc->parent)
-        {
-            list_add(proc->parent->children, proc);
-        }
         thread_t* thread = thread_create(proc, (uint32_t)scheduler_initalizeNewProcess, TFLAG_USER);
         scheduler_addThread(thread);
 
         if(argc > 0)
         {
+            proc->argc = argc;
             proc->argv = (char**)kmalloc(sizeof(char*)*argc);
             for(int i = 0; i<argc; i++)
             {
@@ -160,9 +239,9 @@ process_t* scheduler_executeUser(int argc, char** argv)
 
 process_t* scheduler_getCurrentProcess()
 {
-    if(_current_thread)
+    if(_scheduler->current)
     {
-        return _current_thread->process;
+        return _scheduler->current->thread->process;
     }
     else
     {
@@ -173,9 +252,9 @@ process_t* scheduler_getCurrentProcess()
 process_t* scheduler_getCurrentProcessFromPid(uint32_t pid)
 {
     process_t* process = 0;
-    if(_processes)
+    if(_scheduler->processes)
     {
-        foreach(node, _processes)
+        foreach(node, _scheduler->processes)
         {
             process_t* proc = (process_t*)node->data;
             if(proc->pid == pid)
@@ -190,15 +269,15 @@ process_t* scheduler_getCurrentProcessFromPid(uint32_t pid)
 
 thread_t* scheduler_getCurrentThread()
 {
-    return _current_thread;
+    return _scheduler->current->thread;
 }
 
 thread_t* scheduler_getCurrentThreadFromTid(uint32_t tid)
 {
     thread_t* thread = 0;
-    if(_threads)
+    if(_scheduler->threads)
     {
-        foreach(node, _threads)
+        foreach(node, _scheduler->threads)
         {
             thread_t* th = (thread_t*)node->data;
             if(th->tid == tid)
@@ -214,7 +293,8 @@ thread_t* scheduler_getCurrentThreadFromTid(uint32_t tid)
 void scheduler_initalizeNewProcess()
 {
     thread_t* thread = scheduler_getCurrentThread();
-    printk("Process Init procedure called for PID: %d\n", thread->process->pid);
+    printk("Process Init procedure called for PID: %d with %d arguments\n",
+        thread->process->pid, thread->process->argc);
     if(thread->process->argc > 0)
     {
         printk("Executing file: %s with %d arguments CR3 %x\n",
@@ -227,6 +307,7 @@ void scheduler_initalizeNewProcess()
         if(thread->instrPtr > 0 && thread->process->heapendAddr > PROCESS_MEM_START)
         {
             //TODO: Preload userland stack with arguments!
+            printk("Enterng usermode at: %x with stack at %x\n", thread->instrPtr, thread->userStackPtr);
             thread_enterUsermode(0,
                 thread->instrPtr,
                 thread->userStackPtr);
@@ -239,5 +320,7 @@ void scheduler_initalizeNewProcess()
         }
     }
     //We have somehow failed, lets kill the process
+    printk("scheduler_initalizeNewProcess: FAILED!\n");
     scheduler_removeProcess(thread->process);
+    scheduler_reschedule();
 }
