@@ -183,6 +183,8 @@ void scheduler_removeThread(thread_t* thread)
 
 void scheduler_removeProcess(process_t* proc)
 {
+    printk("Disposing PID %d with %d threads and %d subprocesses\n",
+            proc->pid, proc->threads->size, proc->children->size);
     if(proc->threads && proc->threads->size > 0)
     {
         foreach(node, proc->threads)
@@ -249,7 +251,7 @@ process_t* scheduler_getCurrentProcess()
     }
 }
 
-process_t* scheduler_getCurrentProcessFromPid(uint32_t pid)
+process_t* scheduler_getProcessFromPid(uint32_t pid)
 {
     process_t* process = 0;
     if(_scheduler->processes)
@@ -272,7 +274,7 @@ thread_t* scheduler_getCurrentThread()
     return _scheduler->current->thread;
 }
 
-thread_t* scheduler_getCurrentThreadFromTid(uint32_t tid)
+thread_t* scheduler_getThreadFromTid(uint32_t tid)
 {
     thread_t* thread = 0;
     if(_scheduler->threads)
@@ -307,7 +309,6 @@ void scheduler_initalizeNewProcess()
         if(thread->instrPtr > 0 && thread->process->heapendAddr > PROCESS_MEM_START)
         {
             //TODO: Preload userland stack with arguments!
-            printk("Enterng usermode at: %x with stack at %x\n", thread->instrPtr, thread->userStackPtr);
             thread_enterUsermode(0,
                 thread->instrPtr,
                 thread->userStackPtr);

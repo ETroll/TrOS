@@ -14,8 +14,8 @@ void scheduler_removeProcess(process_t* thread);
 process_t* scheduler_executeKernel(int (*main)());
 process_t* scheduler_executeUser(int argc, char** argv);
 process_t* scheduler_getCurrentProcess();
-process_t* scheduler_getCurrentProcessFromPid(uint32_t pid);
+process_t* scheduler_getProcessFromPid(uint32_t pid);
 thread_t* scheduler_getCurrentThread();
-thread_t* scheduler_getCurrentThreadFromTid(uint32_t tid);
+thread_t* scheduler_getThreadFromTid(uint32_t tid);
 
 #endif

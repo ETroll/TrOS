@@ -145,7 +145,7 @@ static int sys_decreasemem(unsigned int blocks)
 
 static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32_t flags)
 {
-    process_t* reciever = scheduler_getCurrentProcessFromPid(pid);
+    process_t* reciever = scheduler_getProcessFromPid(pid);
     process_t* sender = scheduler_getCurrentProcess();
 
     if(reciever && sender)
@@ -202,12 +202,10 @@ static int sys_execute(const char** arguments)
 
 static void sys_exit(uint32_t status)
 {
-    //WIP: Exit and clean up the process
-    // - Clean up all memory used.
-    // - Remove from scheduler
-    uint32_t pid = scheduler_getCurrentProcess()->pid;
-    printk("EXIT(%d): Exiting with code: %d\n", pid, status);
-    scheduler_removeProcess(scheduler_getCurrentProcess());
+    process_t* proc = scheduler_getCurrentProcess();
+    printk("EXIT(%d): Exiting with code: %d\n", proc->pid, status);
+    scheduler_removeProcess(proc);
+    scheduler_reschedule();
 }
 
 static int sys_thread_start(void (*func)(), void (*exit)())
@@ -217,12 +215,22 @@ static int sys_thread_start(void (*func)(), void (*exit)())
 
 static void sys_thread_cancel(uint32_t tid)
 {
-
+    process_t* proc = scheduler_getCurrentProcess();
+    printk("THREAD_CANCEL(%d): TID %d\n", proc->pid, tid);
+    scheduler_removeThread(scheduler_getThreadFromTid(tid));
+    if(scheduler_getCurrentThread()->tid == tid)
+    {
+        scheduler_reschedule();
+    }
 }
 
 static void sys_thread_exit()
 {
-
+    process_t* proc = scheduler_getCurrentProcess();
+    thread_t* thread = scheduler_getCurrentThread();
+    printk("THREAD_EXIT(%d): TID %d\n", proc->pid, thread->tid);
+    scheduler_removeThread(thread);
+    scheduler_reschedule();
 }
 
 static void sys_thread_sleep(uint32_t ms)
