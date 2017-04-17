@@ -21,12 +21,12 @@ The kernel is a very simple and basic kernel for now. The following "features" a
  * Userland / Ring 3
  * ELF32 Execution
  * UI (Trell)
- - Userland library
- - IPC (Using messagequeues)
+ * Userland library
+ * IPC (Using messagequeues)
+ * Threading
 
 Planned features:
 
- * Threading
  * Lua support in Trell
 
 

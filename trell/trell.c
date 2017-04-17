@@ -1,6 +1,7 @@
 
 #include <trlib/device.h>
 #include <trlib/system.h>
+#include <trlib/threading.h>
 #include <trlib/mq.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,6 +26,8 @@
 file_t* stdout = NULL;
 file_t* stdin = NULL;
 
+static void trell_messageloop();
+
 int main()
 {
     ui_context_t* context = ui_context_create("vga");
@@ -45,16 +48,11 @@ int main()
         int32_t cr3 = system_debug(DEBUG_CR3);
         syslog_log(1, SYSLOG_INFO, "CR3 %x", cr3);
 
+        thread_start(&trell_messageloop);
+
         while(1)
         {
             int key = 0;
-            char buffer[20];
-
-            if(mq_recv(buffer, 20, MQ_NOFLAGS) > 0)
-            {
-                syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
-            }
-
             device_readdata(kbd, &key, 1);
 
             if(key >= KEY_F1 && key < KEY_F9)
@@ -113,4 +111,16 @@ int main()
     }
 
     return 0;
+}
+
+void trell_messageloop()
+{
+    char buffer[20];
+    while(1)
+    {
+        if(mq_recv(buffer, 20, MQ_NOFLAGS) > 0)
+        {
+            syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
+        }
+    }
 }

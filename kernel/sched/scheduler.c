@@ -102,7 +102,17 @@ void scheduler_reschedule()
             // printk("             CR3 %x\n", _scheduler->current->thread->regs.cr3);
             // printk("             CR3 %x\n", _scheduler->current->thread->process->pagedir);
 
-            scheduler_switchThread(&prev->thread->regs, &next->thread->regs);
+            if(next->thread->flags & TFLAG_NEEDKICK)
+            {
+                next->thread->flags &= ~TFLAG_NEEDKICK;
+                thread_enterUsermode(&prev->thread->regs,
+                    next->thread->instrPtr,
+                    next->thread->userStackPtr);
+            }
+            else
+            {
+                scheduler_switchThread(&prev->thread->regs, &next->thread->regs);
+            }
         }
         else
         {

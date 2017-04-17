@@ -72,3 +72,9 @@ DEFN_SYSCALL3(readmessage, 7, const void*, unsigned int, unsigned int);
 
 //Other temoporary or debug calls:
 DEFN_SYSCALL1(debug, 11, unsigned int);
+
+//Threading
+DEFN_SYSCALL2(threadstart, 14, unsigned int, unsigned int);
+DEFN_SYSCALL1(threadcancel, 15, unsigned int);
+DEFN_SYSCALL0(threadexit, 16);
+DEFN_SYSCALL1(threadsleep, 17, unsigned int);

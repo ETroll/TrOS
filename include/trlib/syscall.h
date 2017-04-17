@@ -34,4 +34,10 @@ DECL_SYSCALL3(readmessage, const void*, unsigned int, unsigned int);
 
 DECL_SYSCALL1(debug, unsigned int);
 
+//Threading
+DECL_SYSCALL2(threadstart, unsigned int, unsigned int);
+DECL_SYSCALL1(threadcancel, unsigned int);
+DECL_SYSCALL0(threadexit);
+DECL_SYSCALL1(threadsleep, unsigned int);
+
 #endif

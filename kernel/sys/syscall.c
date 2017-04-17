@@ -208,9 +208,15 @@ static void sys_exit(uint32_t status)
     scheduler_reschedule();
 }
 
-static int sys_thread_start(void (*func)(), void (*exit)())
+static int sys_thread_start(uint32_t func, uint32_t exit)
 {
-    return -1;
+    process_t* proc = scheduler_getCurrentProcess();
+    thread_t* thread = thread_create(proc, func, TFLAG_USER);
+    scheduler_addThread(thread);
+
+    printk("THREAD_START(%d): TID %d at %x\n", proc->pid, thread->tid, func);
+
+    return thread->tid;
 }
 
 static void sys_thread_cancel(uint32_t tid)
