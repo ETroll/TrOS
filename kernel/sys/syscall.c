@@ -241,7 +241,10 @@ static void sys_thread_exit()
 
 static void sys_thread_sleep(uint32_t ms)
 {
-
+    process_t* proc = scheduler_getCurrentProcess();
+    thread_t* thread = scheduler_getCurrentThread();
+    printk("THREAD_SLEEP(%d): TID %d\n", proc->pid, thread->tid);
+    timer_sleep(thread, ms);
 }
 
 int syscall_dispatcher(syscall_parameters_t regs)

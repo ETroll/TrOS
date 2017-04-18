@@ -4,7 +4,9 @@
 #ifndef INCLUDE_TROS_TIMER_H
 #define INCLUDE_TROS_TIMER_H
 
-void timer_initialize(unsigned int frequency);
-void timer_sleep(unsigned int wait);
+#include <tros/sched/scheduler.h>
+
+void timer_initialize(uint32_t frequency);
+void timer_sleep(thread_t* thread, uint32_t ticks);
 
 #endif

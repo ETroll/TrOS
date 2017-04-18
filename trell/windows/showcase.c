@@ -102,5 +102,6 @@ void showcase_threadloop()
     {
         sprintf(buffer, "Thread: %d\0", counter++);
         ui_label_set_text(threadlabel, buffer);
+        thread_sleep(2);
     }
 }

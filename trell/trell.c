@@ -122,5 +122,6 @@ void trell_messageloop()
         {
             syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
         }
+        thread_sleep(20);
     }
 }
