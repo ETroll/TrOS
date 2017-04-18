@@ -98,7 +98,7 @@ void scheduler_reschedule()
             // printk("Switching to TID %d\n", _scheduler->current->thread->tid);
             // printk("             EIP %x\n", _scheduler->current->thread->regs.eip);
             // printk("             ESP %x\n", _scheduler->current->thread->regs.esp);
-            // printk("          Kstack %x (%d bytes used)\n", _scheduler->current->thread->kernelStackPtr, _scheduler->current->thread->kernelStackPtr-_scheduler->current->thread->regs.esp);
+            // printk("          Kstack %x\n", _scheduler->current->thread->kernelStackPtr);
             // printk("             CR3 %x\n", _scheduler->current->thread->regs.cr3);
             // printk("             CR3 %x\n", _scheduler->current->thread->process->pagedir);
 

@@ -68,6 +68,13 @@ thread_enterUsermode:
 
         ; Lets push our new entry point to be used when it "returns" when performing the iret
         push dword [ebp+12] ;note 32 bit address size "hardcoded"
+
+        ;Call the EOI so timer dont stop
+        push eax
+        mov eax, 0x20
+        out 0x20, eax
+        pop eax
+
         iret
 
 global tss_flush
