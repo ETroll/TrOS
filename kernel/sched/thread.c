@@ -80,8 +80,8 @@ void thread_dispose(thread_t* thread)
 void thread_setState(thread_t* p, thread_state_t s)
 {
     p->state = s;
-    if(s == THREAD_WAITIO || s == THREAD_SLEEPING)
-    {
-        printk("TID %d waiting/sleeping\n", p->tid);
-    }
+    // if(s == THREAD_WAITIO || s == THREAD_SLEEPING)
+    // {
+    //     printk("TID %d waiting/sleeping\n", p->tid);
+    // }
 }

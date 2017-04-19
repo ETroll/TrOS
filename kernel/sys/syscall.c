@@ -241,9 +241,9 @@ static void sys_thread_exit()
 
 static void sys_thread_sleep(uint32_t ms)
 {
-    process_t* proc = scheduler_getCurrentProcess();
+    // process_t* proc = scheduler_getCurrentProcess();
     thread_t* thread = scheduler_getCurrentThread();
-    printk("THREAD_SLEEP(%d): TID %d\n", proc->pid, thread->tid);
+    // printk("THREAD_SLEEP(%d): TID %d\n", proc->pid, thread->tid);
     timer_sleep(thread, ms);
 }
 
