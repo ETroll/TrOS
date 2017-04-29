@@ -305,20 +305,58 @@ thread_t* scheduler_getThreadFromTid(uint32_t tid)
 void scheduler_initalizeNewProcess()
 {
     thread_t* thread = scheduler_getCurrentThread();
-    printk("Process Init procedure called for PID: %d with %d arguments\n",
-        thread->process->pid, thread->process->argc);
+    // printk("Process Init procedure called for PID: %d with %d arguments\n",
+    //     thread->process->pid, thread->process->argc);
     if(thread->process->argc > 0)
     {
-        printk("Executing file: %s with %d arguments CR3 %x\n",
-            thread->process->argv[0],
-            thread->process->argc,
-            vmm2_get_directory());
+        // printk("Executing file: %s with %d arguments CR3 %x\n",
+        //     thread->process->argv[0],
+        //     thread->process->argc,
+        //     vmm2_get_directory());
 
         thread->process->heapendAddr = elf32_load(thread->process->argv[0], &thread->instrPtr);
 
         if(thread->instrPtr > 0 && thread->process->heapendAddr > PROCESS_MEM_START)
         {
-            //TODO: Preload userland stack with arguments!
+            //Preload userland stack with arguments!
+            uint32_t argvTotalSize = 0;
+            for(int i = 0; i<thread->process->argc; i++)
+            {
+                argvTotalSize += strlen(thread->process->argv[i])+1;
+            }
+
+            uint32_t blocks = argvTotalSize / VMM2_BLOCK_SIZE;
+            if(argvTotalSize % VMM2_BLOCK_SIZE > 0)
+            {
+                blocks++;
+            }
+            vmm2_map(thread->process->heapendAddr, blocks,  VMM2_PAGE_USER | VMM2_PAGE_WRITABLE);
+            memset((void*)thread->process->heapendAddr, 0, blocks*VMM2_BLOCK_SIZE);
+
+            uint32_t memPtr = thread->process->heapendAddr;
+            thread->process->heapendAddr += (VMM2_BLOCK_SIZE * blocks);
+
+            char** argv = (char**)memPtr;
+            memPtr += sizeof(char*)*thread->process->argc;
+
+            for(int i = 0; i<thread->process->argc; i++)
+            {
+                argv[i] = (char*)memPtr;
+                strcpy(argv[i], thread->process->argv[i]);
+                memPtr += strlen(thread->process->argv[i])+1;
+            }
+
+            thread->userStackPtr -= sizeof(char**);
+            *((char***)thread->userStackPtr) = argv;
+
+            thread->userStackPtr -= sizeof(int);
+            *((int*)thread->userStackPtr) = thread->process->argc;
+
+            // "Return addres" so argc is not taken as a return addr and argv is outside the stack When
+            // the application asks for it.
+            thread->userStackPtr -= sizeof(int);
+            *((int*)thread->userStackPtr) = 0;
+
             thread_enterUsermode(0,
                 thread->instrPtr,
                 thread->userStackPtr);

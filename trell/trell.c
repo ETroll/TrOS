@@ -28,8 +28,9 @@ file_t* stdin = NULL;
 
 static void trell_messageloop();
 
-int main()
+int main(int argc, char** argv[])
 {
+    int pid = system_pid();
     ui_context_t* context = ui_context_create("vga");
     if(context)
     {
@@ -46,7 +47,13 @@ int main()
         device_t kbd = device_open("kbd");
 
         int32_t cr3 = system_debug(DEBUG_CR3);
-        syslog_log(1, SYSLOG_INFO, "CR3 %x", cr3);
+        syslog_log(pid, SYSLOG_INFO, "CR3 %x", cr3);
+        syslog_log(pid, SYSLOG_INFO, "Argc %d", argc);
+
+        for(int i = 0; i<argc; i++)
+        {
+            syslog_log(pid, SYSLOG_INFO, "Argv[%d]: %s", i, argv[i]);
+        }
 
         thread_start(&trell_messageloop);
 
@@ -65,7 +72,7 @@ int main()
                 }
                 else
                 {
-                    syslog_log(1, SYSLOG_INFO, "No window found at index %d", index);
+                    syslog_log(pid, SYSLOG_INFO, "No window found at index %d", index);
                 }
             }
             else
@@ -122,6 +129,9 @@ void trell_messageloop()
         {
             syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
         }
-        thread_sleep(20);
+        else
+        {
+            thread_sleep(10);
+        }
     }
 }

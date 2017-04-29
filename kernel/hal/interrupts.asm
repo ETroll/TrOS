@@ -131,12 +131,11 @@ IRQ 15, 47
 
 global syscall_isr
 syscall_isr:
-    ;xchg bx, bx
-
     push ebp
     mov ebp, esp
     sub esp, 4
 
+    push ebx
     push ds
     push es
     push fs
@@ -147,7 +146,6 @@ syscall_isr:
     mov es, [ebp-4]
     mov fs, [ebp-4]
     mov gs, [ebp-4]
-    add esp, 4 ;clean up variable used to store 0x10
 
     push eax
     push ebx
@@ -156,8 +154,13 @@ syscall_isr:
     push esi
     push edi
     call syscall_dispatcher
-    add esp, 24 ;syscall params
-
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    add esp, 8  ; Dont want to pop into eax, or ebx (stored on stack previous)
+                ; since it is used for return value.
+                ; Just want to "dispose of" the old value
     pop ebx
     mov gs, bx
     pop ebx
@@ -166,9 +169,9 @@ syscall_isr:
     mov es, bx
     pop ebx
     mov ds, bx
-
+    pop ebx     ; Ref above. ebx was stored twice on stack.
+                ; No need to clean up the 4 bytes used for function variable
+                ; esp gets back to normal and it gets "forgotten" anyway!
     mov esp, ebp
     pop ebp
-
-    ;xchg bx, bx
     iretd

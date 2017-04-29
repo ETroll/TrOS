@@ -1,6 +1,7 @@
 #include <tros/irq.h>
 #include <tros/mem/vmm2.h>
 #include <tros/driver.h>
+#include <tros/timer.h>
 #include <tros/tros.h>
 #include <tros/klib/kstring.h>
 #include <tros/sched/scheduler.h>

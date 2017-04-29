@@ -32,7 +32,7 @@ void kernel_early()
 {
     irq_initialize();
     serial_init();
-    timer_initialize(50);
+    timer_initialize(1000);
 
     __asm("sti");
 }
@@ -103,7 +103,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     }
 }
 
-// This is the "idle process"
+// This is the "init/idle process"
 int kernel_idle()
 {
     printk("Starting INIT process!\n");
