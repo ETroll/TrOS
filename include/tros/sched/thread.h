@@ -48,7 +48,7 @@ typedef struct
     process_t* process;
 } thread_t;
 
-thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t flags);
+thread_t* thread_create(process_t* parent, uint32_t instrPointer, uint32_t exitPointer, thread_flag_t flags);
 void thread_dispose(thread_t* thread);
 void thread_setState(thread_t* p, thread_state_t s);
 

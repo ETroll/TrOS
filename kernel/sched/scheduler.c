@@ -216,7 +216,7 @@ process_t* scheduler_executeKernel(int (*main)())
     process_t* proc = process_create(scheduler_getCurrentProcess());
     if(proc)
     {
-        thread_t* thread = thread_create(proc, (uint32_t)main, TFLAG_KERNEL);
+        thread_t* thread = thread_create(proc, (uint32_t)main, 0, TFLAG_KERNEL);
         scheduler_addThread(thread);
 
         if(proc->pid == 0)
@@ -232,7 +232,7 @@ process_t* scheduler_executeUser(int argc, char** argv)
     process_t* proc = process_create(scheduler_getCurrentProcess());
     if(proc)
     {
-        thread_t* thread = thread_create(proc, (uint32_t)scheduler_initalizeNewProcess, TFLAG_USER);
+        thread_t* thread = thread_create(proc, (uint32_t)scheduler_initalizeNewProcess, 0, TFLAG_USER);
         scheduler_addThread(thread);
 
         if(argc > 0)

@@ -8,7 +8,7 @@ static unsigned int _nexttid = 0;
 #define THREAD_STACK_START 0xBFFFC000
 #define THREAD_STACK_SIZE VMM2_BLOCK_SIZE * 4
 
-thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t flags)
+thread_t* thread_create(process_t* parent, uint32_t instrPointer, uint32_t exitPointer, thread_flag_t flags)
 {
     thread_t* thread = (thread_t*)kmalloc(sizeof(thread_t));
     if(thread)
@@ -26,9 +26,23 @@ thread_t* thread_create(process_t* parent, uint32_t instrPointer, thread_flag_t 
             vmm2_map_todir(userStackAddr, 4, VMM2_PAGE_USER | VMM2_PAGE_WRITABLE, parent->pagedir);
             userStackAddr += (THREAD_STACK_SIZE - sizeof(unsigned int));
         }
-
         thread->kernelStackPtr = (uint32_t)kmalloc(KERNEL_STACK_SIZE) + (KERNEL_STACK_SIZE - sizeof(uint32_t));
         thread->userStackPtr = userStackAddr;
+
+        if(exitPointer != 0)
+        {
+            if(thread->userStackPtr != 0)
+            {
+                thread->userStackPtr -= sizeof(int);
+                *((int*)thread->userStackPtr) = exitPointer;
+            }
+            else
+            {
+                thread->kernelStackPtr -= sizeof(int);
+                *((int*)thread->kernelStackPtr) = exitPointer;
+            }
+        }
+
         thread->instrPtr = instrPointer;
         thread->process = parent;
         thread->state = THREAD_RUNNING;

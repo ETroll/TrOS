@@ -209,10 +209,11 @@ static void sys_exit(uint32_t status)
     scheduler_reschedule();
 }
 
-static int sys_thread_start(uint32_t func, uint32_t exit)
+static int sys_thread_start(uint32_t func, uint32_t exitPtr)
 {
     process_t* proc = scheduler_getCurrentProcess();
-    thread_t* thread = thread_create(proc, func, TFLAG_USER);
+    thread_t* thread = thread_create(proc, func, exitPtr, TFLAG_USER);
+
     scheduler_addThread(thread);
 
     printk("THREAD_START(%d): TID %d at %x\n", proc->pid, thread->tid, func);

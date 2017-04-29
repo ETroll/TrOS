@@ -96,11 +96,10 @@ void btn_cancel_clicked()
 
 void showcase_threadloop()
 {
-    uint32_t counter = 0;
     char buffer[20];
-    while(1)
+    for(int i = 0; i<10; i++)
     {
-        sprintf(buffer, "Thread: %d\0", counter++);
+        sprintf(buffer, "Thread: %d\0", i);
         ui_label_set_text(threadlabel, buffer);
         thread_sleep(2);
     }
