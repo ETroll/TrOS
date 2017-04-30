@@ -33,7 +33,7 @@ static void trell_messageloop();
 int main(int argc, char** argv)
 {
     int pid = system_pid();
-    tui_context_t* context = tui_context_create("vga");
+    tui_context_t* context = tui_context_create("vga0");
     if(context)
     {
         tui_window_t* showcase = showcase_create();

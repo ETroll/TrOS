@@ -15,7 +15,7 @@
 //Drivers baked in to the kernel
 extern int kbd_driver_initialize();
 extern int floppy_driver_initialize(unsigned char device);
-extern int vga_driver_initialize();
+extern int textmode_driver_initialize();
 
 //Filesystems baked in to the kernel
 extern int fat12_fs_initialize();
@@ -64,7 +64,7 @@ void kernel_drivers()
     }
 
     kbd_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
-    vga_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
+    textmode_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
 }
 
 void kernel_filesystems()
