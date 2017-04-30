@@ -6,7 +6,7 @@
 file_t* stdout = NULL;
 file_t* stdin = NULL;
 
-int main(int argc, char** argv[])
+int main(int argc, char** argv)
 {
     int parent = system_parentpid();
 

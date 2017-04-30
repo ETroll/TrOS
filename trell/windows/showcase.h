@@ -1,8 +1,8 @@
 #ifndef TRELL_SHOWCASE_H
 #define TRELL_SHOWCASE_H
 
-#include "../ui/ui.h"
+#include "../tui/tui.h"
 
-ui_window_t* showcase_create();
+tui_window_t* showcase_create();
 
 #endif

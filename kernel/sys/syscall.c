@@ -151,7 +151,6 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
 
     if(reciever && sender)
     {
-        printk("sys_sendmessage Payload (%d): %s\n", size, data);
         mailbox_message_t* message = mailbox_message_create(sender->pid, data, size, flags);
         if(message)
         {
@@ -174,10 +173,7 @@ static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
         {
             sizetoread = message->size;
         }
-
-        printk("sys_readmessage Payload (%d): %s\n",sizetoread, message->payload);
         memcpy(buffer, message->payload, sizetoread);
-
         mailbox_message_dispose(message);
 
         return sizetoread; //TODO: replace with real read num

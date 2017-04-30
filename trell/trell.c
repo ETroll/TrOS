@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <keycodes.h>
-#include "ui/ui.h"
-#include "ui/list.h"
+#include "tui/tui.h"
+#include "tui/list.h"
 #include "windows/syslog.h"
 #include "windows/showcase.h"
 
@@ -26,23 +26,25 @@
 file_t* stdout = NULL;
 file_t* stdin = NULL;
 
+tui_desktop_t* desktop = NULL;
+
 static void trell_messageloop();
 
-int main(int argc, char** argv[])
+int main(int argc, char** argv)
 {
     int pid = system_pid();
-    ui_context_t* context = ui_context_create("vga");
+    tui_context_t* context = tui_context_create("vga");
     if(context)
     {
-        ui_window_t* showcase = showcase_create();
-        ui_window_t* syslog = syslog_create();
-        ui_desktop_t* desktop = ui_desktop_create(context);
+        tui_window_t* showcase = showcase_create();
+        tui_window_t* syslog = syslog_create();
+        desktop = tui_desktop_create(context);
 
         list_add(desktop->windows, showcase);
         list_add(desktop->windows, syslog);
 
-        ui_desktop_set_activewindow(desktop, showcase);
-        ui_redraw(desktop);
+        tui_desktop_set_activewindow(desktop, showcase);
+        tui_redraw(desktop);
 
         device_t kbd = device_open("kbd");
 
@@ -65,10 +67,10 @@ int main(int argc, char** argv[])
             if(key >= KEY_F1 && key < KEY_F9)
             {
                 uint32_t index = key - KEY_F1;
-                ui_window_t* win = (ui_window_t*)list_get_at(desktop->windows, index);
+                tui_window_t* win = (tui_window_t*)list_get_at(desktop->windows, index);
                 if(win != NULL)
                 {
-                    ui_desktop_set_activewindow(desktop, win);
+                    tui_desktop_set_activewindow(desktop, win);
                 }
                 else
                 {
@@ -79,10 +81,10 @@ int main(int argc, char** argv[])
             {
                 if(desktop->activeWindow->handlemessage != NULL)
                 {
-                    desktop->activeWindow->handlemessage(UI_KEYSTROKE, key, desktop->activeWindow);
+                    desktop->activeWindow->handlemessage(tui_KEYSTROKE, key, desktop->activeWindow);
                 }
             }
-            ui_redraw(desktop);
+            tui_redraw(desktop);
         }
     }
 
@@ -131,6 +133,7 @@ void trell_messageloop()
         }
         else
         {
+            tui_redraw(desktop);
             thread_sleep(10);
         }
     }

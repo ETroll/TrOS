@@ -1,22 +1,22 @@
 #include <stdlib.h>
 #include <string.h>
-#include "ui.h"
-#include "ui_label.h"
+#include "tui.h"
+#include "tui_label.h"
 
-static void ui_label_paint(ui_context_t* ctx, void* self);
-static void ui_label_dispose(void* self);
+static void tui_label_paint(tui_context_t* ctx, void* self);
+static void tui_label_dispose(void* self);
 
-ui_item_t* ui_label_create(uint8_t x, uint8_t y, uint8_t width, char* text)
+tui_item_t* tui_label_create(uint8_t x, uint8_t y, uint8_t width, char* text)
 {
-    ui_item_t* item = (ui_item_t*)malloc(sizeof(ui_item_t));
+    tui_item_t* item = (tui_item_t*)malloc(sizeof(tui_item_t));
     if(item)
     {
         item->handlemessage = NULL;
-        item->paint = ui_label_paint;
-        item->dispose = ui_label_dispose;
+        item->paint = tui_label_paint;
+        item->dispose = tui_label_dispose;
         item->visible = TRUE;
-        item->backcolor = UI_LIGHT_GRAY;
-        item->frontcolor = UI_BLACK;
+        item->backcolor = tui_LIGHT_GRAY;
+        item->frontcolor = tui_BLACK;
         item->pos.x = x;
         item->pos.y = y;
         item->pos.width = width;
@@ -29,7 +29,7 @@ ui_item_t* ui_label_create(uint8_t x, uint8_t y, uint8_t width, char* text)
     return item;
 }
 
-void ui_label_set_text(ui_item_t* lbl, char* text)
+void tui_label_set_text(tui_item_t* lbl, char* text)
 {
     if(lbl->content)
     {
@@ -39,11 +39,11 @@ void ui_label_set_text(ui_item_t* lbl, char* text)
     strcpy(lbl->content, text);
 }
 
-void ui_label_paint(ui_context_t* ctx, void* self)
+void tui_label_paint(tui_context_t* ctx, void* self)
 {
     if(self && ctx)
     {
-        ui_item_t* item = (ui_item_t*)self;
+        tui_item_t* item = (tui_item_t*)self;
         if(item->content)
         {
             char* text = (char*)item->content;
@@ -52,7 +52,7 @@ void ui_label_paint(ui_context_t* ctx, void* self)
                 x < (item->pos.x + item->pos.width);
                 x++)
             {
-                ui_cell_t* cell = &ctx->buffer[(item->pos.y * ctx->width) + x];
+                tui_cell_t* cell = &ctx->buffer[(item->pos.y * ctx->width) + x];
                 cell->backcolor = item->backcolor;
                 cell->frontcolor = item->frontcolor;
                 cell->dirty = TRUE;
@@ -70,15 +70,15 @@ void ui_label_paint(ui_context_t* ctx, void* self)
     }
 }
 
-void ui_label_dispose(void* self)
+void tui_label_dispose(void* self)
 {
     if(self)
     {
-        ui_item_t* item = (ui_item_t*)self;
+        tui_item_t* item = (tui_item_t*)self;
         if(item->content)
         {
             free(item->content);
         }
-        ui_item_dispose(item);
+        tui_item_dispose(item);
     }
 }

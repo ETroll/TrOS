@@ -4,7 +4,7 @@
 #include <string.h>
 #include <keycodes.h>
 
-#include "ui.h"
+#include "tui.h"
 
 #define FRAME_ROWS 25
 #define FRAME_COLS 80
@@ -16,42 +16,42 @@
 
 #define COLOR(front, back) (back << 4) | front
 
-static void ui_window_paint(ui_window_t* window, ui_context_t* ctx);
-static void ui_menubar_paint(ui_desktop_t* desktop);
+static void tui_window_paint(tui_window_t* window, tui_context_t* ctx);
+static void tui_menubar_paint(tui_desktop_t* desktop);
 
-static void ui_context_flush(ui_context_t* context);
+static void tui_context_flush(tui_context_t* context);
 
-static ui_menubar_t* ui_menubar_create();
+static tui_menubar_t* tui_menubar_create();
 
-static ui_menu_t* ui_menu_create(char* text);
-// static void ui_menu_add_item(ui_menu_t* menu, char* text);
-// static void ui_menu_remove_item(ui_menuitem_t*);
-// static void ui_menu_dispose(ui_menu_t*);
+static tui_menu_t* tui_menu_create(char* text);
+// static void tui_menu_add_item(tui_menu_t* menu, char* text);
+// static void tui_menu_remove_item(tui_menuitem_t*);
+// static void tui_menu_dispose(tui_menu_t*);
 
 
-ui_context_t* ui_context_create(char* devicename)
+tui_context_t* tui_context_create(char* devicename)
 {
-    ui_context_t* context = NULL;
+    tui_context_t* context = NULL;
     device_t vga = device_open(devicename);
 
     if(vga)
     {
-        context = (ui_context_t*)malloc(sizeof(ui_context_t));
+        context = (tui_context_t*)malloc(sizeof(tui_context_t));
         context->device = vga;
         context->width = FRAME_COLS;
         context->height = FRAME_ROWS;
-        context->buffer = (ui_cell_t*)malloc(sizeof(ui_cell_t) * FRAME_COLS * FRAME_ROWS);
+        context->buffer = (tui_cell_t*)malloc(sizeof(tui_cell_t) * FRAME_COLS * FRAME_ROWS);
 
         device_command(vga, IOCTL_VGA_TOGGLE_CURSOR, 0);
-        device_command(vga, IOCTL_VGA_COLOR, COLOR(UI_WHITE, UI_LIGHT_RED));
+        device_command(vga, IOCTL_VGA_COLOR, COLOR(tui_WHITE, tui_LIGHT_RED));
         device_command(vga, IOCTL_VGA_CLEAR_MEM, 0);
 
 
         for(uint32_t i = 0; i<FRAME_COLS * FRAME_ROWS; i++)
         {
-            ui_cell_t* cell = &context->buffer[i];
-            cell->backcolor = UI_LIGHT_RED;
-            cell->frontcolor = UI_WHITE;
+            tui_cell_t* cell = &context->buffer[i];
+            cell->backcolor = tui_LIGHT_RED;
+            cell->frontcolor = tui_WHITE;
             cell->data = 0x00;
             cell->dirty = FALSE;
         }
@@ -59,34 +59,34 @@ ui_context_t* ui_context_create(char* devicename)
     return context;
 }
 
-ui_desktop_t* ui_desktop_create(ui_context_t* context)
+tui_desktop_t* tui_desktop_create(tui_context_t* context)
 {
-    ui_desktop_t* desktop = (ui_desktop_t*)malloc(sizeof(ui_desktop_t));
+    tui_desktop_t* desktop = (tui_desktop_t*)malloc(sizeof(tui_desktop_t));
     if(desktop != NULL)
     {
         desktop->windows = list_create();
         desktop->context = context;
         desktop->activeWindow = NULL;
-        desktop->menubar = ui_menubar_create();
-        desktop->fillColor = UI_LIGHT_RED;
+        desktop->menubar = tui_menubar_create();
+        desktop->fillColor = tui_LIGHT_RED;
     }
     return desktop;
 }
 
-ui_menubar_t* ui_menubar_create()
+tui_menubar_t* tui_menubar_create()
 {
-    return (ui_menubar_t*)malloc(sizeof(ui_menubar_t));
+    return (tui_menubar_t*)malloc(sizeof(tui_menubar_t));
 }
 
-ui_window_t* ui_window_create(char* title)
+tui_window_t* tui_window_create(char* title)
 {
-    ui_window_t* window = (ui_window_t*)malloc(sizeof(ui_window_t));
+    tui_window_t* window = (tui_window_t*)malloc(sizeof(tui_window_t));
     if(window)
     {
         window->title = NULL;
-        window->backcolor = UI_LIGHT_GRAY;
-        window->frontcolor = UI_BLACK;
-        window->menu = ui_menu_create(title);
+        window->backcolor = tui_LIGHT_GRAY;
+        window->frontcolor = tui_BLACK;
+        window->menu = tui_menu_create(title);
         window->items = list_create();
         window->activeItem = NULL;
         window->handlemessage = NULL;
@@ -105,9 +105,9 @@ ui_window_t* ui_window_create(char* title)
     return window;
 }
 
-ui_menu_t* ui_menu_create(char* text)
+tui_menu_t* tui_menu_create(char* text)
 {
-    ui_menu_t* menu = (ui_menu_t*)malloc(sizeof(ui_menu_t));
+    tui_menu_t* menu = (tui_menu_t*)malloc(sizeof(tui_menu_t));
     if(menu)
     {
         menu->active = 0;
@@ -123,19 +123,19 @@ ui_menu_t* ui_menu_create(char* text)
     return menu;
 }
 
-void ui_desktop_set_activewindow(ui_desktop_t* desktop,  ui_window_t* window)
+void tui_desktop_set_activewindow(tui_desktop_t* desktop,  tui_window_t* window)
 {
     if(desktop->activeWindow != NULL)
     {
-        desktop->activeWindow->handlemessage(UI_WINDOW_LEAVE, 0, desktop->activeWindow);
+        desktop->activeWindow->handlemessage(tui_WINDOW_LEAVE, 0, desktop->activeWindow);
     }
     desktop->activeWindow = window;
-    desktop->activeWindow->handlemessage(UI_WINDOW_ENTER, 0, desktop->activeWindow);
+    desktop->activeWindow->handlemessage(tui_WINDOW_ENTER, 0, desktop->activeWindow);
 }
 
-void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* window)
+void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* window)
 {
-    if(code == UI_KEYSTROKE)
+    if(code == tui_KEYSTROKE)
     {
         switch (val) {
             case KEY_TAB:
@@ -152,19 +152,19 @@ void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* window)
 
                 if(prevItem != NULL)
                 {
-                    ui_item_t* itm = (ui_item_t*)prevItem->data;
+                    tui_item_t* itm = (tui_item_t*)prevItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(UI_ITEM_LOSTFOCUS, 0, itm);
+                        itm->handlemessage(tui_ITEM_LOSTFOCUS, 0, itm);
                     }
                 }
 
                 if(window->activeItem != NULL)
                 {
-                    ui_item_t* itm = (ui_item_t*)window->activeItem->data;
+                    tui_item_t* itm = (tui_item_t*)window->activeItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(UI_ITEM_GOTFOCUS, 0, itm);
+                        itm->handlemessage(tui_ITEM_GOTFOCUS, 0, itm);
                     }
                 }
             } break;
@@ -172,10 +172,10 @@ void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* window)
             {
                 if(window->activeItem != NULL)
                 {
-                    ui_item_t* itm = (ui_item_t*)window->activeItem->data;
+                    tui_item_t* itm = (tui_item_t*)window->activeItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(UI_KEYSTROKE, val, itm);
+                        itm->handlemessage(tui_KEYSTROKE, val, itm);
                     }
                 }
             }break;
@@ -184,7 +184,7 @@ void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* window)
 }
 
 
-// void ui_menu_dispose(ui_menu_t* menu)
+// void tui_menu_dispose(tui_menu_t* menu)
 // {
 //     if(menu)
 //     {
@@ -196,7 +196,7 @@ void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* window)
 //         {
 //             foreach(i, menu->items)
 //             {
-//                 ui_menu_remove_item(i->data);
+//                 tui_menu_remove_item(i->data);
 //             }
 //             list_free(menu->items);
 //         }
@@ -204,21 +204,21 @@ void ui_window_inputhandler(ui_message_t code, int val, ui_window_t* window)
 //     }
 // }
 
-// void ui_menu_add_item(ui_menu_t* menu, char* text)
+// void tui_menu_add_item(tui_menu_t* menu, char* text)
 // {
 //
 // }
 
-// void ui_menu_remove_item(ui_menuitem_t* item)
+// void tui_menu_remove_item(tui_menuitem_t* item)
 // {
-//     //free up item! (See ui_menu_dispose usage)
+//     //free up item! (See tui_menu_dispose usage)
 // }
 
-void ui_redraw(ui_desktop_t* desktop)
+void tui_redraw(tui_desktop_t* desktop)
 {
     if(desktop->activeWindow != NULL)
     {
-        ui_window_paint(desktop->activeWindow, desktop->context);
+        tui_window_paint(desktop->activeWindow, desktop->context);
     }
     else
     {
@@ -226,9 +226,9 @@ void ui_redraw(ui_desktop_t* desktop)
         {
             for(uint32_t x = 0; x < FRAME_COLS; x++)
             {
-                ui_cell_t* cell = &desktop->context->buffer[y * desktop->context->width + x];
+                tui_cell_t* cell = &desktop->context->buffer[y * desktop->context->width + x];
                 cell->backcolor = desktop->fillColor;
-                cell->frontcolor = UI_BLACK;
+                cell->frontcolor = tui_BLACK;
                 cell->dirty = TRUE;
             }
         }
@@ -236,23 +236,23 @@ void ui_redraw(ui_desktop_t* desktop)
 
     if(desktop->menubar != NULL)
     {
-        ui_menubar_paint(desktop);
+        tui_menubar_paint(desktop);
     }
     else
     {
         for(uint32_t x = 0; x < FRAME_COLS; x++)
         {
-            ui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
-            cell->backcolor = UI_GREEN;
-            cell->frontcolor = UI_BLACK;
+            tui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
+            cell->backcolor = tui_GREEN;
+            cell->frontcolor = tui_BLACK;
             cell->dirty = TRUE;
         }
     }
 
-    ui_context_flush(desktop->context);
+    tui_context_flush(desktop->context);
 }
 
-void ui_window_paint(ui_window_t* window, ui_context_t* ctx)
+void tui_window_paint(tui_window_t* window, tui_context_t* ctx)
 {
     if(window && ctx)
     {
@@ -263,7 +263,7 @@ void ui_window_paint(ui_window_t* window, ui_context_t* ctx)
         {
             for(uint32_t x = 0; x < max_x; x++)
             {
-                ui_cell_t* cell = &ctx->buffer[y * ctx->width + x];
+                tui_cell_t* cell = &ctx->buffer[y * ctx->width + x];
                 cell->backcolor = window->backcolor;
                 cell->frontcolor = window->frontcolor;
                 cell->dirty = TRUE;
@@ -309,7 +309,7 @@ void ui_window_paint(ui_window_t* window, ui_context_t* ctx)
 
             for(uint32_t x = startOffset, c = 0; x < (startOffset+len); x++)
             {
-                ui_cell_t* cell = &ctx->buffer[x];
+                tui_cell_t* cell = &ctx->buffer[x];
                 if(x == startOffset)
                 {
                     cell->data = 0xB5;
@@ -329,22 +329,22 @@ void ui_window_paint(ui_window_t* window, ui_context_t* ctx)
         {
             foreach(item, window->items)
             {
-                if(((ui_item_t*)item->data)->visible)
+                if(((tui_item_t*)item->data)->visible)
                 {
-                    ((ui_item_t*)item->data)->paint(ctx, item->data);
+                    ((tui_item_t*)item->data)->paint(ctx, item->data);
                 }
             }
         }
     }
 }
 
-void ui_menubar_paint(ui_desktop_t* desktop)
+void tui_menubar_paint(tui_desktop_t* desktop)
 {
     for(uint32_t x = 0; x < FRAME_COLS; x++)
     {
-        ui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
-        cell->backcolor = UI_GREEN;
-        cell->frontcolor = UI_BLACK;
+        tui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
+        cell->backcolor = tui_GREEN;
+        cell->frontcolor = tui_BLACK;
         cell->dirty = TRUE;
     }
 
@@ -353,7 +353,7 @@ void ui_menubar_paint(ui_desktop_t* desktop)
 
     foreach(item, desktop->windows)
     {
-        ui_window_t* window = (ui_window_t*)item->data;
+        tui_window_t* window = (tui_window_t*)item->data;
         if(window)
         {
             char name[14] = "F";
@@ -370,12 +370,12 @@ void ui_menubar_paint(ui_desktop_t* desktop)
             }
 
             uint32_t counter = 0;
-            ui_cell_color_t backcolor = window == desktop->activeWindow ? UI_LIGHT_GREEN : UI_GREEN;
+            tui_cell_color_t backcolor = window == desktop->activeWindow ? tui_LIGHT_GREEN : tui_GREEN;
             for(int x = (index*itemsize); x < (index*itemsize)+(itemsize-1); x++)
             {
-                ui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
+                tui_cell_t* cell = &desktop->context->buffer[(FRAME_ROWS-1) * desktop->context->width + x];
                 cell->backcolor = backcolor;
-                cell->frontcolor = UI_BLACK;
+                cell->frontcolor = tui_BLACK;
                 cell->dirty = TRUE;
                 cell->data = name[counter++];
             }
@@ -384,13 +384,13 @@ void ui_menubar_paint(ui_desktop_t* desktop)
     }
 }
 
-void ui_context_flush(ui_context_t* context)
+void tui_context_flush(tui_context_t* context)
 {
     for(uint32_t y = 0; y < FRAME_ROWS; y++)
     {
         for(uint32_t x = 0; x < FRAME_COLS; x++)
         {
-            ui_cell_t* cell = &context->buffer[y * context->width + x];
+            tui_cell_t* cell = &context->buffer[y * context->width + x];
             if(cell->dirty)
             {
                 char combinedColor = COLOR(cell->frontcolor, cell->backcolor);
@@ -403,13 +403,13 @@ void ui_context_flush(ui_context_t* context)
     }
 }
 
-void ui_item_dispose(ui_item_t* item)
+void tui_item_dispose(tui_item_t* item)
 {
     if(item->subitems && item->subitems->size > 0)
     {
         foreach(i, item->subitems)
         {
-            ui_item_t* child = (ui_item_t*)i->data;
+            tui_item_t* child = (tui_item_t*)i->data;
             if(child->dispose != NULL)
             {
                 child->dispose(child);

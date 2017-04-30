@@ -3,19 +3,19 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include "syslog.h"
-#include "../ui/ui_textbox.h"
+#include "../tui/tui_textbox.h"
 
-static ui_window_t* window = NULL;
-static ui_item_t* tb = NULL;
+static tui_window_t* window = NULL;
+static tui_item_t* tb = NULL;
 
-void syslog_inputhandler(ui_message_t code, int val, void* self);
+void syslog_inputhandler(tui_event_t code, int val, void* self);
 
-ui_window_t* syslog_create()
+tui_window_t* syslog_create()
 {
-    window  = ui_window_create("System log");
+    window  = tui_window_create("System log");
     window->handlemessage = syslog_inputhandler;
 
-    tb = ui_textbox_create(
+    tb = tui_textbox_create(
         window->pos.x + 1,
         window->pos.y + 1,
         window->pos.width - 2,
@@ -36,16 +36,16 @@ void syslog_log(uint32_t pid, syslog_severity_t sev, char* data, ...)
     char prefix[20];
     sprintf(prefix, "[%d] ", pid);
 
-    ui_textbox_append(tb, prefix);
-    ui_textbox_appendline(tb, message);
+    tui_textbox_append(tb, prefix);
+    tui_textbox_appendline(tb, message);
 }
 
 
-void syslog_inputhandler(ui_message_t code, int val, void* self)
+void syslog_inputhandler(tui_event_t code, int val, void* self)
 {
-    // if(code == UI_KEYSTROKE && tb != NULL)
+    // if(code == tui_KEYSTROKE && tb != NULL)
     // {
     //     //TODO: Just navigation line arrows and pgup/down home/end
-    //     ui_textbox_appendchar(tb, (char)(val & 0xFF));
+    //     tui_textbox_appendchar(tb, (char)(val & 0xFF));
     // }
 }
