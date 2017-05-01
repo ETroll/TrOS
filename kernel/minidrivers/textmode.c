@@ -2,16 +2,16 @@
 #include <tros/hal/io.h>
 #include <tros/tros.h>
 
-#define textmode_CURSOR_IREG 0x3D4
-#define textmode_CURSOR_DREG 0x3D5
-#define textmode_ROWS 25
-#define textmode_COLS 80
-#define textmode_MEM_SIZE textmode_COLS + (textmode_ROWS*textmode_COLS)
+#define TEXTMODE_CURSOR_IREG 0x3D4
+#define TEXTMODE_CURSOR_DREG 0x3D5
+#define TEXTMODE_ROWS 25
+#define TEXTMODE_COLS 80
+#define TEXTMODE_MEM_SIZE TEXTMODE_COLS + (TEXTMODE_ROWS*TEXTMODE_COLS)
 
-#define IOCTL_textmode_COLOR         1
-#define IOCTL_textmode_CURSER_POS    2
-#define IOCTL_textmode_TOGGLE_CURSOR 3
-#define IOCTL_textmode_CLEAR_MEM     4
+#define IOCTL_TEXTMODE_COLOR         1
+#define IOCTL_TEXTMODE_CURSER_POS    2
+#define IOCTL_TEXTMODE_TOGGLE_CURSOR 3
+#define IOCTL_TEXTMODE_CLEAR_MEM     4
 
 static unsigned char _textmode_isopen = 0;
 static unsigned char _textmode_xpos = 0;
@@ -51,18 +51,18 @@ int textmode_driver_initialize()
     _textmode_show_cursor = 1;
     _textmode_current_color = 0x0F;
 
-    printk("** Installing 80x25 VGA driver - ");
+    printk("** Installing 80x25 textmode driver - ");
 	return driver_register(&drv);
 }
 
 int textmode_drv_read(int* buffer, unsigned int count)
 {
     int bytes_read = 0;
-    unsigned int memloc = _textmode_xpos + (_textmode_ypos * textmode_COLS);
+    unsigned int memloc = _textmode_xpos + (_textmode_ypos * TEXTMODE_COLS);
 
     for(; bytes_read<count; bytes_read++)
     {
-        if(memloc < textmode_MEM_SIZE)
+        if(memloc < TEXTMODE_MEM_SIZE)
         {
             buffer[bytes_read] = (int)_textmode_mem[memloc];
             memloc++;
@@ -82,14 +82,14 @@ int textmode_drv_write(int* buffer, unsigned int count)
         unsigned char x = (unsigned char)((data & 0xFF000000) >> 24);
         unsigned char y = (unsigned char)((data & 0x00FF0000) >> 16);
 
-        if(x > textmode_COLS || y > textmode_ROWS)
+        if(x > TEXTMODE_COLS || y > TEXTMODE_ROWS)
         {
             printk("VGA ERROR: X %d, Y %d, vgadata %x, data %x\n", x, y, vgadata, data);
         }
 
-        if(x < textmode_COLS && y < textmode_ROWS)
+        if(x < TEXTMODE_COLS && y < TEXTMODE_ROWS)
         {
-            unsigned int memloc = x + (y * textmode_COLS);
+            unsigned int memloc = x + (y * TEXTMODE_COLS);
             _textmode_mem[memloc] = (short)vgadata;
         }
     }
@@ -100,10 +100,10 @@ int textmode_drv_ioctl(unsigned int ioctl_num, unsigned int param)
 {
     switch (ioctl_num)
     {
-        case IOCTL_textmode_COLOR:
+        case IOCTL_TEXTMODE_COLOR:
             _textmode_current_color = (unsigned char)param;
         break;
-        case IOCTL_textmode_TOGGLE_CURSOR:
+        case IOCTL_TEXTMODE_TOGGLE_CURSOR:
         {
             if(param > 0)
             {
@@ -114,27 +114,27 @@ int textmode_drv_ioctl(unsigned int ioctl_num, unsigned int param)
             {
                 _textmode_show_cursor = 0;
                 //Just moving the cursor out of screen
-                pio_outb(0x0F, textmode_CURSOR_IREG);
-                pio_outb(0xFF, textmode_CURSOR_DREG);
+                pio_outb(0x0F, TEXTMODE_CURSOR_IREG);
+                pio_outb(0xFF, TEXTMODE_CURSOR_DREG);
 
-                pio_outb(0x0E, textmode_CURSOR_IREG);
-                pio_outb(0xFF, textmode_CURSOR_DREG);
+                pio_outb(0x0E, TEXTMODE_CURSOR_IREG);
+                pio_outb(0xFF, TEXTMODE_CURSOR_DREG);
             }
         } break;
-        case IOCTL_textmode_CURSER_POS:
+        case IOCTL_TEXTMODE_CURSER_POS:
         {
             unsigned char x = (unsigned char)((param & 0xFF00) >> 8);
             unsigned char y = (unsigned char)(param & 0xFF);
 
-            if(x < textmode_COLS && y < textmode_ROWS)
+            if(x < TEXTMODE_COLS && y < TEXTMODE_ROWS)
             {
                 _textmode_xpos = x;
                 _textmode_ypos = y;
             }
         } break;
-        case IOCTL_textmode_CLEAR_MEM:
+        case IOCTL_TEXTMODE_CLEAR_MEM:
         {
-            for (int i=0; i<(textmode_COLS*textmode_ROWS); i++)
+            for (int i=0; i<(TEXTMODE_COLS*TEXTMODE_ROWS); i++)
             {
                 _textmode_mem[i] =  (_textmode_current_color << 8) | 0x0020;
             }
@@ -166,14 +166,14 @@ void textmode_drv_update_cursor()
 {
     if(_textmode_show_cursor)
     {
-        unsigned int mempos = (textmode_COLS * _textmode_ypos) + _textmode_xpos;
+        unsigned int mempos = (TEXTMODE_COLS * _textmode_ypos) + _textmode_xpos;
         unsigned char mempos_low = mempos & 0xFF;
         unsigned char mempos_high = (mempos >> 8) & 0xFF;
 
-        pio_outb(0x0F, textmode_CURSOR_IREG);
-        pio_outb(mempos_low, textmode_CURSOR_DREG);
+        pio_outb(0x0F, TEXTMODE_CURSOR_IREG);
+        pio_outb(mempos_low, TEXTMODE_CURSOR_DREG);
 
-        pio_outb(0x0E, textmode_CURSOR_IREG);
-        pio_outb(mempos_high, textmode_CURSOR_DREG);
+        pio_outb(0x0E, TEXTMODE_CURSOR_IREG);
+        pio_outb(mempos_high, TEXTMODE_CURSOR_DREG);
     }
 }

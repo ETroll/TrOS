@@ -16,6 +16,7 @@
 extern int kbd_driver_initialize();
 extern int floppy_driver_initialize(unsigned char device);
 extern int textmode_driver_initialize();
+extern int vga_driver_initialize();
 
 //Filesystems baked in to the kernel
 extern int fat12_fs_initialize();
@@ -64,7 +65,8 @@ void kernel_drivers()
     }
 
     kbd_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
-    textmode_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
+    // textmode_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
+    vga_driver_initialize()  ? printk("OK\n") : printk("FAILED!\n");
 }
 
 void kernel_filesystems()
@@ -114,10 +116,14 @@ int kernel_idle()
 
     char* argv[] =
     {
-        "/fd0/trell"
+        "/fd0/cenui"
     };
+    // char* argv[] =
+    // {
+    //     "/fd0/trell"
+    // };
     process_t* proc = scheduler_executeUser(1, argv);
-    printk("Started Trell at PID: %d starting idle loop\n", proc->pid);
+    printk("Started %s at PID: %d starting idle loop\n", argv[0], proc->pid);
 
     while(1)
     {
