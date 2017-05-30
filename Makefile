@@ -1,7 +1,7 @@
 #TrOS-2 Makefile
 
 KERNEL := bootloader/bootsector bootloader/loader kernel
-USERLAND := trell applications/tusse
+USERLAND := trell applications/tusse applications/javabin
 FOLDERS := build build/tmp build/tmp/apps build/tmp/services tools
 SUBCLEAN = $(addsuffix .clean,$(KERNEL))
 IMAGE = build/tros.img
@@ -49,7 +49,7 @@ qemu: $(IMAGE)
 
 debug: $(IMAGE)
 	qemu-system-i386 -fda $(IMAGE) -serial stdio -m 256 -d cpu_reset -s -S
-	
+
 bochs: $(IMAGE)
 	tools/bochs/bochs -q -f bochsrc.bxrc
 

@@ -2,6 +2,7 @@
 #include <trlib/device.h>
 #include <trlib/system.h>
 #include <trlib/threading.h>
+#include <trlib/trui.h>
 #include <trlib/mq.h>
 #include <stdio.h>
 #include <string.h>
@@ -88,32 +89,6 @@ int main(int argc, char** argv)
         }
     }
 
-
-    /*
-    #include <stdio.h>
-    #include <dirent.h>
-
-    int main()
-    {
-        DIR *dir;
-        struct dirent *dp;
-        char * file_name;
-        dir = opendir(".");
-        while ((dp=readdir(dir)) != NULL) {
-            printf("debug: %s\n", dp->d_name);
-            if ( !strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") )
-            {
-                // do nothing (straight logic)
-            } else {
-                file_name = dp->d_name; // use it
-                printf("file_name: \"%s\"\n",file_name);
-            }
-        }
-        closedir(dir);
-        return 0;
-    }
-    */
-
     while(TRUE)
     {
         BOCHS_DEBUG;
@@ -124,17 +99,17 @@ int main(int argc, char** argv)
 
 void trell_messageloop()
 {
-    char buffer[20];
-    while(1)
-    {
-        if(mq_recv(buffer, 20, MQ_NOFLAGS) > 0)
-        {
-            syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
-        }
-        else
-        {
-            tui_redraw(desktop);
-            thread_sleep(10);
-        }
-    }
+    // trui_clientmessage_t message;
+    // while(1)
+    // {
+    //     if(mq_recv(&message, sizeof(trui_clientmessage_t), MQ_NOWAIT) > 0)
+    //     {
+    //
+    //     }
+    //     else
+    //     {
+    //         tui_redraw(desktop);
+    //         thread_sleep(10);
+    //     }
+    // }
 }
