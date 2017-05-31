@@ -102,27 +102,27 @@ void trell_messageloop()
     trui_clientmessage_t message;
     while(1)
     {
-        //TODO: zero out message every time?
         if(mq_recv(&message, sizeof(trui_clientmessage_t), MQ_NOWAIT) > 0)
         {
-            syslog_log(1, SYSLOG_INFO, "MESSAGE TYPE: %x", message.command);
-            syslog_log(1, SYSLOG_INFO, "Got message: %s", message.text);
             switch (message.command)
             {
                 case TRUI_SYSLOG:
                 {
-                    syslog_log(1, SYSLOG_INFO, "Got message: %s", message.text);
+                    syslog_log(message.pid, SYSLOG_INFO, message.text);
                 } break;
                 case TRUI_CREATE_WINDOW:
                 {
-                    syslog_log(1, SYSLOG_INFO, "Create a window: %s", message.text);
+                    syslog_log(message.pid, SYSLOG_INFO, "Create a window: %s", message.text);
+                    tui_window_t* window  = tui_window_create(message.text);
+                    list_add(desktop->windows, window);
+                    tui_desktop_set_activewindow(desktop, window);
                 } break;
             }
         }
         else
         {
             tui_redraw(desktop);
-            thread_sleep(10);
+            thread_sleep(5);
         }
     }
 }

@@ -104,7 +104,7 @@ tui_context_t* tui_context_create(char* devicename);
 tui_desktop_t* tui_desktop_create(tui_context_t* context);
 
 tui_window_t* tui_window_create(char* title);
-void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* self);
+
 
 void tui_redraw(tui_desktop_t* desktop);
 void tui_desktop_set_activewindow(tui_desktop_t* desktop,  tui_window_t* window);

@@ -14,8 +14,6 @@ static tui_window_t* window = NULL;
 static tui_item_t* label = NULL;
 static tui_item_t* threadlabel = NULL;
 
-static void showcase_inputhandler(tui_event_t code, int val, void* self);
-
 static void btn_execute_clicked();
 static void btn_newthread_clicked();
 static void btn_javabin_clicked();
@@ -25,7 +23,6 @@ static void showcase_threadloop();
 tui_window_t* showcase_create()
 {
     window  = tui_window_create("UI Component Showcase");
-    window->handlemessage = showcase_inputhandler;
 
     tui_item_t* btn_execute = tui_button_create(40, 4, 21, "Execute: Tusse", btn_execute_clicked);
     tui_item_t* btn_javabin = tui_button_create(40, 5, 21, "Execute: Javabin", btn_javabin_clicked);
@@ -48,14 +45,6 @@ ullamco laboris nisi ut aliquip ex ea commodo consequat.");
     list_add(window->items, threadlabel);
 
     return window;
-}
-
-void showcase_inputhandler(tui_event_t code, int val, void* self)
-{
-    if(self)
-    {
-        tui_window_inputhandler(code, val, (tui_window_t*)self);
-    }
 }
 
 void btn_execute_clicked()

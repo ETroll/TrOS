@@ -18,6 +18,7 @@
 
 static void tui_window_paint(tui_window_t* window, tui_context_t* ctx);
 static void tui_menubar_paint(tui_desktop_t* desktop);
+static void tui_window_inputhandler(tui_event_t code, int val, void* self);
 
 static void tui_context_flush(tui_context_t* context);
 
@@ -89,7 +90,7 @@ tui_window_t* tui_window_create(char* title)
         window->menu = tui_menu_create(title);
         window->items = list_create();
         window->activeItem = NULL;
-        window->handlemessage = NULL;
+        window->handlemessage = tui_window_inputhandler;
 
         window->pos.x = 0;
         window->pos.y = 0;
@@ -133,8 +134,9 @@ void tui_desktop_set_activewindow(tui_desktop_t* desktop,  tui_window_t* window)
     desktop->activeWindow->handlemessage(tui_WINDOW_ENTER, 0, desktop->activeWindow);
 }
 
-void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* window)
+void tui_window_inputhandler(tui_event_t code, int val, void* self)
 {
+    tui_window_t* window = (tui_window_t*)self;
     if(code == tui_KEYSTROKE)
     {
         switch (val) {
