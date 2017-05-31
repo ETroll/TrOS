@@ -5,16 +5,18 @@
 
 typedef enum
 {
-    TRUI_CREATE_WINDOW,
+    TRUI_CREATE_WINDOW = 0x00,
     TRUI_CREATE_BUTTON,
     TRUI_CREATE_LABEL,
     TRUI_CREATE_TEXTBOX,
+    TRUI_SYSLOG,
     TRUI_CLOSE,
 } trui_command_t;
 
 typedef enum
 {
-    TRUI_BUTTON_PRESSED
+    TRUI_BUTTON_PRESSED = 0x00,
+    TRUI_WINDOW_CREATED
 } trui_message_t;
 
 typedef struct

@@ -99,17 +99,30 @@ int main(int argc, char** argv)
 
 void trell_messageloop()
 {
-    // trui_clientmessage_t message;
-    // while(1)
-    // {
-    //     if(mq_recv(&message, sizeof(trui_clientmessage_t), MQ_NOWAIT) > 0)
-    //     {
-    //
-    //     }
-    //     else
-    //     {
-    //         tui_redraw(desktop);
-    //         thread_sleep(10);
-    //     }
-    // }
+    trui_clientmessage_t message;
+    while(1)
+    {
+        //TODO: zero out message every time?
+        if(mq_recv(&message, sizeof(trui_clientmessage_t), MQ_NOWAIT) > 0)
+        {
+            syslog_log(1, SYSLOG_INFO, "MESSAGE TYPE: %x", message.command);
+            syslog_log(1, SYSLOG_INFO, "Got message: %s", message.text);
+            switch (message.command)
+            {
+                case TRUI_SYSLOG:
+                {
+                    syslog_log(1, SYSLOG_INFO, "Got message: %s", message.text);
+                } break;
+                case TRUI_CREATE_WINDOW:
+                {
+                    syslog_log(1, SYSLOG_INFO, "Create a window: %s", message.text);
+                } break;
+            }
+        }
+        else
+        {
+            tui_redraw(desktop);
+            thread_sleep(10);
+        }
+    }
 }
