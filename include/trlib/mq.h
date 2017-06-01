@@ -7,7 +7,7 @@ typedef enum mq_flags
 {
     MQ_NOFLAGS = 0x00,
     MQ_RECIEPT = 0x01,
-    MQ_NOWAIT = 0x01
+    MQ_NOWAIT = 0x02
 }mq_flags_t;
 
 

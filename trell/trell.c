@@ -112,10 +112,17 @@ void trell_messageloop()
                 } break;
                 case TRUI_CREATE_WINDOW:
                 {
-                    syslog_log(message.pid, SYSLOG_INFO, "Create a window: %s", message.text);
+                    syslog_log(message.pid, SYSLOG_INFO, "Created window: %s", message.text);
                     tui_window_t* window  = tui_window_create(message.text);
                     list_add(desktop->windows, window);
                     tui_desktop_set_activewindow(desktop, window);
+
+                    trui_servermessage_t responce = {
+                        .message = TRUI_WINDOW_CREATED,
+                        .param = 1
+                    };
+                    mq_send(message.pid, &responce, sizeof(trui_servermessage_t), MQ_NOFLAGS);
+                    tui_redraw(desktop);
                 } break;
             }
         }

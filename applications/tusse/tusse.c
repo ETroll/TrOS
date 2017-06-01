@@ -18,19 +18,15 @@ int main(int argc, char** argv)
     };
 
     strcpy(message.text, "Hello parent!\0");
-    // char* data = "Hello parent!\0";
-    // mq_send(parent, data, strlen(data), MQ_NOFLAGS);
     mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
     if(argc > 0)
     {
         sprintf(message.text, "Got %d arguments\0", argc);
-        // mq_send(parent, buffer, strlen(buffer), MQ_NOFLAGS);
         mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
 
         for(int i = 0; i<argc; i++)
         {
             sprintf(message.text, "Arg%d: %s\0", i, argv[i]);
-            // mq_send(parent, buffer, strlen(buffer), MQ_NOFLAGS);
             mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
         }
     }
@@ -38,7 +34,6 @@ int main(int argc, char** argv)
     {
         // char* error = "NO ARGUMENTS!\0";
         strcpy(message.text, "NO ARGUMENTS!\0");
-        // mq_send(parent, error, strlen(error), MQ_NOFLAGS);
         mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
 
     }

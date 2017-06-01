@@ -35,7 +35,7 @@ typedef enum
     TFLAG_NEEDKICK = 0x04
 } thread_flag_t;
 
-typedef struct
+typedef struct thread
 {
     uint32_t tid;
     uint32_t userStackPtr;

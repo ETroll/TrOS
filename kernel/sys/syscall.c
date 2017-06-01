@@ -154,8 +154,8 @@ static int sys_sendmessage(uint32_t pid, const void* data, uint32_t size, uint32
         mailbox_message_t* message = mailbox_message_create(sender->pid, data, size, flags);
         if(message)
         {
-            printk("SENDMESSAGE(%d) to PID %d with size %d bytes (allocated %d bytes)\n", sender->pid, pid, size, message->size);
             mailbox_push(reciever->mailbox, message);
+            printk("SENDMESSAGE(%d) to PID %d with size %d bytes\n", sender->pid, pid, size);
             return size;
         }
     }
@@ -166,7 +166,7 @@ static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
 {
     process_t* proc = scheduler_getCurrentProcess();
 
-    mailbox_message_t* message = mailbox_pop(proc->mailbox);
+    mailbox_message_t* message = mailbox_pop(proc->mailbox, flags);
     if(message != 0)
     {
         uint32_t sizetoread = size;
@@ -174,10 +174,10 @@ static int sys_readmessage(void* buffer, uint32_t size, uint32_t flags)
         {
             sizetoread = message->size;
         }
-        printk("READMESSAGE(%d) size %d bytes\n", proc->pid, message->size);
         memcpy(buffer, message->payload, sizetoread);
         mailbox_message_dispose(message);
 
+        printk("READMESSAGE(%d) size %d bytes\n", proc->pid, message->size);
         return sizetoread; //TODO: replace with real read num
     }
     return -1;

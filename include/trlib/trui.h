@@ -36,8 +36,16 @@ typedef struct
     uint32_t param;
 } trui_servermessage_t;
 
+typedef int32_t trui_window_t;
+typedef int32_t trui_button_t;
+typedef int32_t trui_label_t;
 
-int trui_create_window(char* title);
-int trui_create_label(uint8_t x, uint8_t y, uint8_t width, char* text);
-int trui_create_button(uint8_t x, uint8_t y, uint8_t width, char* text);
+
+trui_window_t trui_create_window(char* title);
+trui_label_t trui_create_label(uint8_t x, uint8_t y, uint8_t width, char* text);
+trui_button_t trui_create_button(uint8_t x, uint8_t y, uint8_t width, char* text);
+void trui_syslog_writeline(char* data, ...);
+
+void trui_close();
+
 #endif
