@@ -66,7 +66,7 @@ void mailbox_push(mailbox_t* mb, mailbox_message_t* message)
             // spinlock_unlock(mb->memlock);
             if(mb->listener != 0)
             {
-                printk("TID %d got IO\n", ((thread_t*)mb->listener)->tid);
+                // printk("TID %d got IO\n", ((thread_t*)mb->listener)->tid);
                 thread_setState((thread_t*)mb->listener, THREAD_IOREADY);
             }
         }
@@ -90,9 +90,9 @@ mailbox_message_t* mailbox_pop(mailbox_t* mb, uint32_t flags)
             {
                 mb->listener = scheduler_getCurrentThread();
                 thread_setState((thread_t*)mb->listener, THREAD_WAITIO);
-                printk("TID %d going to sleep\n", ((thread_t*)mb->listener)->tid);
+                // printk("TID %d going to sleep\n", ((thread_t*)mb->listener)->tid);
                 scheduler_reschedule();
-                printk("TID %d woke up\n", ((thread_t*)mb->listener)->tid);
+                // printk("TID %d woke up\n", ((thread_t*)mb->listener)->tid);
                 mb->listener = 0;
             }
 
