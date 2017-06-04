@@ -25,7 +25,7 @@ uint32_t elf32_load(char* path, uint32_t* startAddr)
             && sizeof(Elf32_ProgramHeader_t) == elf_header.e_phentsize) //will fail if 64bit
             {
                 printk("\nWe have a valid executable with entry at %x\n", elf_header.e_entry);
-                printk("\nType Offset      VirtAddr    PhysAddr    FileSiz     MemSiz     Align\n");
+                printk("\nType Offset      VirtAddr    PhysAddr    FileSize    MemSize    Align\n");
 
                 *startAddr = elf_header.e_entry;
                 for(int i = 0; i<elf_header.e_phnum; i++)

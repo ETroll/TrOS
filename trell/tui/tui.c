@@ -5,6 +5,7 @@
 #include <keycodes.h>
 
 #include "tui.h"
+#include "../windows/syslog.h"
 
 #define FRAME_ROWS 25
 #define FRAME_COLS 80
@@ -91,7 +92,7 @@ tui_window_t* tui_window_create(char* title)
         window->items = list_create();
         window->activeItem = NULL;
         window->handlemessage = tui_window_inputhandler;
-
+        window->pid = 0;
         window->pos.x = 0;
         window->pos.y = 0;
         window->pos.width = FRAME_COLS;
@@ -104,6 +105,11 @@ tui_window_t* tui_window_create(char* title)
         }
     }
     return window;
+}
+
+void tui_window_dispose(tui_window_t* window)
+{
+    //TODO!:
 }
 
 tui_menu_t* tui_menu_create(char* text)
@@ -248,6 +254,7 @@ void tui_redraw(tui_desktop_t* desktop)
             cell->backcolor = tui_GREEN;
             cell->frontcolor = tui_BLACK;
             cell->dirty = TRUE;
+            cell->data = NULL;
         }
     }
 
@@ -348,6 +355,7 @@ void tui_menubar_paint(tui_desktop_t* desktop)
         cell->backcolor = tui_GREEN;
         cell->frontcolor = tui_BLACK;
         cell->dirty = TRUE;
+        cell->data = NULL;;
     }
 
     uint32_t itemsize = 14;

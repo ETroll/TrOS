@@ -84,6 +84,7 @@ typedef struct {
     tui_cell_color_t backcolor;
     tui_cell_color_t frontcolor;
     tui_pos_t pos;
+    uint32_t pid;
     void (*handlemessage)(tui_event_t code, int val, void* self);
 } tui_window_t;
 
@@ -104,6 +105,7 @@ tui_context_t* tui_context_create(char* devicename);
 tui_desktop_t* tui_desktop_create(tui_context_t* context);
 
 tui_window_t* tui_window_create(char* title);
+void tui_window_dispose(tui_window_t* item);
 
 
 void tui_redraw(tui_desktop_t* desktop);

@@ -114,6 +114,7 @@ void trell_messageloop()
                 {
                     syslog_log(message.pid, SYSLOG_INFO, "Created window: %s", message.text);
                     tui_window_t* window  = tui_window_create(message.text);
+                    window->pid = message.pid;
                     list_add(desktop->windows, window);
                     tui_desktop_set_activewindow(desktop, window);
 
@@ -134,7 +135,19 @@ void trell_messageloop()
                 }break;
                 case TRUI_CLOSE:
                 {
-
+                    uint32_t index = 0;
+                    foreach(win, desktop->windows)
+                    {
+                        if(((tui_window_t*)win->data)->pid == message.pid)
+                        {
+                            tui_window_dispose((tui_window_t*)win->data);
+                            tui_window_t* prev = (tui_window_t*)win->prev->data;
+                            list_remove_at(desktop->windows, index);
+                            tui_desktop_set_activewindow(desktop, prev);
+                        }
+                        index++;
+                    }
+                    tui_redraw(desktop);
                 }break;
             }
         }
