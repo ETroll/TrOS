@@ -18,8 +18,7 @@ trui_window_t trui_create_window(char* title)
     trui_servermessage_t responce;
     trui_clientmessage_t message = {
         .command = TRUI_CREATE_WINDOW,
-        .pid = pid,
-        .text = "Hello JavaBin!\0"
+        .pid = pid
     };
     strcpy(message.text, title);
 
@@ -36,7 +35,28 @@ trui_window_t trui_create_window(char* title)
 
 trui_label_t trui_create_label(uint8_t x, uint8_t y, uint8_t width, char* text)
 {
-    return 0;
+    //NOTE: Not ask for pid/parent every time!
+    // int pid = system_pid();
+    // int parent = system_parentpid();
+    //
+    // trui_servermessage_t responce;
+    // trui_clientmessage_t message = {
+    //     .command = TRUI_CREATE_WINDOW,
+    //     .pid = pid,
+    //     .text = text,
+    //
+    // };
+    // strcpy(message.text, title);
+    //
+    // mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
+    // if(mq_recv(&responce, sizeof(trui_servermessage_t), MQ_NOFLAGS) > 0)
+    // {
+    //     return responce.param;
+    // }
+    // else
+    // {
+        return -1; //Error happened
+    // }
 }
 
 trui_button_t trui_create_button(uint8_t x, uint8_t y, uint8_t width, char* text)
@@ -67,5 +87,13 @@ void trui_syslog_writeline(char* data, ...)
 
 void trui_close()
 {
+    //NOTE: Not ask for pid/parent every time!
+    int pid = system_pid();
+    int parent = system_parentpid();
+    trui_clientmessage_t message = {
+        .command = TRUI_CLOSE,
+        .pid = pid
+    };
+    mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
     system_exit(1);
 }

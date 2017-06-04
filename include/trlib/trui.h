@@ -8,7 +8,6 @@ typedef enum
     TRUI_CREATE_WINDOW = 0x00,
     TRUI_CREATE_BUTTON,
     TRUI_CREATE_LABEL,
-    TRUI_CREATE_TEXTBOX,
     TRUI_SYSLOG,
     TRUI_CLOSE,
 } trui_command_t;

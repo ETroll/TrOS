@@ -128,16 +128,16 @@ void tui_desktop_set_activewindow(tui_desktop_t* desktop,  tui_window_t* window)
 {
     if(desktop->activeWindow != NULL)
     {
-        desktop->activeWindow->handlemessage(tui_WINDOW_LEAVE, 0, desktop->activeWindow);
+        desktop->activeWindow->handlemessage(TUI_WINDOW_LEAVE, 0, desktop->activeWindow);
     }
     desktop->activeWindow = window;
-    desktop->activeWindow->handlemessage(tui_WINDOW_ENTER, 0, desktop->activeWindow);
+    desktop->activeWindow->handlemessage(TUI_WINDOW_ENTER, 0, desktop->activeWindow);
 }
 
 void tui_window_inputhandler(tui_event_t code, int val, void* self)
 {
     tui_window_t* window = (tui_window_t*)self;
-    if(code == tui_KEYSTROKE)
+    if(code == TUI_KEYSTROKE)
     {
         switch (val) {
             case KEY_TAB:
@@ -157,7 +157,7 @@ void tui_window_inputhandler(tui_event_t code, int val, void* self)
                     tui_item_t* itm = (tui_item_t*)prevItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(tui_ITEM_LOSTFOCUS, 0, itm);
+                        itm->handlemessage(TUI_ITEM_LOSTFOCUS, 0, itm);
                     }
                 }
 
@@ -166,7 +166,7 @@ void tui_window_inputhandler(tui_event_t code, int val, void* self)
                     tui_item_t* itm = (tui_item_t*)window->activeItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(tui_ITEM_GOTFOCUS, 0, itm);
+                        itm->handlemessage(TUI_ITEM_GOTFOCUS, 0, itm);
                     }
                 }
             } break;
@@ -177,7 +177,7 @@ void tui_window_inputhandler(tui_event_t code, int val, void* self)
                     tui_item_t* itm = (tui_item_t*)window->activeItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(tui_KEYSTROKE, val, itm);
+                        itm->handlemessage(TUI_KEYSTROKE, val, itm);
                     }
                 }
             }break;

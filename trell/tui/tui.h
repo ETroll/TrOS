@@ -24,11 +24,11 @@ typedef enum  {
 } tui_cell_color_t;
 
 typedef enum {
-    tui_KEYSTROKE,
-    tui_WINDOW_ENTER,
-    tui_WINDOW_LEAVE,
-    tui_ITEM_GOTFOCUS,
-    tui_ITEM_LOSTFOCUS
+    TUI_KEYSTROKE,
+    TUI_WINDOW_ENTER,
+    TUI_WINDOW_LEAVE,
+    TUI_ITEM_GOTFOCUS,
+    TUI_ITEM_LOSTFOCUS
 } tui_event_t;
 
 typedef struct {

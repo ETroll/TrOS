@@ -109,13 +109,13 @@ void tui_button_input(tui_event_t code, int val, void* self)
 {
     tui_item_t* item = (tui_item_t*)self;
     switch (code) {
-        case tui_ITEM_GOTFOCUS:
+        case TUI_ITEM_GOTFOCUS:
             item->backcolor = tui_DARK_GRAY;
         break;
-        case tui_ITEM_LOSTFOCUS:
+        case TUI_ITEM_LOSTFOCUS:
             item->backcolor = tui_LIGHT_GRAY;
         break;
-        case tui_KEYSTROKE:
+        case TUI_KEYSTROKE:
         {
             if(val == KEY_SPACE || val == KEY_RETURN)
             {

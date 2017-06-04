@@ -82,7 +82,7 @@ int main(int argc, char** argv)
             {
                 if(desktop->activeWindow->handlemessage != NULL)
                 {
-                    desktop->activeWindow->handlemessage(tui_KEYSTROKE, key, desktop->activeWindow);
+                    desktop->activeWindow->handlemessage(TUI_KEYSTROKE, key, desktop->activeWindow);
                 }
             }
             tui_redraw(desktop);
@@ -119,11 +119,23 @@ void trell_messageloop()
 
                     trui_servermessage_t responce = {
                         .message = TRUI_WINDOW_CREATED,
-                        .param = 1
+                        .param = desktop->windows->size
                     };
                     mq_send(message.pid, &responce, sizeof(trui_servermessage_t), MQ_NOFLAGS);
                     tui_redraw(desktop);
                 } break;
+                case TRUI_CREATE_LABEL:
+                {
+
+                } break;
+                case TRUI_CREATE_BUTTON:
+                {
+
+                }break;
+                case TRUI_CLOSE:
+                {
+
+                }break;
             }
         }
         else
