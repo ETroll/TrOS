@@ -14,9 +14,9 @@ static tui_window_t* window = NULL;
 static tui_item_t* label = NULL;
 static tui_item_t* threadlabel = NULL;
 
-static void btn_execute_clicked();
-static void btn_newthread_clicked();
-static void btn_javabin_clicked();
+static void btn_execute_clicked(tui_item_t* item);
+static void btn_newthread_clicked(tui_item_t* item);
+static void btn_javabin_clicked(tui_item_t* item);
 
 static void showcase_threadloop();
 
@@ -47,7 +47,7 @@ ullamco laboris nisi ut aliquip ex ea commodo consequat.");
     return window;
 }
 
-void btn_execute_clicked()
+void btn_execute_clicked(tui_item_t* item)
 {
     char* argv[] =
     {
@@ -61,7 +61,7 @@ void btn_execute_clicked()
     syslog_log(1, SYSLOG_INFO, "system_execute returned %d", retval);
 }
 
-void btn_javabin_clicked()
+void btn_javabin_clicked(tui_item_t* item)
 {
     char* argv[] =
     {
@@ -74,7 +74,7 @@ void btn_javabin_clicked()
     syslog_log(1, SYSLOG_INFO, "system_execute returned %d", retval);
 }
 
-void btn_newthread_clicked()
+void btn_newthread_clicked(tui_item_t* item)
 {
     threadlabel->visible = TRUE;
     tui_label_set_text(threadlabel, "TEST");

@@ -7,7 +7,7 @@
 
 typedef struct {
     char* text;
-    void (*onclick)();
+    void (*onclick)(tui_item_t*);
 } tui_button_t;
 
 static void tui_button_paint(tui_context_t* ctx, void* self);
@@ -15,7 +15,7 @@ static void tui_button_dispose(void* self);
 
 void tui_button_input(tui_event_t code, int val, void* self);
 
-tui_item_t* tui_button_create(uint8_t x, uint8_t y, uint8_t width, char* text, void (*onclick)())
+tui_item_t* tui_button_create(uint8_t x, uint8_t y, uint8_t width, char* text, void (*onclick)(tui_item_t*))
 {
     tui_item_t* item = (tui_item_t*)malloc(sizeof(tui_item_t));
     if(item)
@@ -32,6 +32,7 @@ tui_item_t* tui_button_create(uint8_t x, uint8_t y, uint8_t width, char* text, v
             item->dispose = tui_button_dispose;
             item->visible = TRUE;
             item->selectable = TRUE;
+            item->id = 0;
             item->backcolor = tui_LIGHT_GRAY;
             item->frontcolor = tui_BLACK;
             item->pos.x = x;
@@ -124,7 +125,7 @@ void tui_button_input(tui_event_t code, int val, void* self)
                     tui_button_t* btn = (tui_button_t*)item->content;
                     if(btn->onclick)
                     {
-                        btn->onclick();
+                        btn->onclick(item);
                     }
                 }
             }

@@ -36,31 +36,38 @@ trui_window_t trui_create_window(char* title)
 trui_label_t trui_create_label(uint8_t x, uint8_t y, uint8_t width, char* text)
 {
     //NOTE: Not ask for pid/parent every time!
-    // int pid = system_pid();
-    // int parent = system_parentpid();
-    //
-    // trui_servermessage_t responce;
-    // trui_clientmessage_t message = {
-    //     .command = TRUI_CREATE_WINDOW,
-    //     .pid = pid,
-    //     .text = text,
-    //
-    // };
-    // strcpy(message.text, title);
-    //
-    // mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
-    // if(mq_recv(&responce, sizeof(trui_servermessage_t), MQ_NOFLAGS) > 0)
-    // {
-    //     return responce.param;
-    // }
-    // else
-    // {
-        return -1; //Error happened
-    // }
+    int pid = system_pid();
+    int parent = system_parentpid();
+
+    trui_clientmessage_t message = {
+        .command = TRUI_CREATE_LABEL,
+        .pid = pid,
+        .width = width,
+        .x = x,
+        .y = y
+    };
+    strcpy(message.text, text);
+
+    mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
+    return 0;
 }
 
 trui_button_t trui_create_button(uint8_t x, uint8_t y, uint8_t width, char* text)
 {
+    //NOTE: Not ask for pid/parent every time!
+    int pid = system_pid();
+    int parent = system_parentpid();
+
+    trui_clientmessage_t message = {
+        .command = TRUI_CREATE_BUTTON,
+        .pid = pid,
+        .width = width,
+        .x = x,
+        .y = y
+    };
+    strcpy(message.text, text);
+
+    mq_send(parent, &message, sizeof(trui_clientmessage_t), MQ_NOFLAGS);
     return 0;
 }
 

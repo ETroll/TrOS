@@ -17,16 +17,15 @@ int main(int argc, char** argv)
     trui_label_t label = trui_create_label(2, 2, 50, "This is a simple label!");
     trui_button_t button = trui_create_button(2, 4, 20, "Close application");
 
-    // trui_servermessage_t responce;
-    // while(mq_recv(&responce, sizeof(trui_servermessage_t), MQ_NOFLAGS))
-    // {
-    //     if(responce.message == TRUI_BUTTON_PRESSED)
-    //     {
-    //         trui_syslog_writeline("Button %d was pressed. Exiting PID %d", responce.param, pid);
-    //         break;
-    //     }
-    // }
-    thread_sleep(10);
+    trui_servermessage_t responce;
+    while(mq_recv(&responce, sizeof(trui_servermessage_t), MQ_NOFLAGS))
+    {
+        if(responce.message == TRUI_BUTTON_PRESSED)
+        {
+            trui_syslog_writeline("Button %d was pressed. Exiting PID %d", responce.param, pid);
+            break;
+        }
+    }
     trui_close();
     return 0;
 }

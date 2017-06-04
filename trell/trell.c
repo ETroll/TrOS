@@ -9,6 +9,8 @@
 #include <keycodes.h>
 #include "tui/tui.h"
 #include "tui/list.h"
+#include "tui/tui_label.h"
+#include "tui/tui_button.h"
 #include "windows/syslog.h"
 #include "windows/showcase.h"
 
@@ -30,6 +32,7 @@ file_t* stdin = NULL;
 tui_desktop_t* desktop = NULL;
 
 static void trell_messageloop();
+static void btn_clicked(tui_item_t* item);
 
 int main(int argc, char** argv)
 {
@@ -127,11 +130,39 @@ void trell_messageloop()
                 } break;
                 case TRUI_CREATE_LABEL:
                 {
-
+                    foreach(win, desktop->windows)
+                    {
+                        if(((tui_window_t*)win->data)->pid == message.pid)
+                        {
+                            tui_window_t* window = (tui_window_t*)win->data;
+                            tui_item_t* label = tui_label_create(
+                                message.x,
+                                message.y,
+                                message.width,
+                                message.text);
+                            list_add(window->items, label);
+                            break;
+                        }
+                    }
                 } break;
                 case TRUI_CREATE_BUTTON:
                 {
-
+                    foreach(win, desktop->windows)
+                    {
+                        if(((tui_window_t*)win->data)->pid == message.pid)
+                        {
+                            tui_window_t* window = (tui_window_t*)win->data;
+                            tui_item_t* button = tui_button_create(
+                                message.x,
+                                message.y,
+                                message.width,
+                                message.text,
+                                btn_clicked);
+                            button->id = message.pid;
+                            list_add(window->items, button);
+                            break;
+                        }
+                    }
                 }break;
                 case TRUI_CLOSE:
                 {
@@ -157,4 +188,15 @@ void trell_messageloop()
             thread_sleep(5);
         }
     }
+}
+
+void btn_clicked(tui_item_t* item)
+{
+    //NOTE: This is a ugly hack just to get a simple button "event" back to host process
+    //      since Trell does not really do events back to processes yet.
+    trui_servermessage_t responce = {
+        .message = TRUI_BUTTON_PRESSED,
+        .param = 0
+    };
+    mq_send(item->id, &responce, sizeof(trui_servermessage_t), MQ_NOFLAGS);
 }

@@ -58,6 +58,7 @@ typedef struct {
     void (*dispose)(void* self);
     char visible;
     char selectable;
+    uint32_t id;
     list_t* subitems;
     tui_cell_color_t backcolor;
     tui_cell_color_t frontcolor;
