@@ -1,6 +1,6 @@
 
 # COMPILATION
-TOOLCHAIN = ../tools/gcc-i386-none-elf/bin/
+TOOLCHAIN = ../../tools/gcc-i386-none-elf/bin/
 GCC = $(TOOLCHAIN)i386-elf-gcc
 LD = $(TOOLCHAIN)i386-elf-ld
 
@@ -13,9 +13,9 @@ TARGET = trell
 # CONFIGURATION
 FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
-INCLUDES = ../include/
+INCLUDES = ../../include/
 LINKER_MAP = flatbinary.ld
-FOLDERS = ../libc ../trlib . tui windows
+FOLDERS = ../../libraries/libc ../../libraries/trlib . tui windows
 
 # SOURCE FILES
 SRC_GCC := $(foreach sdir, $(FOLDERS), $(wildcard $(sdir)/*.c))

@@ -15,7 +15,7 @@ FLAGS = -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector
 LINKER_FLAGS = -ffreestanding -nostdlib
 INCLUDES = ../../include/
 LINKER_MAP = flatbinary.ld
-FOLDERS = ../../libc ../../trlib .
+FOLDERS = ../../libraries/libc ../../libraries/trlib .
 
 # SOURCE FILES
 SRC_GCC := $(foreach sdir, $(FOLDERS), $(wildcard $(sdir)/*.c))
