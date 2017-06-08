@@ -5,6 +5,7 @@
 #include <keycodes.h>
 
 #include "tui.h"
+#include "../windows/syslog.h"
 
 #define FRAME_ROWS 25
 #define FRAME_COLS 80
@@ -18,6 +19,7 @@
 
 static void tui_window_paint(tui_window_t* window, tui_context_t* ctx);
 static void tui_menubar_paint(tui_desktop_t* desktop);
+static void tui_window_inputhandler(tui_event_t code, int val, void* self);
 
 static void tui_context_flush(tui_context_t* context);
 
@@ -89,8 +91,8 @@ tui_window_t* tui_window_create(char* title)
         window->menu = tui_menu_create(title);
         window->items = list_create();
         window->activeItem = NULL;
-        window->handlemessage = NULL;
-
+        window->handlemessage = tui_window_inputhandler;
+        window->pid = 0;
         window->pos.x = 0;
         window->pos.y = 0;
         window->pos.width = FRAME_COLS;
@@ -103,6 +105,11 @@ tui_window_t* tui_window_create(char* title)
         }
     }
     return window;
+}
+
+void tui_window_dispose(tui_window_t* window)
+{
+    //TODO!:
 }
 
 tui_menu_t* tui_menu_create(char* text)
@@ -127,15 +134,16 @@ void tui_desktop_set_activewindow(tui_desktop_t* desktop,  tui_window_t* window)
 {
     if(desktop->activeWindow != NULL)
     {
-        desktop->activeWindow->handlemessage(tui_WINDOW_LEAVE, 0, desktop->activeWindow);
+        desktop->activeWindow->handlemessage(TUI_WINDOW_LEAVE, 0, desktop->activeWindow);
     }
     desktop->activeWindow = window;
-    desktop->activeWindow->handlemessage(tui_WINDOW_ENTER, 0, desktop->activeWindow);
+    desktop->activeWindow->handlemessage(TUI_WINDOW_ENTER, 0, desktop->activeWindow);
 }
 
-void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* window)
+void tui_window_inputhandler(tui_event_t code, int val, void* self)
 {
-    if(code == tui_KEYSTROKE)
+    tui_window_t* window = (tui_window_t*)self;
+    if(code == TUI_KEYSTROKE)
     {
         switch (val) {
             case KEY_TAB:
@@ -155,7 +163,7 @@ void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* window)
                     tui_item_t* itm = (tui_item_t*)prevItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(tui_ITEM_LOSTFOCUS, 0, itm);
+                        itm->handlemessage(TUI_ITEM_LOSTFOCUS, 0, itm);
                     }
                 }
 
@@ -164,7 +172,7 @@ void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* window)
                     tui_item_t* itm = (tui_item_t*)window->activeItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(tui_ITEM_GOTFOCUS, 0, itm);
+                        itm->handlemessage(TUI_ITEM_GOTFOCUS, 0, itm);
                     }
                 }
             } break;
@@ -175,7 +183,7 @@ void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* window)
                     tui_item_t* itm = (tui_item_t*)window->activeItem->data;
                     if(itm->handlemessage)
                     {
-                        itm->handlemessage(tui_KEYSTROKE, val, itm);
+                        itm->handlemessage(TUI_KEYSTROKE, val, itm);
                     }
                 }
             }break;
@@ -246,6 +254,7 @@ void tui_redraw(tui_desktop_t* desktop)
             cell->backcolor = tui_GREEN;
             cell->frontcolor = tui_BLACK;
             cell->dirty = TRUE;
+            cell->data = NULL;
         }
     }
 
@@ -346,6 +355,7 @@ void tui_menubar_paint(tui_desktop_t* desktop)
         cell->backcolor = tui_GREEN;
         cell->frontcolor = tui_BLACK;
         cell->dirty = TRUE;
+        cell->data = NULL;;
     }
 
     uint32_t itemsize = 14;

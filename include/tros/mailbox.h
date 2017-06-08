@@ -21,6 +21,7 @@ typedef struct
     uint32_t totalbytes;
     uint32_t size;
     spinlock_t memlock;
+    void* listener;
     mailbox_message_t* start;
     mailbox_message_t* end;
 } mailbox_t;
@@ -30,7 +31,7 @@ mailbox_t* mailbox_create();
 void mailbox_dispose(mailbox_t* mb);
 
 void mailbox_push(mailbox_t* mb, mailbox_message_t* message);
-mailbox_message_t* mailbox_pop(mailbox_t* mb);
+mailbox_message_t* mailbox_pop(mailbox_t* mb, uint32_t flags);
 
 mailbox_message_t* mailbox_message_create(uint32_t sender, const void* payload,
     uint32_t size, uint32_t flags);

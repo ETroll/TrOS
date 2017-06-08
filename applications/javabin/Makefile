@@ -7,7 +7,7 @@ LD = $(TOOLCHAIN)i386-elf-ld
 # OUTPUT
 DIR_BUILD = bin/
 DIR_OBJECT = obj/
-TARGET = tusse
+TARGET = javabin
 
 
 # CONFIGURATION

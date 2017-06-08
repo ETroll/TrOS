@@ -24,11 +24,11 @@ typedef enum  {
 } tui_cell_color_t;
 
 typedef enum {
-    tui_KEYSTROKE,
-    tui_WINDOW_ENTER,
-    tui_WINDOW_LEAVE,
-    tui_ITEM_GOTFOCUS,
-    tui_ITEM_LOSTFOCUS
+    TUI_KEYSTROKE,
+    TUI_WINDOW_ENTER,
+    TUI_WINDOW_LEAVE,
+    TUI_ITEM_GOTFOCUS,
+    TUI_ITEM_LOSTFOCUS
 } tui_event_t;
 
 typedef struct {
@@ -58,6 +58,7 @@ typedef struct {
     void (*dispose)(void* self);
     char visible;
     char selectable;
+    uint32_t id;
     list_t* subitems;
     tui_cell_color_t backcolor;
     tui_cell_color_t frontcolor;
@@ -84,6 +85,7 @@ typedef struct {
     tui_cell_color_t backcolor;
     tui_cell_color_t frontcolor;
     tui_pos_t pos;
+    uint32_t pid;
     void (*handlemessage)(tui_event_t code, int val, void* self);
 } tui_window_t;
 
@@ -104,7 +106,8 @@ tui_context_t* tui_context_create(char* devicename);
 tui_desktop_t* tui_desktop_create(tui_context_t* context);
 
 tui_window_t* tui_window_create(char* title);
-void tui_window_inputhandler(tui_event_t code, int val, tui_window_t* self);
+void tui_window_dispose(tui_window_t* item);
+
 
 void tui_redraw(tui_desktop_t* desktop);
 void tui_desktop_set_activewindow(tui_desktop_t* desktop,  tui_window_t* window);

@@ -2,12 +2,15 @@
 #include <trlib/device.h>
 #include <trlib/system.h>
 #include <trlib/threading.h>
+#include <trlib/trui.h>
 #include <trlib/mq.h>
 #include <stdio.h>
 #include <string.h>
 #include <keycodes.h>
 #include "tui/tui.h"
 #include "tui/list.h"
+#include "tui/tui_label.h"
+#include "tui/tui_button.h"
 #include "windows/syslog.h"
 #include "windows/showcase.h"
 
@@ -29,6 +32,7 @@ file_t* stdin = NULL;
 tui_desktop_t* desktop = NULL;
 
 static void trell_messageloop();
+static void btn_clicked(tui_item_t* item);
 
 int main(int argc, char** argv)
 {
@@ -81,38 +85,12 @@ int main(int argc, char** argv)
             {
                 if(desktop->activeWindow->handlemessage != NULL)
                 {
-                    desktop->activeWindow->handlemessage(tui_KEYSTROKE, key, desktop->activeWindow);
+                    desktop->activeWindow->handlemessage(TUI_KEYSTROKE, key, desktop->activeWindow);
                 }
             }
             tui_redraw(desktop);
         }
     }
-
-
-    /*
-    #include <stdio.h>
-    #include <dirent.h>
-
-    int main()
-    {
-        DIR *dir;
-        struct dirent *dp;
-        char * file_name;
-        dir = opendir(".");
-        while ((dp=readdir(dir)) != NULL) {
-            printf("debug: %s\n", dp->d_name);
-            if ( !strcmp(dp->d_name, ".") || !strcmp(dp->d_name, "..") )
-            {
-                // do nothing (straight logic)
-            } else {
-                file_name = dp->d_name; // use it
-                printf("file_name: \"%s\"\n",file_name);
-            }
-        }
-        closedir(dir);
-        return 0;
-    }
-    */
 
     while(TRUE)
     {
@@ -124,17 +102,101 @@ int main(int argc, char** argv)
 
 void trell_messageloop()
 {
-    char buffer[20];
+    trui_clientmessage_t message;
     while(1)
     {
-        if(mq_recv(buffer, 20, MQ_NOFLAGS) > 0)
+        if(mq_recv(&message, sizeof(trui_clientmessage_t), MQ_NOWAIT) > 0)
         {
-            syslog_log(1, SYSLOG_INFO, "Got message: %s", buffer);
+            switch (message.command)
+            {
+                case TRUI_SYSLOG:
+                {
+                    syslog_log(message.pid, SYSLOG_INFO, message.text);
+                } break;
+                case TRUI_CREATE_WINDOW:
+                {
+                    syslog_log(message.pid, SYSLOG_INFO, "Created window: %s", message.text);
+                    tui_window_t* window  = tui_window_create(message.text);
+                    window->pid = message.pid;
+                    list_add(desktop->windows, window);
+                    tui_desktop_set_activewindow(desktop, window);
+
+                    trui_servermessage_t responce = {
+                        .message = TRUI_WINDOW_CREATED,
+                        .param = desktop->windows->size
+                    };
+                    mq_send(message.pid, &responce, sizeof(trui_servermessage_t), MQ_NOFLAGS);
+                    tui_redraw(desktop);
+                } break;
+                case TRUI_CREATE_LABEL:
+                {
+                    foreach(win, desktop->windows)
+                    {
+                        if(((tui_window_t*)win->data)->pid == message.pid)
+                        {
+                            tui_window_t* window = (tui_window_t*)win->data;
+                            tui_item_t* label = tui_label_create(
+                                message.x,
+                                message.y,
+                                message.width,
+                                message.text);
+                            list_add(window->items, label);
+                            break;
+                        }
+                    }
+                } break;
+                case TRUI_CREATE_BUTTON:
+                {
+                    foreach(win, desktop->windows)
+                    {
+                        if(((tui_window_t*)win->data)->pid == message.pid)
+                        {
+                            tui_window_t* window = (tui_window_t*)win->data;
+                            tui_item_t* button = tui_button_create(
+                                message.x,
+                                message.y,
+                                message.width,
+                                message.text,
+                                btn_clicked);
+                            button->id = message.pid;
+                            list_add(window->items, button);
+                            break;
+                        }
+                    }
+                }break;
+                case TRUI_CLOSE:
+                {
+                    uint32_t index = 0;
+                    foreach(win, desktop->windows)
+                    {
+                        if(((tui_window_t*)win->data)->pid == message.pid)
+                        {
+                            tui_window_dispose((tui_window_t*)win->data);
+                            tui_window_t* prev = (tui_window_t*)win->prev->data;
+                            list_remove_at(desktop->windows, index);
+                            tui_desktop_set_activewindow(desktop, prev);
+                        }
+                        index++;
+                    }
+                    tui_redraw(desktop);
+                }break;
+            }
         }
         else
         {
             tui_redraw(desktop);
-            thread_sleep(10);
+            thread_sleep(5);
         }
     }
+}
+
+void btn_clicked(tui_item_t* item)
+{
+    //NOTE: This is a ugly hack just to get a simple button "event" back to host process
+    //      since Trell does not really do events back to processes yet.
+    trui_servermessage_t responce = {
+        .message = TRUI_BUTTON_PRESSED,
+        .param = 0
+    };
+    mq_send(item->id, &responce, sizeof(trui_servermessage_t), MQ_NOFLAGS);
 }

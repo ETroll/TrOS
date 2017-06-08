@@ -2,6 +2,7 @@
 #include <tros/atomics.h>
 #include <tros/memory.h>
 #include <tros/klib/kstring.h>
+#include <tros/sched/scheduler.h>
 
 
 static mailbox_message_t* mailbox_removetop(mailbox_t* mb);
@@ -15,6 +16,7 @@ mailbox_t* mailbox_create()
         mb->size = 0;
         mb->start = 0;
         mb->end = 0;
+        mb->listener = 0;
         spinlock_inistialize(mb->memlock);
     }
     return mb;
@@ -38,7 +40,7 @@ void mailbox_push(mailbox_t* mb, mailbox_message_t* message)
     {
         if(message->size < MAILBOX_MAX_SIZE)
         {
-            spinlock_lock(mb->memlock);
+            // spinlock_lock(mb->memlock);
             while((mb->totalbytes + message->size) > MAILBOX_MAX_SIZE)
             {
                 mailbox_message_t* message = mailbox_removetop(mb);
@@ -61,20 +63,43 @@ void mailbox_push(mailbox_t* mb, mailbox_message_t* message)
                 mb->totalbytes += message->size;
                 mb->size++;
             }
-            spinlock_unlock(mb->memlock);
+            // spinlock_unlock(mb->memlock);
+            if(mb->listener != 0)
+            {
+                // printk("TID %d got IO\n", ((thread_t*)mb->listener)->tid);
+                thread_setState((thread_t*)mb->listener, THREAD_IOREADY);
+            }
         }
     }
     //NOTE: Maybe return something?
 }
 
-mailbox_message_t* mailbox_pop(mailbox_t* mb)
+mailbox_message_t* mailbox_pop(mailbox_t* mb, uint32_t flags)
 {
     mailbox_message_t* message = 0;
     if(mb)
     {
-        spinlock_lock(mb->memlock);
-        message = mailbox_removetop(mb);
-        spinlock_unlock(mb->memlock);
+        if(mb->listener == 0)
+        {
+            uint32_t size = 0;
+            // spinlock_lock(mb->memlock);
+            size = mb->size;
+            // spinlock_unlock(mb->memlock);
+
+            if(size == 0 && !(flags & 0x02))
+            {
+                mb->listener = scheduler_getCurrentThread();
+                thread_setState((thread_t*)mb->listener, THREAD_WAITIO);
+                // printk("TID %d going to sleep\n", ((thread_t*)mb->listener)->tid);
+                scheduler_reschedule();
+                // printk("TID %d woke up\n", ((thread_t*)mb->listener)->tid);
+                mb->listener = 0;
+            }
+
+            // spinlock_lock(mb->memlock);
+            message = mailbox_removetop(mb);
+            // spinlock_unlock(mb->memlock);
+        }
     }
     return message;
 }
