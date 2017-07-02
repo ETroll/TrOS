@@ -8,13 +8,13 @@ static int is_transmit_empty();
 
 void serial_init()
 {
-    pio_outb(0x00, PORT + 1);    // Disable all interrupts
-    pio_outb(0x80, PORT + 3);    // Enable DLAB (set baud rate divisor)
-    pio_outb(0x03, PORT + 0);    // Set divisor to 3 (lo byte) 38400 baud
-    pio_outb(0x00, PORT + 1);    //                  (hi byte)
-    pio_outb(0x03, PORT + 3);    // 8 bits, no parity, one stop bit
-    pio_outb(0xC7, PORT + 2);    // Enable FIFO, clear them, with 14-byte threshold
-    pio_outb(0x0B, PORT + 4);    // IRQs enabled, RTS/DSR set
+    pio_outb(PORT + 1, 0x00);    // Disable all interrupts
+    pio_outb(PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
+    pio_outb(PORT + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
+    pio_outb(PORT + 1, 0x00);    //                  (hi byte)
+    pio_outb(PORT + 3, 0x03);    // 8 bits, no parity, one stop bit
+    pio_outb(PORT + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
+    pio_outb(PORT + 4, 0x0B);    // IRQs enabled, RTS/DSR set
 }
 
 static int serial_received()
@@ -36,7 +36,7 @@ char serial_readch()
 void serial_putch(char a)
 {
     while (is_transmit_empty() == 0);
-    pio_outb(a, PORT);
+    pio_outb(PORT, a);
 }
 
 void serial_puts(const char* str)

@@ -353,7 +353,7 @@ static void fdd_send_command(unsigned char cmd)
     {
         if(pio_inb(FDD_IO_MSR) & FDD_MSR_MASK_DATAREG)
         {
-            pio_outb(cmd, FDD_IO_FIFO);
+            pio_outb(FDD_IO_FIFO, cmd);
             break;
         }
     }
@@ -393,16 +393,16 @@ static void fdd_motor_on()
             break;
     }
 
-    pio_outb(__fdd_current_drive
+    pio_outb(FDD_IO_DOR, __fdd_current_drive
         | motor
         | FDD_DOR_MASK_RESET
-        | FDD_DOR_MASK_DMA, FDD_IO_DOR);
+        | FDD_DOR_MASK_DMA);
 	// timer_sleep(5); //To wait for the motor to start up on real HW.
 }
 
 static void fdd_motor_off()
 {
-    pio_outb(FDD_DOR_MASK_RESET, FDD_IO_DOR);
+    pio_outb(FDD_IO_DOR, FDD_DOR_MASK_RESET);
 	// timer_sleep(5); //To wait for the motor to stop on real HW.
 }
 
@@ -443,15 +443,15 @@ static void fdd_reset()
 {
     unsigned int status = 0;
     unsigned int cylinder = 0;
-    pio_outb(0, FDD_IO_DOR);
-    pio_outb(FDD_DOR_MASK_RESET | FDD_DOR_MASK_DMA, FDD_IO_DOR);
+    pio_outb(FDD_IO_DOR, 0);
+    pio_outb(FDD_IO_DOR, FDD_DOR_MASK_RESET | FDD_DOR_MASK_DMA);
     fdd_wait_irq();
 
     for(int i=0; i<4; i++)
     {
         fdd_check_interrupt_status(&status, &cylinder);
     }
-    pio_outb(0, FDD_IO_CTRL); //Sets transfer speed to 500Kb/s
+    pio_outb(FDD_IO_CTRL, 0); //Sets transfer speed to 500Kb/s
 
     //steprate=3ms, load_time=16ms unload_time=240ms, DMA=ON
     fdd_send_drivedata(3, 16, 240, 1);

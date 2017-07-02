@@ -114,11 +114,11 @@ int textmode_drv_ioctl(unsigned int ioctl_num, unsigned int param)
             {
                 _textmode_show_cursor = 0;
                 //Just moving the cursor out of screen
-                pio_outb(0x0F, TEXTMODE_CURSOR_IREG);
-                pio_outb(0xFF, TEXTMODE_CURSOR_DREG);
+                pio_outb(TEXTMODE_CURSOR_IREG, 0x0F);
+                pio_outb(TEXTMODE_CURSOR_DREG, 0xFF);
 
-                pio_outb(0x0E, TEXTMODE_CURSOR_IREG);
-                pio_outb(0xFF, TEXTMODE_CURSOR_DREG);
+                pio_outb(TEXTMODE_CURSOR_IREG, 0x0E);
+                pio_outb(TEXTMODE_CURSOR_DREG, 0xFF);
             }
         } break;
         case IOCTL_TEXTMODE_CURSER_POS:
@@ -170,10 +170,10 @@ void textmode_drv_update_cursor()
         unsigned char mempos_low = mempos & 0xFF;
         unsigned char mempos_high = (mempos >> 8) & 0xFF;
 
-        pio_outb(0x0F, TEXTMODE_CURSOR_IREG);
-        pio_outb(mempos_low, TEXTMODE_CURSOR_DREG);
+        pio_outb(TEXTMODE_CURSOR_IREG, 0x0F);
+        pio_outb(TEXTMODE_CURSOR_DREG, mempos_low);
 
-        pio_outb(0x0E, TEXTMODE_CURSOR_IREG);
-        pio_outb(mempos_high, TEXTMODE_CURSOR_DREG);
+        pio_outb(TEXTMODE_CURSOR_IREG, 0x0E);
+        pio_outb(TEXTMODE_CURSOR_DREG, mempos_high);
     }
 }

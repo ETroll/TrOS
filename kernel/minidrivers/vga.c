@@ -179,9 +179,11 @@ int vga_ioctl(unsigned int num, unsigned int param)
         } break;
         case VGA_IOCTL_GETMODES:
         {
+            //Return a basic list of modes
         } break;
         case VGA_IOCTL_INFOMODES:
         {
+            //Get info on mode?
         } break;
     }
     return retVal;
@@ -190,57 +192,57 @@ int vga_ioctl(unsigned int num, unsigned int param)
 void vga_changemode(vga_mode_t* mode)
 {
 
-    pio_outb(mode->regs.miscOutput, 0x3c2);
-    pio_outw(mode->regs.verticalRetraceEnd, 0x3d4);
+    pio_outb(0x3c2, mode->regs.miscOutput);
+    pio_outw(0x3d4, mode->regs.verticalRetraceEnd);
 
-    pio_outw(mode->regs.horizontalTotal, 0x3d4);
-    pio_outw(mode->regs.horizontalDisplayEnableEnd, 0x3d4);
-    pio_outw(mode->regs.horizontalBlankStart, 0x3d4);
-    pio_outw(mode->regs.horizontalBlankEnd, 0x3d4);
-    pio_outw(mode->regs.horizontalRetraceStart, 0x3d4);
-    pio_outw(mode->regs.horizontalRetraceEnd, 0x3d4);
-    pio_outw(mode->regs.verticalRetraceEnd, 0x3d4);
-    pio_outw(mode->regs.logicalWidth, 0x3d4);
+    pio_outw(0x3d4, mode->regs.horizontalTotal);
+    pio_outw(0x3d4, mode->regs.horizontalDisplayEnableEnd);
+    pio_outw(0x3d4, mode->regs.horizontalBlankStart);
+    pio_outw(0x3d4, mode->regs.horizontalBlankEnd);
+    pio_outw(0x3d4, mode->regs.horizontalRetraceStart);
+    pio_outw(0x3d4, mode->regs.horizontalRetraceEnd);
+    pio_outw(0x3d4, mode->regs.verticalRetraceEnd);
+    pio_outw(0x3d4, mode->regs.logicalWidth);
 
-    pio_outw(mode->regs.verticalTotal, 0x3d4);
-    pio_outw(mode->regs.overflow, 0x3d4);
-    pio_outw(mode->regs.maximumScanLine, 0x3d4);
-    pio_outw(mode->regs.verticalRetraceStart, 0x3d4);
-    pio_outw(mode->regs.verticalRetraceEnd, 0x3d4);
-    pio_outw(mode->regs.verticalDisplayEnableEnd, 0x3d4);
-    pio_outw(mode->regs.verticalBlankStart, 0x3d4);
-    pio_outw(mode->regs.verticalBlankEnd, 0x3d4);
+    pio_outw(0x3d4, mode->regs.verticalTotal);
+    pio_outw(0x3d4, mode->regs.overflow);
+    pio_outw(0x3d4, mode->regs.maximumScanLine);
+    pio_outw(0x3d4, mode->regs.verticalRetraceStart);
+    pio_outw(0x3d4, mode->regs.verticalRetraceEnd);
+    pio_outw(0x3d4, mode->regs.verticalDisplayEnableEnd);
+    pio_outw(0x3d4, mode->regs.verticalBlankStart);
+    pio_outw(0x3d4, mode->regs.verticalBlankEnd);
 
-    pio_outw(mode->regs.presetRowScan, 0x3d4);
-    pio_outw(mode->regs.underlineLocation, 0x3d4);
-    pio_outw(mode->regs.modeControl2, 0x3d4);
+    pio_outw(0x3d4, mode->regs.presetRowScan);
+    pio_outw(0x3d4, mode->regs.underlineLocation);
+    pio_outw(0x3d4, mode->regs.modeControl2);
 
-    pio_outw(mode->regs.clockMode, 0x3c4);
-    pio_outw(mode->regs.characterSelect, 0x3c4);
-    pio_outw(mode->regs.memoryMode, 0x3c4);
-    pio_outw(0x0f02, 0x3c4); // enable writing to all planes
+    pio_outw(0x3c4, mode->regs.clockMode);
+    pio_outw(0x3c4, mode->regs.characterSelect);
+    pio_outw(0x3c4, mode->regs.memoryMode);
+    pio_outw(0x3c4, 0x0f02); // enable writing to all planes
 
 
-    pio_outw(mode->regs.mode, 0x3ce);
-    pio_outw(mode->regs.misc, 0x3ce);
+    pio_outw(0x3ce, mode->regs.mode);
+    pio_outw(0x3ce, mode->regs.misc);
 
     pio_inb(0x3da);
-    pio_outb(0x10, 0x3c0);
-    pio_outb(mode->regs.modeControl, 0x3c0);
-    pio_outb(0x11, 0x3c0);
-    pio_outb(mode->regs.overscan, 0x3c0);
-    pio_outb(0x12, 0x3c0);
-    pio_outb(mode->regs.colorPlaneEnable, 0x3c0);
-    pio_outb(0x13, 0x3c0);
-    pio_outb(mode->regs.horizontalPanning, 0x3c0);
-    pio_outb(0x14, 0x3c0);
-    pio_outb(mode->regs.colorSelect, 0x3c0);
+    pio_outb(0x3c0, 0x10);
+    pio_outb(0x3c0, mode->regs.modeControl);
+    pio_outb(0x3c0, 0x11);
+    pio_outb(0x3c0, mode->regs.overscan);
+    pio_outb(0x3c0, 0x12);
+    pio_outb(0x3c0, mode->regs.colorPlaneEnable);
+    pio_outb(0x3c0, 0x13);
+    pio_outb(0x3c0, mode->regs.horizontalPanning);
+    pio_outb(0x3c0, 0x14);
+    pio_outb(0x3c0, mode->regs.colorSelect);
 
     for (int i=0; i<(mode->width*mode->height); i++)
     {
-        _vga_mem_start[i] =  0x0f;
+        _vga_mem_start[i] =  0x0A;
     }
-    pio_outb(0x20, 0x3c0); // enable video
+    pio_outb(0x3c0, 0x20); // enable video
 }
 
 void vga_initmodes()

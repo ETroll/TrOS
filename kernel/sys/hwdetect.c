@@ -16,7 +16,7 @@ char *floppy_descripive_names[6] =
 
 hwd_floppy_t hwdetect_floppy_disks()
 {
-    pio_outb(0x10, 0x70);
+    pio_outb(0x70, 0x10);
     unsigned char data = pio_inb(0x71);
 
     //High nibble -> Master device

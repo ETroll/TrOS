@@ -118,7 +118,7 @@ void dma_channel_set_mode(unsigned char channel, unsigned char mode)
     int chan = (int)((dma==0) ? channel : channel-4);
 
     dma_channel_mask(channel);
-    pio_outb(chan | mode, (channel < 4) ? DMA0_REG_MODE : DMA1_REG_MODE);
+    pio_outb((channel < 4) ? DMA0_REG_MODE : DMA1_REG_MODE, chan | mode);
     dma_unmask(dma);
 }
 
@@ -172,8 +172,8 @@ void dma_channel_set_address(unsigned char channel, unsigned short address)
                 port = DMA1_REG_CHAN7_ADDR;
             } break;
 	   }
-       pio_outb(address & 0xFF, port);
-       pio_outb((address >> 8) & 0xFF, port);
+       pio_outb(port, address & 0xFF);
+       pio_outb(port, (address >> 8) & 0xFF);
     }
 }
 
@@ -217,8 +217,8 @@ void dma_channel_set_count(unsigned char channel, unsigned short count)
                 port = DMA1_REG_CHAN7_COUNT;
             } break;
 	   }
-       pio_outb(count & 0xFF, port);
-       pio_outb((count >> 8) & 0xFF, port);
+       pio_outb(port, count & 0xFF);
+       pio_outb(port, (count >> 8) & 0xFF);
     }
 }
 
@@ -226,11 +226,11 @@ void dma_channel_mask(unsigned char channel)
 {
     if(channel < 5)
     {
-        pio_outb((1 << (channel-1)), DMA0_REG_CHANMASK);
+        pio_outb(DMA0_REG_CHANMASK, (1 << (channel-1)));
     }
     else
     {
-        pio_outb((1 << (channel-5)), DMA1_REG_CHANMASK);
+        pio_outb(DMA1_REG_CHANMASK, (1 << (channel-5)));
     }
 }
 
@@ -238,11 +238,11 @@ void dma_channel_unmask(unsigned char channel)
 {
     if(channel < 5)
     {
-        pio_outb(channel, DMA0_REG_CHANMASK);
+        pio_outb(DMA0_REG_CHANMASK, channel);
     }
     else
     {
-        pio_outb(channel, DMA1_REG_CHANMASK);
+        pio_outb(DMA1_REG_CHANMASK, channel);
     }
 }
 
@@ -250,13 +250,13 @@ void dma_flipflop_reset(int dma)
 {
     if(dma < 2)
     {
-        pio_outb(0xFF, dma == 0 ? DMA0_REG_CLEARBYTE_FLIPFLOP : DMA1_REG_CLEARBYTE_FLIPFLOP);
+        pio_outb(dma == 0 ? DMA0_REG_CLEARBYTE_FLIPFLOP : DMA1_REG_CLEARBYTE_FLIPFLOP, 0xFF);
     }
 }
 
 void dma_reset()
 {
-    pio_outb(0xFF, DMA0_REG_TEMP);
+    pio_outb(DMA0_REG_TEMP, 0xFF);
 }
 
 void dma_set_external_page_register(unsigned char reg, unsigned char value)
@@ -294,11 +294,11 @@ void dma_set_external_page_register(unsigned char reg, unsigned char value)
             } break;
 	   }
 
-       pio_outb(value, port);
+       pio_outb(port, value);
     }
 }
 
 void dma_unmask()
 {
-    pio_outb(0xFF, DMA1_REG_UNMASK_ALL);
+    pio_outb(DMA1_REG_UNMASK_ALL, 0xFF);
 }
