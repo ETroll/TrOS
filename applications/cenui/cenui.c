@@ -15,15 +15,16 @@ int main(int argc, char** argv)
 
     device_t vga = device_open("vga1");
 
-    device_command(vga, 1, 0);
-    thread_sleep(1000);
-    device_command(vga, 1, 1);
-    thread_sleep(1000);
-    device_command(vga, 1, 0);
+    device_command(vga, 1, 0); //Planar 640x480
+    // device_command(vga, 1, 1); //Linear 320x200
+    // thread_sleep(1000);
+    // device_command(vga, 1, 1);
+    // thread_sleep(1000);
+    // device_command(vga, 1, 0);
 
     while(TRUE)
     {
-        thread_sleep(10);
+        thread_sleep(1000);
     }
     return 0;
 }

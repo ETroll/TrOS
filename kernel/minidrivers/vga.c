@@ -76,6 +76,7 @@ static unsigned char _vga_isopen = 0;
 
 #define VGA_NUM_MODES 2
 static vga_mode_t modes[VGA_NUM_MODES];
+static vga_mode_t* _active_mode;
 
 //http://bos.asmhackers.net/docs/vga_without_bios/docs/mode%2013h%20without%20using%20bios.htm
 
@@ -108,32 +109,33 @@ int vga_driver_initialize()
     };
 
     _vga_isopen = 0;
+    _active_mode = 0;
     vga_initmodes();
 
     printk("** Installing VGA driver - ");
 	return driver_register(&drv);
 }
 
-#define R_COM  0x63 // "common" bits
-#define R_W256 0x00
-#define R_W320 0x00
-#define R_W360 0x04
-#define R_W376 0x04
-#define R_W400 0x04
+// #define R_COM  0x63 // "common" bits
+// #define R_W256 0x00
+// #define R_W320 0x00
+// #define R_W360 0x04
+// #define R_W376 0x04
+// #define R_W400 0x04
+//
+// #define R_H200 0x00
+// #define R_H224 0x80
+// #define R_H240 0x80
+// #define R_H256 0x80
+// #define R_H270 0x80
+// #define R_H300 0x80
+// #define R_H360 0x00
+// #define R_H400 0x00
+// #define R_H480 0x80
+// #define R_H564 0x80
+// #define R_H600 0x80
 
-#define R_H200 0x00
-#define R_H224 0x80
-#define R_H240 0x80
-#define R_H256 0x80
-#define R_H270 0x80
-#define R_H300 0x80
-#define R_H360 0x00
-#define R_H400 0x00
-#define R_H480 0x80
-#define R_H564 0x80
-#define R_H600 0x80
-
-#define SZ(x) (sizeof(x)/sizeof(x[0]))
+// #define SZ(x) (sizeof(x)/sizeof(x[0]))
 
 int vga_open()
 {
@@ -189,6 +191,95 @@ int vga_ioctl(unsigned int num, unsigned int param)
     return retVal;
 }
 
+void vga_set_plane(uint32_t plane)
+{
+    plane &= 3;
+    // uint8_t pmask = 1 << plane;
+
+    // pio_outb(0x3c0, 0x20);
+    // pio_outb(0x3CE, 4);
+    // pio_outb(0x3CF, plane);
+
+    pio_outb(0x3C4, 2);
+    pio_outb(0x3C5, 1 << plane);
+}
+
+void vga_write_pixel_linear(uint32_t x, uint32_t y, uint8_t c)
+{
+    //320y = 256y + 64y,
+    //        2^8 + 2^6
+    //uint16_t offset = _active_mode->width * y + x;
+    uint16_t offset = offset = (y<<8) + (y<<6) + x;
+    _vga_mem_start[offset] =  c;
+}
+
+void vga_write_pixel_planar(uint32_t x, uint32_t y, uint8_t c)
+{
+    //640 = 512 + 128 = 128 × 5, and 480 = 32 × 15.
+    //      2^16 + 2^7
+    // uint16_t offset = offset = (y<<14) + (y<<5) + (x>>2);
+    // _vga_mem_start[offset] =  c;
+    unsigned wd_in_bytes, off, mask, p, pmask;
+
+    wd_in_bytes = _active_mode->width / 8;
+    off = wd_in_bytes * y + x / 8;
+    x = (x & 7) * 1;
+    mask = 0x80 >> x;
+    pmask = 1;
+    for(p = 0; p < 4; p++)
+    {
+        vga_set_plane(p);
+        if(pmask & c)
+        {
+            _vga_mem_start[off] = _vga_mem_start[off] | mask;
+        }
+        else
+        {
+            _vga_mem_start[off] = _vga_mem_start[off] & ~mask;
+        }
+        pmask <<= 1;
+    }
+
+}
+
+void vga_test_linear(uint32_t width, uint32_t height)
+{
+    for (int i=0; i<(width*height); i++)
+    {
+        _vga_mem_start[i] =  0x0E;
+    }
+}
+
+void vga_test_planar(uint32_t width, uint32_t height)
+{
+    // for(int i = 0; i<4; i++)
+    // {
+    //     vga_set_plane(i);
+    //     for (int k=0; k<(65536); k++)
+    //     {
+    //         _vga_mem_start[k] =  0x01;
+    //     }
+    //     // for (int k=0; k<(width*height); k++)
+    //     // {
+    //     //     _vga_mem_start[k] =  0x02;
+    //     // }
+    // }
+    for(int x=0; x<width; x++)
+    {
+        for(int y=0; y<height; y++)
+        {
+            vga_write_pixel_planar(x,y, 0x00);
+        }
+    }
+    for(int x=200; x<300; x++)
+    {
+        for(int y=100; y<200; y++)
+        {
+            vga_write_pixel_planar(x,y, 0x0F);
+        }
+    }
+}
+
 void vga_changemode(vga_mode_t* mode)
 {
 
@@ -238,11 +329,22 @@ void vga_changemode(vga_mode_t* mode)
     pio_outb(0x3c0, 0x14);
     pio_outb(0x3c0, mode->regs.colorSelect);
 
-    for (int i=0; i<(mode->width*mode->height); i++)
+    _active_mode = mode;
+    if((mode->width * mode->height) > 65536)
     {
-        _vga_mem_start[i] =  0x0A;
+        printk("Testing planar!\n");
+        vga_test_planar(mode->width, mode->height);
+
     }
+    else
+    {
+        printk("Testing linear!\n");
+        vga_test_linear(mode->width, mode->height);
+    }
+
     pio_outb(0x3c0, 0x20); // enable video
+
+
 }
 
 void vga_initmodes()
