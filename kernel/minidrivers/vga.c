@@ -1,10 +1,16 @@
 #include <tros/driver.h>
 #include <tros/hal/io.h>
 #include <tros/tros.h>
+#include <tros/memory.h>
 
+#define VGA_MEM_SIZE 65535
 
-static uint8_t* _vga_mem_start = (uint8_t*)0xA0000;
-static uint8_t* _vga_mem_end = (uint8_t*)0xBFFFF;
+typedef struct
+{
+    uint8_t unused:7;
+    uint8_t dirty:1;
+    uint8_t data[4];
+} __attribute__((packed)) vga_frame_t; // maybe name vga_mem_frame?
 
 typedef enum
 {
@@ -17,8 +23,14 @@ typedef enum
 typedef enum
 {
     VGA_DEPTH_256,
-    VGA_DEPTH_16K
+    VGA_DEPTH_16
 } vga_color_depth_t;
+
+typedef enum
+{
+    VGA_MEMORY_LINEAR,
+    VGA_MEMORY_PLANAR
+} vga_memory_model_t;
 
 typedef struct
 {
@@ -59,6 +71,7 @@ typedef struct
     uint16_t height;
     vga_color_depth_t depth;
     vga_mode_regs_t regs;
+    vga_memory_model_t mmodel;
 } vga_mode_t;
 
 // typedef enum
@@ -72,11 +85,15 @@ typedef struct
 //     VGA_MODE_320x200x256
 // } vga_modes_t;
 
+static uint8_t* _vga_mem_start = (uint8_t*)0xA0000;
+static uint8_t* _vga_mem_end = (uint8_t*)0xBFFFF;
+
 static unsigned char _vga_isopen = 0;
 
 #define VGA_NUM_MODES 2
 static vga_mode_t modes[VGA_NUM_MODES];
-static vga_mode_t* _active_mode;
+static vga_mode_t* _active_mode = 0;
+static vga_frame_t* _buffer = 0;
 
 //http://bos.asmhackers.net/docs/vga_without_bios/docs/mode%2013h%20without%20using%20bios.htm
 
@@ -116,32 +133,17 @@ int vga_driver_initialize()
 	return driver_register(&drv);
 }
 
-// #define R_COM  0x63 // "common" bits
-// #define R_W256 0x00
-// #define R_W320 0x00
-// #define R_W360 0x04
-// #define R_W376 0x04
-// #define R_W400 0x04
-//
-// #define R_H200 0x00
-// #define R_H224 0x80
-// #define R_H240 0x80
-// #define R_H256 0x80
-// #define R_H270 0x80
-// #define R_H300 0x80
-// #define R_H360 0x00
-// #define R_H400 0x00
-// #define R_H480 0x80
-// #define R_H564 0x80
-// #define R_H600 0x80
-
-// #define SZ(x) (sizeof(x)/sizeof(x[0]))
-
 int vga_open()
 {
     if(!_vga_isopen)
     {
         _vga_isopen = 1;
+        _buffer = (vga_frame_t*)kmalloc(sizeof(vga_frame_t)*VGA_MEM_SIZE);
+        for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
+        {
+            //Maybe clear mem instead? Bit slower, but safer!
+            _buffer[i].dirty = 0;
+        }
         return TROS_DRIVER_OK;
     }
     else
@@ -151,6 +153,10 @@ int vga_open()
 }
 void vga_close()
 {
+    if(_buffer)
+    {
+        kfree(_buffer);
+    }
     _vga_isopen = 0;
 }
 
@@ -193,24 +199,50 @@ int vga_ioctl(unsigned int num, unsigned int param)
 
 void vga_set_plane(uint32_t plane)
 {
-    plane &= 3;
-    // uint8_t pmask = 1 << plane;
-
-    // pio_outb(0x3c0, 0x20);
-    // pio_outb(0x3CE, 4);
-    // pio_outb(0x3CF, plane);
-
+    plane &= 3; //Just in case, clear rest of the int
     pio_outb(0x3C4, 2);
     pio_outb(0x3C5, 1 << plane);
 }
 
+void vga_drawbuffer()
+{
+    if(_buffer)
+    {
+        for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
+        {
+            if(_buffer[i].dirty)
+            {
+                if(_active_mode->mmodel == VGA_MEMORY_PLANAR)
+                {
+                    vga_set_plane(0);
+                    _vga_mem_start[i] = _buffer[i].data[0];
+                    vga_set_plane(1);
+                    _vga_mem_start[i] = _buffer[i].data[1];
+                    vga_set_plane(2);
+                    _vga_mem_start[i] = _buffer[i].data[2];
+                    vga_set_plane(3);
+                    _vga_mem_start[i] = _buffer[i].data[3];
+                }
+                else
+                {
+                    _vga_mem_start[i] = _buffer[i].data[0];
+                }
+            }
+        }
+    }
+}
+
 void vga_write_pixel_linear(uint32_t x, uint32_t y, uint8_t c)
 {
-    //320y = 256y + 64y,
-    //        2^8 + 2^6
-    //uint16_t offset = _active_mode->width * y + x;
-    uint16_t offset = offset = (y<<8) + (y<<6) + x;
-    _vga_mem_start[offset] =  c;
+    if(_buffer)
+    {
+        //320y = 256y + 64y,
+        //        2^8 + 2^6
+        //uint16_t offset = _active_mode->width * y + x;
+        uint16_t offset = offset = (y<<8) + (y<<6) + x;
+        _buffer[offset].data[0] = c;
+        _buffer[offset].dirty = 1;
+    }
 }
 
 void vga_write_pixel_planar(uint32_t x, uint32_t y, uint8_t c)
@@ -218,66 +250,83 @@ void vga_write_pixel_planar(uint32_t x, uint32_t y, uint8_t c)
     //640 = 512 + 128 = 128 × 5, and 480 = 32 × 15.
     //      2^16 + 2^7
     // uint16_t offset = offset = (y<<14) + (y<<5) + (x>>2);
-    // _vga_mem_start[offset] =  c;
-    unsigned wd_in_bytes, off, mask, p, pmask;
-
-    wd_in_bytes = _active_mode->width / 8;
-    off = wd_in_bytes * y + x / 8;
-    x = (x & 7) * 1;
-    mask = 0x80 >> x;
-    pmask = 1;
-    for(p = 0; p < 4; p++)
+    if(_buffer)
     {
-        vga_set_plane(p);
-        if(pmask & c)
-        {
-            _vga_mem_start[off] = _vga_mem_start[off] | mask;
-        }
-        else
-        {
-            _vga_mem_start[off] = _vga_mem_start[off] & ~mask;
-        }
-        pmask <<= 1;
-    }
+        uint32_t offset = (y*_active_mode->width) / 8 + (x/8);
+        x = 7-(x%8);
 
+        _buffer[offset].dirty = 1;
+
+        uint8_t bitmask = 1 << x;
+        uint8_t planemask = 1;
+        for(uint8_t p = 0; p < 4; p++)
+        {
+            if(planemask & c)
+            {
+                _buffer[offset].data[p] |= bitmask;
+            }
+            else
+            {
+                _buffer[offset].data[p] &= ~bitmask;
+            }
+            planemask <<= 1;
+        }
+    }
 }
 
 void vga_test_linear(uint32_t width, uint32_t height)
 {
-    for (int i=0; i<(width*height); i++)
+    for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
     {
-        _vga_mem_start[i] =  0x0E;
+        _buffer[i].dirty = 1;
+        _buffer[i].data[0] = 0x00;
     }
+
+    for(int x=50; x<150; x++)
+    {
+        for(int y=50; y<150; y++)
+        {
+            vga_write_pixel_linear(x,y, 0xF);
+        }
+    }
+    vga_drawbuffer();
 }
 
 void vga_test_planar(uint32_t width, uint32_t height)
 {
-    // for(int i = 0; i<4; i++)
-    // {
-    //     vga_set_plane(i);
-    //     for (int k=0; k<(65536); k++)
-    //     {
-    //         _vga_mem_start[k] =  0x01;
-    //     }
-    //     // for (int k=0; k<(width*height); k++)
-    //     // {
-    //     //     _vga_mem_start[k] =  0x02;
-    //     // }
-    // }
-    for(int x=0; x<width; x++)
+    for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
     {
-        for(int y=0; y<height; y++)
-        {
-            vga_write_pixel_planar(x,y, 0x00);
-        }
+        _buffer[i].dirty = 1;
+        _buffer[i].data[0] = 0x00;
+        _buffer[i].data[1] = 0x00;
+        _buffer[i].data[2] = 0xFF;
+        _buffer[i].data[3] = 0xFF;
     }
-    for(int x=200; x<300; x++)
+
+    for(int x=100; x<200; x++)
     {
         for(int y=100; y<200; y++)
         {
-            vga_write_pixel_planar(x,y, 0x0F);
+            vga_write_pixel_planar(x,y, 0x02);
         }
     }
+
+    for(int x=300; x<400; x++)
+    {
+        for(int y=200; y<300; y++)
+        {
+            if(y == 200 || y == 299)
+            {
+                vga_write_pixel_planar(x,y, 0x01);
+            }
+            else if(x==300 || x ==399)
+            {
+                vga_write_pixel_planar(x,y, 0x01);
+            }
+        }
+    }
+
+    vga_drawbuffer();
 }
 
 void vga_changemode(vga_mode_t* mode)
@@ -351,7 +400,8 @@ void vga_initmodes()
 {
     modes[0].width = 640;
     modes[0].height = 480;
-    modes[0].depth = VGA_DEPTH_16K;
+    modes[0].depth = VGA_DEPTH_16;
+    modes[0].mmodel = VGA_MEMORY_PLANAR;
     modes[0].regs.modeControl = 0x01;
     modes[0].regs.overscan = 0x00;
     modes[0].regs.colorPlaneEnable = 0x0F;
@@ -385,6 +435,7 @@ void vga_initmodes()
     modes[1].width = 320;
     modes[1].height = 200;
     modes[1].depth = VGA_DEPTH_256;
+    modes[1].mmodel = VGA_MEMORY_LINEAR;
     modes[1].regs.modeControl = 0x41;
     modes[1].regs.overscan = 0x00;
     modes[1].regs.colorPlaneEnable = 0x0F;

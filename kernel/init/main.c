@@ -33,7 +33,7 @@ void kernel_early()
 {
     irq_initialize();
     serial_init();
-    timer_initialize(1000);
+    timer_initialize(1000); //Set tick to ~1ms
 
     __asm("sti");
 }
