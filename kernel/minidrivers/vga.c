@@ -12,19 +12,19 @@ typedef struct
     uint8_t data[4];
 } __attribute__((packed)) vga_frame_t; // maybe name vga_mem_frame?
 
-typedef enum
+typedef struct
 {
-    VGA_IOCTL_SWAPBUFFER = 0x00,
-    VGA_IOCTL_CHANGEMODE,
-    VGA_IOCTL_GETMODES,
-    VGA_IOCTL_INFOMODES
-} vga_ioctl_t;
+    uint32_t width;
+    uint32_t height;
+    uint32_t bpp;       //if zero, then text-mode
+    uint32_t mode;
+} fbmode_information_t;
 
 typedef enum
 {
-    VGA_DEPTH_256,
-    VGA_DEPTH_16
-} vga_color_depth_t;
+    VGA_IOCTL_CHANGEMODE = 0x00,
+    VGA_IOCTL_GETMODES
+} vga_ioctl_t;
 
 typedef enum
 {
@@ -69,21 +69,11 @@ typedef struct
 {
     uint16_t width;
     uint16_t height;
-    vga_color_depth_t depth;
+    uint16_t bpp;
     vga_mode_regs_t regs;
     vga_memory_model_t mmodel;
 } vga_mode_t;
 
-// typedef enum
-// {
-//     VGA_MODE_640x480x16K = 0x00,
-//     VGA_MODE_640x480x256,
-//     VGA_MODE_600x400x16K,
-//     VGA_MODE_600x400x256,
-//     VGA_MODE_480x360x256,
-//     VGA_MODE_320x240x256,
-//     VGA_MODE_320x200x256
-// } vga_modes_t;
 
 static uint8_t* _vga_mem_start = (uint8_t*)0xA0000;
 static uint8_t* _vga_mem_end = (uint8_t*)0xBFFFF;
@@ -99,19 +89,18 @@ static vga_frame_t* _buffer = 0;
 
 //http://files.osdev.org/mirrors/geezer/osd/graphics/modes.c
 
-static int vga_read(int* buffer, unsigned int count);
-static int vga_write(int* buffer, unsigned int count);
+static void vga_swapbuffer(unsigned char* buffer, unsigned int length);
 static int vga_ioctl(unsigned int num, unsigned int param);
 static int vga_open();
 static void vga_close();
 
 static void vga_initmodes();
 static void vga_changemode(vga_mode_t* mode);
+static void vga_drawbuffer();
 
-static driver_generic_t _vga_driver =
+static driver_framebuffer_t _vga_driver =
 {
-    .read = vga_read,
-    .write = vga_write,
+    .swapbuffer = vga_swapbuffer,
     .ioctl = vga_ioctl,
     .open = vga_open,
     .close = vga_close
@@ -121,7 +110,7 @@ int vga_driver_initialize()
 {
     device_driver_t drv = {
         .name = "vga1",
-        .type = DRV_GENERIC,
+        .type = DRV_FRAMEBUFFER,
         .driver = &_vga_driver
     };
 
@@ -160,40 +149,46 @@ void vga_close()
     _vga_isopen = 0;
 }
 
-int vga_read(int* buffer, unsigned int count)
+void vga_swapbuffer(unsigned char* buffer, unsigned int length)
 {
-    return 0;
-}
 
-int vga_write(int* buffer, unsigned int count)
-{
-    return 0;
 }
 
 int vga_ioctl(unsigned int num, unsigned int param)
 {
     int retVal = 0;
+    static int nextmode = 0;
+    printk("VGA IOCTL %d - PARAM: %x\n", num, param);
     switch (num)
     {
-        case VGA_IOCTL_SWAPBUFFER:
-        {
-        } break;
         case VGA_IOCTL_CHANGEMODE:
         {
             if(param < VGA_NUM_MODES)
             {
                 vga_changemode(&modes[param]);
+                retVal = 1;
             }
         } break;
         case VGA_IOCTL_GETMODES:
         {
-            //Return a basic list of modes
-        } break;
-        case VGA_IOCTL_INFOMODES:
-        {
-            //Get info on mode?
+            if(nextmode < VGA_NUM_MODES)
+            {
+                fbmode_information_t* fbinfo = (fbmode_information_t*)param;
+                fbinfo->width = modes[nextmode].width;
+                fbinfo->height = modes[nextmode].height;
+                fbinfo->bpp = modes[nextmode].bpp;
+                fbinfo->mode = nextmode;
+                retVal = ++nextmode;
+                printk("Retrning info: %dx%dx%d\n", fbinfo->width, fbinfo->height, fbinfo->bpp);
+            }
+            else
+            {
+                printk("Resetting counter\n");
+                nextmode = 0;
+            }
         } break;
     }
+    printk("Retval: %d\n", retVal);
     return retVal;
 }
 
@@ -297,10 +292,31 @@ void vga_test_planar(uint32_t width, uint32_t height)
     for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
     {
         _buffer[i].dirty = 1;
-        _buffer[i].data[0] = 0x00;
-        _buffer[i].data[1] = 0x00;
+        _buffer[i].data[0] = 0xFF;
+        _buffer[i].data[1] = 0xFF;
         _buffer[i].data[2] = 0xFF;
         _buffer[i].data[3] = 0xFF;
+    }
+
+    for(int x=0; x<640; x++)
+    {
+        for(int y=0; y<480; y++)
+        {
+            if(x % 2 == 0)
+            {
+                if(y % 2 == 0)
+                {
+                    vga_write_pixel_planar(x,y, 0x01);
+                }
+            }
+            else
+            {
+                if(y % 2 == 1)
+                {
+                    vga_write_pixel_planar(x,y, 0x07);
+                }
+            }
+        }
     }
 
     for(int x=100; x<200; x++)
@@ -317,14 +333,16 @@ void vga_test_planar(uint32_t width, uint32_t height)
         {
             if(y == 200 || y == 299)
             {
-                vga_write_pixel_planar(x,y, 0x01);
+                vga_write_pixel_planar(x,y, 0x00);
             }
             else if(x==300 || x ==399)
             {
-                vga_write_pixel_planar(x,y, 0x01);
+                vga_write_pixel_planar(x,y, 0x00);
             }
         }
     }
+
+
 
     vga_drawbuffer();
 }
@@ -400,7 +418,7 @@ void vga_initmodes()
 {
     modes[0].width = 640;
     modes[0].height = 480;
-    modes[0].depth = VGA_DEPTH_16;
+    modes[0].bpp = 4;
     modes[0].mmodel = VGA_MEMORY_PLANAR;
     modes[0].regs.modeControl = 0x01;
     modes[0].regs.overscan = 0x00;
@@ -434,7 +452,7 @@ void vga_initmodes()
 
     modes[1].width = 320;
     modes[1].height = 200;
-    modes[1].depth = VGA_DEPTH_256;
+    modes[1].bpp = 8;
     modes[1].mmodel = VGA_MEMORY_LINEAR;
     modes[1].regs.modeControl = 0x41;
     modes[1].regs.overscan = 0x00;

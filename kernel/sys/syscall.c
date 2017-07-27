@@ -55,6 +55,9 @@ static int sys_opendevice(const char* name)
             case DRV_GENERIC:
                 result = ((driver_generic_t*)device->driver)->open();
             break;
+            case DRV_FRAMEBUFFER:
+                result = ((driver_framebuffer_t*)device->driver)->open();
+            break;
         }
         if(result > 0)
         {
@@ -80,6 +83,9 @@ static int sys_closedevice(unsigned int fd)
             break;
             case DRV_GENERIC:
                 ((driver_generic_t*)device->driver)->close();
+            break;
+            case DRV_FRAMEBUFFER:
+                ((driver_framebuffer_t*)device->driver)->close();
             break;
         }
         return 1;
@@ -122,6 +128,10 @@ static int sys_ioctl(unsigned int fd, unsigned int ioctl_num, unsigned int param
         if(device->type == DRV_GENERIC)
         {
             return ((driver_generic_t*)device->driver)->ioctl(ioctl_num, param);
+        }
+        else if(device->type == DRV_FRAMEBUFFER)
+        {
+            return ((driver_framebuffer_t*)device->driver)->ioctl(ioctl_num, param);
         }
     }
     return -1;

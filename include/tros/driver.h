@@ -11,7 +11,8 @@
 typedef enum
 {
     DRV_GENERIC = 0x01,
-    DRV_BLOCK
+    DRV_BLOCK,
+    DRV_FRAMEBUFFER
 } driver_t;
 
 typedef struct
@@ -30,6 +31,14 @@ typedef struct
     int (*open) (void);
     void (*close) (void);
 } driver_generic_t;
+
+typedef struct
+{
+    void (*swapbuffer) (unsigned char* buffer, unsigned int length);
+    int (*ioctl) (unsigned int num, unsigned int param);
+    int (*open) (void);
+    void (*close) (void);
+} driver_framebuffer_t;
 
 typedef struct
 {
