@@ -40,4 +40,6 @@ DECL_SYSCALL1(threadcancel, unsigned int);
 DECL_SYSCALL0(threadexit);
 DECL_SYSCALL1(threadsleep, unsigned int);
 
+//Framebuffer devies
+DECL_SYSCALL3(swapbuffer, unsigned int, unsigned char*, unsigned int);
 #endif

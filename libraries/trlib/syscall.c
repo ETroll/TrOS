@@ -78,3 +78,6 @@ DEFN_SYSCALL2(threadstart, 14, unsigned int, unsigned int);
 DEFN_SYSCALL1(threadcancel, 15, unsigned int);
 DEFN_SYSCALL0(threadexit, 16);
 DEFN_SYSCALL1(threadsleep, 17, unsigned int);
+
+//Framebuffer devies
+DEFN_SYSCALL3(swapbuffer, 18, unsigned int, unsigned char*, unsigned int);

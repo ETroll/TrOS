@@ -18,4 +18,6 @@ typedef enum
 } framebuffer_ioctl_t;
 
 
+void framebuffer_swapbuffer(unsigned int device, unsigned char* buffer, unsigned int length);
+
 #endif

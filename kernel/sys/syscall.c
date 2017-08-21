@@ -257,6 +257,21 @@ static void sys_thread_sleep(uint32_t ms)
     timer_sleep(thread, ms);
 }
 
+static int sys_swapbuffer(uint32_t dev, uint8_t* buffer, uint32_t length)
+{
+    printk("SWAPBUFFER!\n");
+    device_driver_t* device = driver_find_device_id(dev);
+    if(device != 0)
+    {
+        if(device->type == DRV_FRAMEBUFFER)
+        {
+            ((driver_framebuffer_t*)device->driver)->swapbuffer(buffer, length);
+            return 1;
+        }
+    }
+    return -1;
+}
+
 int syscall_dispatcher(syscall_parameters_t regs)
 {
     int retval = 0;
@@ -317,4 +332,5 @@ void syscall_initialize()
     _syscalls[15] = &sys_thread_cancel;
     _syscalls[16] = &sys_thread_exit;
     _syscalls[17] = &sys_thread_sleep;
+    _syscalls[18] = &sys_swapbuffer;
 }

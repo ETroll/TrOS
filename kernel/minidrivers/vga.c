@@ -20,6 +20,15 @@ typedef struct
     uint32_t mode;
 } fbmode_information_t;
 
+typedef struct
+{
+    uint32_t width;
+    uint32_t height;
+    uint32_t ppb;       //pixels per byte
+    uint32_t size;
+    uint8_t* data;
+} vga_framebuffer_t;
+
 typedef enum
 {
     VGA_IOCTL_CHANGEMODE = 0x00,
@@ -76,14 +85,15 @@ typedef struct
 
 
 static uint8_t* _vga_mem_start = (uint8_t*)0xA0000;
-static uint8_t* _vga_mem_end = (uint8_t*)0xBFFFF;
+// static uint8_t* _vga_mem_end = (uint8_t*)0xBFFFF;
 
 static unsigned char _vga_isopen = 0;
 
 #define VGA_NUM_MODES 2
 static vga_mode_t modes[VGA_NUM_MODES];
 static vga_mode_t* _active_mode = 0;
-static vga_frame_t* _buffer = 0;
+static vga_frame_t* _vgamem = 0;        //TODO: Remove after new solution works
+static vga_framebuffer_t* framebuffer = 0;
 
 //http://bos.asmhackers.net/docs/vga_without_bios/docs/mode%2013h%20without%20using%20bios.htm
 
@@ -96,7 +106,8 @@ static void vga_close();
 
 static void vga_initmodes();
 static void vga_changemode(vga_mode_t* mode);
-static void vga_drawbuffer();
+static void vga_set_plane(uint32_t plane);
+static void vga_flushmem();
 
 static driver_framebuffer_t _vga_driver =
 {
@@ -127,11 +138,11 @@ int vga_open()
     if(!_vga_isopen)
     {
         _vga_isopen = 1;
-        _buffer = (vga_frame_t*)kmalloc(sizeof(vga_frame_t)*VGA_MEM_SIZE);
+        _vgamem = (vga_frame_t*)kmalloc(sizeof(vga_frame_t)*VGA_MEM_SIZE);
         for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
         {
             //Maybe clear mem instead? Bit slower, but safer!
-            _buffer[i].dirty = 0;
+            _vgamem[i].dirty = 0;
         }
         return TROS_DRIVER_OK;
     }
@@ -142,16 +153,37 @@ int vga_open()
 }
 void vga_close()
 {
-    if(_buffer)
+    if(_vgamem)
     {
-        kfree(_buffer);
+        kfree(_vgamem);
     }
     _vga_isopen = 0;
 }
 
 void vga_swapbuffer(unsigned char* buffer, unsigned int length)
 {
+    if(framebuffer && length <= framebuffer->size)
+    {
+        //TODO
+        printk("VGA_MEMORY_PLANAR swapbuffer MISSING!!\n");
+        for(int i = 0; i<length; i++)
+        {
+            if(buffer[i] != framebuffer->data[i])
+            {
+                framebuffer->data[i] = buffer[i];
+                if(_active_mode->mmodel == VGA_MEMORY_PLANAR)
+                {
 
+                }
+                else
+                {
+                    _vgamem[i].data[0] = framebuffer->data[i];
+                    _vgamem[i].dirty = 1;
+                }
+            }
+        }
+        vga_flushmem();
+    }
 }
 
 int vga_ioctl(unsigned int num, unsigned int param)
@@ -166,7 +198,22 @@ int vga_ioctl(unsigned int num, unsigned int param)
             if(param < VGA_NUM_MODES)
             {
                 vga_changemode(&modes[param]);
-                retVal = 1;
+                if(framebuffer)
+                {
+                    if(framebuffer->data)
+                    {
+                        kfree(framebuffer->data);
+                    }
+                    kfree(framebuffer);
+                }
+                framebuffer = (vga_framebuffer_t*)kmalloc(sizeof(vga_framebuffer_t));
+                framebuffer->height = modes[param].height;
+                framebuffer->width = (modes[param].width * modes[param].bpp) / 8;
+                framebuffer->ppb = 8 / modes[param].bpp;
+                framebuffer->size = sizeof(uint8_t) * framebuffer->height * framebuffer->width;
+                framebuffer->data = (uint8_t*)kmalloc(framebuffer->size);
+
+                retVal = framebuffer->size;
             }
         } break;
         case VGA_IOCTL_GETMODES:
@@ -199,28 +246,28 @@ void vga_set_plane(uint32_t plane)
     pio_outb(0x3C5, 1 << plane);
 }
 
-void vga_drawbuffer()
+void vga_flushmem()
 {
-    if(_buffer)
+    if(_vgamem)
     {
         for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
         {
-            if(_buffer[i].dirty)
+            if(_vgamem[i].dirty)
             {
                 if(_active_mode->mmodel == VGA_MEMORY_PLANAR)
                 {
                     vga_set_plane(0);
-                    _vga_mem_start[i] = _buffer[i].data[0];
+                    _vga_mem_start[i] = _vgamem[i].data[0];
                     vga_set_plane(1);
-                    _vga_mem_start[i] = _buffer[i].data[1];
+                    _vga_mem_start[i] = _vgamem[i].data[1];
                     vga_set_plane(2);
-                    _vga_mem_start[i] = _buffer[i].data[2];
+                    _vga_mem_start[i] = _vgamem[i].data[2];
                     vga_set_plane(3);
-                    _vga_mem_start[i] = _buffer[i].data[3];
+                    _vga_mem_start[i] = _vgamem[i].data[3];
                 }
                 else
                 {
-                    _vga_mem_start[i] = _buffer[i].data[0];
+                    _vga_mem_start[i] = _vgamem[i].data[0];
                 }
             }
         }
@@ -229,14 +276,14 @@ void vga_drawbuffer()
 
 void vga_write_pixel_linear(uint32_t x, uint32_t y, uint8_t c)
 {
-    if(_buffer)
+    if(_vgamem)
     {
         //320y = 256y + 64y,
         //        2^8 + 2^6
         //uint16_t offset = _active_mode->width * y + x;
-        uint16_t offset = offset = (y<<8) + (y<<6) + x;
-        _buffer[offset].data[0] = c;
-        _buffer[offset].dirty = 1;
+        uint16_t offset = (y<<8) + (y<<6) + x;
+        _vgamem[offset].data[0] = c;
+        _vgamem[offset].dirty = 1;
     }
 }
 
@@ -245,12 +292,12 @@ void vga_write_pixel_planar(uint32_t x, uint32_t y, uint8_t c)
     //640 = 512 + 128 = 128 × 5, and 480 = 32 × 15.
     //      2^16 + 2^7
     // uint16_t offset = offset = (y<<14) + (y<<5) + (x>>2);
-    if(_buffer)
+    if(_vgamem)
     {
         uint32_t offset = (y*_active_mode->width) / 8 + (x/8);
         x = 7-(x%8);
 
-        _buffer[offset].dirty = 1;
+        _vgamem[offset].dirty = 1;
 
         uint8_t bitmask = 1 << x;
         uint8_t planemask = 1;
@@ -258,11 +305,11 @@ void vga_write_pixel_planar(uint32_t x, uint32_t y, uint8_t c)
         {
             if(planemask & c)
             {
-                _buffer[offset].data[p] |= bitmask;
+                _vgamem[offset].data[p] |= bitmask;
             }
             else
             {
-                _buffer[offset].data[p] &= ~bitmask;
+                _vgamem[offset].data[p] &= ~bitmask;
             }
             planemask <<= 1;
         }
@@ -273,8 +320,8 @@ void vga_test_linear(uint32_t width, uint32_t height)
 {
     for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
     {
-        _buffer[i].dirty = 1;
-        _buffer[i].data[0] = 0x00;
+        _vgamem[i].dirty = 1;
+        _vgamem[i].data[0] = 0x00;
     }
 
     for(int x=50; x<150; x++)
@@ -284,18 +331,18 @@ void vga_test_linear(uint32_t width, uint32_t height)
             vga_write_pixel_linear(x,y, 0xF);
         }
     }
-    vga_drawbuffer();
+    vga_flushmem();
 }
 
 void vga_test_planar(uint32_t width, uint32_t height)
 {
     for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
     {
-        _buffer[i].dirty = 1;
-        _buffer[i].data[0] = 0xFF;
-        _buffer[i].data[1] = 0xFF;
-        _buffer[i].data[2] = 0xFF;
-        _buffer[i].data[3] = 0xFF;
+        _vgamem[i].dirty = 1;
+        _vgamem[i].data[0] = 0xFF;
+        _vgamem[i].data[1] = 0xFF;
+        _vgamem[i].data[2] = 0xFF;
+        _vgamem[i].data[3] = 0xFF;
     }
 
     for(int x=0; x<640; x++)
@@ -342,9 +389,7 @@ void vga_test_planar(uint32_t width, uint32_t height)
         }
     }
 
-
-
-    vga_drawbuffer();
+    vga_flushmem();
 }
 
 void vga_changemode(vga_mode_t* mode)
