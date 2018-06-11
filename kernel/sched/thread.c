@@ -70,7 +70,9 @@ thread_t* thread_create(process_t* parent, uint32_t instrPointer, uint32_t exitP
         }
 
         //TODO: Replace with abstraction for compatability
+        #ifndef __VSCODE  //Just so VSCode's clang-x64 complains about i386 registers
         __asm("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(thread->regs.eflags)::"%eax");
+        #endif
 
         list_add(parent->threads, thread);
     }
