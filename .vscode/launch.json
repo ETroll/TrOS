@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to QEMU",
+            "type": "gdb",
+            "request": "attach",
+            "executable": "${workspaceRoot}/kernel/obj/kernel_debug.elf",
+            "target": "localhost:1234",
+            "remote": true,
+            "gdbpath": "C:\\MinGW\\bin\\gdb.exe",
+            "cwd": "${workspaceRoot}/kernel/",
+            // "preLaunchTask": "Setup Debug"
+            // "autorun": [
+            //     "set substitute-path /vagrant ."
+            // ],
+        }
+    ]
+}

@@ -20,7 +20,7 @@ typedef struct
     uint32_t mode;
 } fbmode_information_t;
 
-typedef struct
+typedef struct 
 {
     uint32_t width;
     uint32_t height;
@@ -32,7 +32,8 @@ typedef struct
 typedef enum
 {
     VGA_IOCTL_CHANGEMODE = 0x00,
-    VGA_IOCTL_GETMODES
+    VGA_IOCTL_GETMODES,
+    VGA_IOCTL_CLEARSCREEN
 } vga_ioctl_t;
 
 typedef enum
@@ -157,6 +158,14 @@ void vga_close()
     {
         kfree(_vgamem);
     }
+    if(framebuffer)
+    {
+        if(framebuffer->data)
+        {
+            kfree(framebuffer->data);
+        }
+        kfree(framebuffer);
+    }
     _vga_isopen = 0;
 }
 
@@ -168,7 +177,7 @@ void vga_swapbuffer(unsigned char* buffer, unsigned int length)
         printk("VGA_MEMORY_PLANAR swapbuffer MISSING!!\n");
         for(int i = 0; i<length; i++)
         {
-            if(buffer[i] != framebuffer->data[i])
+            if(framebuffer->data[i] != buffer[i])
             {
                 framebuffer->data[i] = buffer[i];
                 if(_active_mode->mmodel == VGA_MEMORY_PLANAR)
@@ -232,6 +241,22 @@ int vga_ioctl(unsigned int num, unsigned int param)
             {
                 printk("Resetting counter\n");
                 nextmode = 0;
+            }
+        } break;
+        case VGA_IOCTL_CLEARSCREEN:
+        {
+            if(framebuffer)
+            {
+                for(int i = 0; i<framebuffer->size; i++)
+                {
+                    uint8_t color = (uint8_t)param;
+                    if(framebuffer->ppb == 2)
+                    {
+                        color &= 0x0F;
+                        color |= color << 4;
+                    }
+                    framebuffer->data[i] = color;
+                }
             }
         } break;
     }

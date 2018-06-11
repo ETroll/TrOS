@@ -1,0 +1,20 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "build" : true,
+        "tools" : true,
+        "**/bin": true,
+        "**/obj": true
+      },
+      "editor.insertSpaces": true,
+      "editor.tabSize": 4,
+      "editor.trimAutoWhitespace": true,
+      "editor.useTabStops": true,
+      "telemetry.enableTelemetry": false,
+      "telemetry.enableCrashReporter": false,
+      "files.eol": "\n",
+}

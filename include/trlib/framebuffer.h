@@ -14,7 +14,8 @@ typedef struct
 typedef enum
 {
     FB_IOCTL_CHANGEMODE = 0x00,
-    FB_IOCTL_GETMODES
+    FB_IOCTL_GETMODES,
+    FB_IOCTL_CLEARSCREEN
 } framebuffer_ioctl_t;
 
 

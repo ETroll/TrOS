@@ -14,8 +14,8 @@ int main(int argc, char** argv)
     trui_window_t window = trui_create_window("Hello JavaBin!");
     trui_syslog_writeline("Got WINID: %d", window);
 
-    trui_label_t label = trui_create_label(2, 2, 50, "This is a simple label!");
-    trui_button_t button = trui_create_button(2, 4, 20, "Close application");
+    trui_create_label(2, 2, 50, "This is a simple label!");
+    trui_create_button(2, 4, 20, "Close application");
 
     trui_servermessage_t responce;
     while(mq_recv(&responce, sizeof(trui_servermessage_t), MQ_NOFLAGS))

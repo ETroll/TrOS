@@ -13,12 +13,15 @@ COMPILER_ASM = nasm
 DIR_BUILD = bin/
 DIR_OBJECT = obj/
 TARGET = kernel.elf
+DEBUG = kernel_debug.elf
 LIST = kernel.list
 MAP = kernel.map
 
 
 # CONFIGURATION
-FLAGS = -s -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector #-fno-asynchronous-unwind-tables
+# -fno-pic -static -fno-builtin -fno-strict-aliasing -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -gdwarf-2
+#FLAGS = -g -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -fno-omit-frame-pointer #-fno-asynchronous-unwind-tables
+FLAGS = -ggdb -Wall -std=c99 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -fno-omit-frame-pointer -gdwarf-2 -fno-strict-aliasing
 LINKER_FLAGS = -ffreestanding -nostdlib -Wl,-Map=$(DIR_OBJECT)$(MAP)
 INCLUDES = ../include/
 LINKER_MAP = kernel.ld
@@ -38,10 +41,12 @@ all: clean $(LIST)
 
 $(LIST) : $(TARGET)
 	$(TOOLCHAIN)i386-elf-objdump -M intel -D $(DIR_BUILD)$(TARGET) > $(DIR_OBJECT)/$(LIST)
-	$(TOOLCHAIN)i386-elf-strip --strip-unneeded $(DIR_BUILD)$(TARGET)
 
-$(TARGET): $(DIR_BUILD) $(OBJECTS_AS) $(OBJECTS_GCC)
-	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(OBJECTS_ALL) -o $(DIR_BUILD)$(TARGET)
+$(TARGET) : $(DIR_BUILD) $(DEBUG)
+	$(TOOLCHAIN)i386-elf-strip --strip-unneeded $(DIR_OBJECT)$(DEBUG) -o $(DIR_BUILD)$(TARGET)
+
+$(DEBUG): $(OBJECTS_AS) $(OBJECTS_GCC)
+	$(GCC) $(LINKER_FLAGS) -T $(LINKER_MAP) $(OBJECTS_ALL) -o $(DIR_OBJECT)$(DEBUG)
 
 $(OBJECTS_AS): $(DIR_OBJECT)
 	@mkdir -p $(@D)

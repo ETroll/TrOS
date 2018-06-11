@@ -45,10 +45,10 @@ $(IMAGE):
 
 run: all qemu
 qemu: $(IMAGE)
-	qemu-system-i386 -fda $(IMAGE) -serial stdio -m 256 -d cpu_reset
+	qemu-system-i386 -drive format=raw,file=$(IMAGE),index=0,if=floppy -serial stdio -m 256 -d cpu_reset
 
 debug: $(IMAGE)
-	qemu-system-i386 -fda $(IMAGE) -serial stdio -m 256 -d cpu_reset -s -S
+	qemu-system-i386 -drive format=raw,file=$(IMAGE),index=0,if=floppy -serial stdio -m 256 -d cpu_reset -s -S
 
 bochs: $(IMAGE)
 	tools/bochs/bochs -q -f bochsrc.bxrc
