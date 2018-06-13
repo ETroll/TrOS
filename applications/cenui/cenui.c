@@ -61,8 +61,10 @@ int main(int argc, char** argv)
         }
         fbsize_bytes = fbline_bytes*fbinfo.height*sizeof(uint8_t);
         framebuffer = (uint8_t*)malloc(fbsize_bytes);
+        memset(framebuffer, 0x00, fbsize_bytes);
 
-        draw_rectangle(100, 100, 50, 100, 0x2);
+
+        draw_rectangle(100, 100, 100, 100, 0x3F);
         framebuffer_swapbuffer(vga, framebuffer, fbsize_bytes);
 
         while(TRUE)
@@ -81,6 +83,7 @@ int main(int argc, char** argv)
 void draw_pixel(int32_t x, int32_t y, uint8_t c)
 {
     uint32_t offset = (y * fbline_bytes) + (x / fbppb);
+    //uint32_t offset = (y<<8) + (y<<6) + x;
 
     if(fbppb == 2)
     {
@@ -94,7 +97,7 @@ void draw_pixel(int32_t x, int32_t y, uint8_t c)
             c |= 0xF0;
         }
     }
-    framebuffer[offset] &= c;
+    framebuffer[offset] = c;
 }
 
 void draw_rectangle(int32_t xstart, int32_t ystart, int32_t height, int32_t width, uint8_t color)

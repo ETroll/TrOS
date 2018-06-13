@@ -221,6 +221,8 @@ int vga_ioctl(unsigned int num, unsigned int param)
                 framebuffer->ppb = 8 / modes[param].bpp;
                 framebuffer->size = sizeof(uint8_t) * framebuffer->height * framebuffer->width;
                 framebuffer->data = (uint8_t*)kmalloc(framebuffer->size);
+                memset(framebuffer->data, 0x00, framebuffer->size);
+
 
                 retVal = framebuffer->size;
             }
@@ -343,18 +345,25 @@ void vga_write_pixel_planar(uint32_t x, uint32_t y, uint8_t c)
 
 void vga_test_linear(uint32_t width, uint32_t height)
 {
+    //NOTE: Even in 256 color mode here,
+    //      we are only seeing the 64 color EGA palette.
+    //      If we want full 256 colors, we need to set
+    //      up the VGA palette when we change modes or
+    //      at boot.
+    //      EGA Palette: https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/EGA_Table.PNG/330px-EGA_Table.PNG
     for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
     {
         _vgamem[i].dirty = 1;
         _vgamem[i].data[0] = 0x00;
     }
-
+    uint8_t color = 0x00;
     for(int x=50; x<150; x++)
     {
         for(int y=50; y<150; y++)
         {
             vga_write_pixel_linear(x,y, 0xF);
         }
+        color++;
     }
     vga_flushmem();
 }
