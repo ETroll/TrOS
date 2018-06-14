@@ -35,4 +35,4 @@ Planned features:
 
 Progress is slow. But here is the latest "screenshot" / progress-picture:
 
-![trell-ui-components](https://cloud.githubusercontent.com/assets/404305/23579208/e1504d0e-00e8-11e7-8878-ba5110396881.gif)
+![trell-ui-components](https://user-images.githubusercontent.com/404305/28158605-82ef8e6c-67ba-11e7-886e-60d4f1adfdc4.gif)
