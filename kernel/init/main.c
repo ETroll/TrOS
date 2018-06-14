@@ -65,7 +65,7 @@ void kernel_drivers()
     }
 
     kbd_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
-    // textmode_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
+    textmode_driver_initialize() ? printk("OK\n") : printk("FAILED!\n");
     vga_driver_initialize()  ? printk("OK\n") : printk("FAILED!\n");
 }
 
@@ -114,14 +114,14 @@ int kernel_idle()
         kernel_panic("Error mounting root folder. Halting!", 0);
     }
 
-    char* argv[] =
-    {
-        "/fd0/cenui"
-    };
     // char* argv[] =
     // {
-    //     "/fd0/trell"
+    //     "/fd0/cenui"
     // };
+    char* argv[] =
+    {
+        "/fd0/trell"
+    };
     process_t* proc = scheduler_executeUser(1, argv);
     printk("Started %s at PID: %d starting idle loop\n", argv[0], proc->pid);
 

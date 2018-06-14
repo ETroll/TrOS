@@ -143,6 +143,10 @@ int vga_open()
         for(uint32_t i = 0; i<VGA_MEM_SIZE; i++)
         {
             //Maybe clear mem instead? Bit slower, but safer!
+            _vgamem[i].data[0] = 0x00;
+            _vgamem[i].data[1] = 0x00;
+            _vgamem[i].data[2] = 0x00;
+            _vgamem[i].data[3] = 0x00;
             _vgamem[i].dirty = 0;
         }
         return TROS_DRIVER_OK;
