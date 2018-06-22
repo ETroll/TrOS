@@ -24,3 +24,16 @@ void pio_outw(unsigned short port, unsigned short value)
 {
     __asm("outw %0, %1" : : "a"(value), "d"(port));
 }
+
+unsigned int pio_indw(unsigned short port)
+{
+    unsigned short ret;
+    __asm("inl %%dx, %%eax" : "=a" (ret) : "dN" (port));
+    return ret;
+}
+
+void pio_outdw(unsigned short port, unsigned int value)
+{
+    __asm("outl %%eax, %%dx" : : "dN" (port), "a" (value));
+}
+

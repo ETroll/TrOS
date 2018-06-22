@@ -9,12 +9,15 @@
         "tools" : true,
         "**/bin": true,
         "**/obj": true
-      },
-      "editor.insertSpaces": true,
-      "editor.tabSize": 4,
-      "editor.trimAutoWhitespace": true,
-      "editor.useTabStops": true,
-      "telemetry.enableTelemetry": false,
-      "telemetry.enableCrashReporter": false,
-      "files.eol": "\n",
+    },
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.trimAutoWhitespace": true,
+    "editor.useTabStops": true,
+    "telemetry.enableTelemetry": false,
+    "telemetry.enableCrashReporter": false,
+    "files.eol": "\n",
+    "files.associations": {
+        "*.h": "c",
+    },
 }

@@ -81,6 +81,8 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     kernel_memory_initialize(stack_top, multiboot);
     kernel_drivers();
     kernel_filesystems();
+    
+    hwdetect_enumerate_hardware();
     /*
         fd0/
             initrd
