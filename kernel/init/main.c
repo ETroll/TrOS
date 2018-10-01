@@ -82,7 +82,7 @@ void kernel_main(multiboot_info_t* multiboot, uint32_t magic, uint32_t stack_top
     kernel_drivers();
     kernel_filesystems();
     
-    hwdetect_enumerate_hardware();
+    hwdetect_enumerate_hardware(0);
     /*
         fd0/
             initrd

@@ -5,6 +5,9 @@
 #define INCLUDE_TROS_HWDETECT_H
 
 #include <tros/klib/list.h>
+#include <tros/driver.h>
+#include <tros/tros.h>
+#include <stdint.h>
 
 typedef enum
 {
@@ -24,12 +27,27 @@ typedef struct
     char* slave_desc;
 } hwd_floppy_t;
 
-// typedef struct 
-// {
+typedef enum 
+{
+    HWD_PCI = 0,
+    HWD_USB,
+    HWD_ISA,
+    HWD_PLATFORM, //PORT
+    HWD_MEMORYMAPPED
+} hwd_type_t;
 
-// } hwd_device_t;
+typedef struct hwd_device
+{
+    uint32_t vendorid;
+    uint32_t deviceid;
+    uint32_t class;
+    uint32_t subclass;
+    uint32_t progif;
+    uint32_t irq;
+    hwd_type_t* type;
+} hwd_device_t;
 
 hwd_floppy_t hwdetect_floppy_disks();
-void hwdetect_enumerate_hardware();
+tros_status_t hwdetect_enumerate_hardware(list_t* hwlist);
 
 #endif
