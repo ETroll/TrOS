@@ -5,8 +5,6 @@
 #include <tros/hal/io.h>
 #include <tros/hal/pci.h>
 
-#include <stdint.h>
-
 #include <tros/tros.h> //prink -- todo remove!
 
 char *floppy_descripive_names[6] =
@@ -66,7 +64,7 @@ void hwdetect_pci_device(uint8_t bus, uint8_t slot)
     }
  }
 
- void hwdetect_pci_checkbus(uint8_t bus) 
+ void hwdetect_pci_checkbus(list_t* hwlist, uint8_t bus) 
  {
      for(uint8_t slot = 0; slot < 32; slot++) 
      {
@@ -75,14 +73,14 @@ void hwdetect_pci_device(uint8_t bus, uint8_t slot)
  }
 
 //return a list of devices. PCI, USB, MEMORYMAPPED, PORT (etc)
-void hwdetect_enumerate_hardware()
+tros_status_t hwdetect_enumerate_hardware(list_t* hwlist)
 {
     uint8_t header = pci_read_headertype(0, 0, 0);
     if( (header & PCI_HEADERTYPE_MULTIPLE) == 0) 
     {
         //Single PCI host controller
         printk("PCI: Single bus detected\n");
-        hwdetect_pci_checkbus(0);
+        hwdetect_pci_checkbus(hwlist, 0);
     }
     else 
     {
@@ -92,7 +90,7 @@ void hwdetect_enumerate_hardware()
         {
             if(pci_read_word(0, 0, function, PCI_WORD_VENDORID) != 0xFFFF) 
             {
-                hwdetect_pci_checkbus(function);        
+                hwdetect_pci_checkbus(hwlist, function);        
             }
             else 
             {
