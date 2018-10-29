@@ -1,7 +1,7 @@
 #TrOS-2 Makefile
 
 KERNEL := bootloader/bootsector bootloader/loader kernel
-USERLAND := applications/trell applications/tusse applications/cenui applications/javabin
+USERLAND := applications/trell applications/tusse applications/cenui applications/example
 FOLDERS := build build/tmp build/tmp/apps build/tmp/services tools
 SUBCLEAN = $(addsuffix .clean,$(KERNEL))
 IMAGE = build/tros.img
